@@ -241,6 +241,27 @@ body {
   user-select: none;
 }
 
+/* Minimap: scaled-down code copy, theme-aware via shiki vars */
+.minimap-body {
+  font-size: 2px;
+  line-height: 3.5px;
+  white-space: pre;
+  color: var(--ide-fg);
+}
+.minimap-body pre,
+.minimap-body pre.shiki {
+  background: transparent !important;
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.minimap-body .line {
+  display: block;
+}
+.minimap-body .line::before {
+  display: none;
+}
+
 /* Find matches inside code panes */
 .codepane .line.find-hit {
   background: rgba(var(--ide-accent-rgb), 0.16);

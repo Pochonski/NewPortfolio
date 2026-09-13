@@ -145,8 +145,8 @@ export default function SettingsPage() {
                       </span>
                       {/* Authentic palette strip */}
                       <span className="mt-3 flex overflow-hidden rounded-md border" aria-hidden style={{ borderColor: "var(--ide-border)" }}>
-                        {t.palette.map((c) => (
-                          <i key={c} className="h-5 flex-1" style={{ background: c }} title={c} />
+                        {t.palette.map((c, i) => (
+                          <i key={`${c}-${i}`} className="h-5 flex-1" style={{ background: c }} title={c} />
                         ))}
                       </span>
                     </button>

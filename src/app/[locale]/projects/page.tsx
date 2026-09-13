@@ -1,10 +1,12 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { projectsJs } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
-import { ExternalLink, Github } from "lucide-react";
+import { caseStudies } from "@/content/case-studies";
+import { ExternalLink, FileText, Github } from "lucide-react";
 
 interface Project {
   slug?: string;
@@ -15,7 +17,8 @@ interface Project {
   github: string;
 }
 
-function ProjectCard({ p }: { p: Project }) {
+function ProjectCard({ p, caseLabel }: { p: Project; caseLabel: string }) {
+  const hasStudy = !!p.slug && p.slug in caseStudies;
   return (
     <article className="flex flex-col rounded-lg border p-5" style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}>
       <h2 className="text-base font-semibold" style={{ color: "var(--ide-fg-bright)" }}>{p.title}</h2>
@@ -34,6 +37,15 @@ function ProjectCard({ p }: { p: Project }) {
         <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:underline" style={{ color: "var(--ide-fg-dim)" }}>
           <Github size={14} /> Code
         </a>
+        {hasStudy && (
+          <Link
+            href={`/projects/${p.slug}` as "/projects/[slug]"}
+            className="flex items-center gap-1.5 hover:underline"
+            style={{ color: "var(--ide-accent)" }}
+          >
+            <FileText size={13} /> {caseLabel}
+          </Link>
+        )}
       </div>
     </article>
   );
@@ -66,7 +78,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
     >
       <div className="grid gap-4 md:grid-cols-2">
         {featured.map((p) => (
-          <ProjectCard key={p.title} p={p} />
+          <ProjectCard key={p.title} p={p} caseLabel={t("projects.caseStudy")} />
         ))}
       </div>
       <h2 className="mt-10 mb-4 font-mono text-xs tracking-wider uppercase" style={{ color: "var(--ide-fg-dim)" }}>
@@ -74,7 +86,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
       </h2>
       <div className="grid gap-4 md:grid-cols-2">
         {archive.map((p) => (
-          <ProjectCard key={p.title} p={p} />
+          <ProjectCard key={p.title} p={p} caseLabel={t("projects.caseStudy")} />
         ))}
       </div>
       <p className="mt-8 text-center">

@@ -108,6 +108,17 @@ export const projects = [\n${items},\n];\n`;
   return pick("projects", "JavaScript", "javascript", code);
 }
 
+export function projectJsSingle(p: ProjectLite & { slug?: string }): BuiltFileSource {
+  const code = `// portfolio/projects/${p.slug ?? "case"}.js — case study
+export const project = {
+  title: ${JSON.stringify(p.title)},
+  stack: ${JSON.stringify(p.tags)},
+  live: ${JSON.stringify(p.link)},
+};
+`;
+  return pick("projects", "JavaScript", "javascript", code);
+}
+
 export function skillsTs(groups: { key: string; items: Skill[] }[]): BuiltFileSource {
   const blocks = groups
     .map(
