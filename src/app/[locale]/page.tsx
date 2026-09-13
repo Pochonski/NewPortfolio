@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, FileText, Mail, MapPin } from "lucide-react";
@@ -7,6 +8,17 @@ import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { homeTsx } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale as Locale);
+  const t = await getTranslations();
+  return { title: "home.tsx", description: t("hero.role") };
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -23,7 +35,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-5">
           <Image
-            src="/images/profile.jpg"
+            src="/images/profile.webp"
             alt="Joseph Fonseca"
             width={96}
             height={96}

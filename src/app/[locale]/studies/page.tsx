@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { studiesMd } from "@/lib/file-sources";
@@ -12,6 +13,21 @@ interface StudyItem {
   period: string;
   location: string;
   points: string[];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "studies.md",
+    description:
+      locale === "en"
+        ? "Studies of Joseph Fonseca: Computer Engineering (TEC) and Azure Cloud Support."
+        : "Estudios de Joseph Fonseca: Ingeniería en Computadores (TEC) y Azure Cloud Support.",
+  };
 }
 
 export default async function StudiesPage({ params }: { params: Promise<{ locale: string }> }) {

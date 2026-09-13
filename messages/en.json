@@ -196,6 +196,13 @@
     "solution": "Solution",
     "results": "Results"
   },
+  "notfound": {
+    "heading": "File not found in workspace",
+    "body": "The route you are looking for does not exist. Check the Explorer or go home.",
+    "home": "Go to home.tsx",
+    "projects": "View projects.js",
+    "hint": "Press Ctrl+K to search files or commands"
+  },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
     "general": "General",

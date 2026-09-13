@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { Star, GitFork, ExternalLink } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
@@ -8,6 +9,21 @@ import { highlightCode } from "@/lib/shiki";
 import { getGithubData } from "@/lib/github";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "github.md",
+    description:
+      locale === "en"
+        ? "Profile and repositories of @Pochonski on GitHub."
+        : "Perfil y repositorios de @Pochonski en GitHub.",
+  };
+}
 
 export default async function GithubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

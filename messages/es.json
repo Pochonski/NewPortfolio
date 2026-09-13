@@ -200,6 +200,13 @@
     "solution": "Solución",
     "results": "Resultados"
   },
+  "notfound": {
+    "heading": "Archivo no encontrado en el workspace",
+    "body": "La ruta que buscas no existe. Revisa el Explorer o vuelve al inicio.",
+    "home": "Ir a home.tsx",
+    "projects": "Ver projects.js",
+    "hint": "Pulsa Ctrl+K para buscar archivos o comandos"
+  },
   "shortcuts": {
     "title": "Atajos de teclado",
     "general": "General",

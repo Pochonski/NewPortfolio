@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { projectsJs } from "@/lib/file-sources";
@@ -36,6 +37,17 @@ function ProjectCard({ p }: { p: Project }) {
       </div>
     </article>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale as Locale);
+  const t = await getTranslations();
+  return { title: "projects.js", description: t("projects.subtitle") };
 }
 
 export default async function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {

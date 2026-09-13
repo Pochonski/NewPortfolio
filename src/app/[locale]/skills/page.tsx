@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { skillsTs } from "@/lib/file-sources";
@@ -6,6 +7,21 @@ import { highlightCode } from "@/lib/shiki";
 import { skills } from "@/content/skills";
 
 const LEVEL_PCT: Record<string, number> = { familiar: 55, proficient: 78, expert: 94 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "skills.ts",
+    description:
+      locale === "en"
+        ? "Technical skills of Joseph Fonseca: React, Next.js, TypeScript, Supabase, Python, Azure."
+        : "Habilidades técnicas de Joseph Fonseca: React, Next.js, TypeScript, Supabase, Python, Azure.",
+  };
+}
 
 export default async function SkillsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

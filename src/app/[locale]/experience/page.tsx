@@ -1,4 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { experienceJson } from "@/lib/file-sources";
@@ -13,6 +14,21 @@ interface ExpItem {
   location: string;
   type: string;
   points: string[];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: "experience.json",
+    description:
+      locale === "en"
+        ? "Work experience of Joseph Fonseca: ScoreHub, StickerHub, Perfumes El Pocho, SECSA."
+        : "Experiencia de Joseph Fonseca: ScoreHub, StickerHub, Perfumes El Pocho, SECSA.",
+  };
 }
 
 export default async function ExperiencePage({ params }: { params: Promise<{ locale: string }> }) {

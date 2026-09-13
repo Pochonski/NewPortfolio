@@ -22,6 +22,7 @@ const HELP = (es: boolean) => [
   "  open <archivo> [--side]  — ej: open projects.js --side",
   "  go <ruta>       — ej: go /skills",
   "  about · skills · projects · contact · socials",
+  "  neofetch · sudo · vim",
   "  split     - Toggle code/preview split editor",
   "  themes · theme <id> · lang <es|en> · cv · clear",
 ];
@@ -46,6 +47,10 @@ const COMMANDS = [
   "go",
   "echo",
   "clear",
+  "neofetch",
+  "sudo",
+  "vim",
+  ":q!",
 ];
 
 export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: boolean }) {
@@ -162,6 +167,30 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
       if (f) go(f.route);
       else out.push({ type: "err", text: es ? `Ruta desconocida: ${args[0] || ""}` : `Unknown route: ${args[0] || ""}` });
     } else if (c === "echo") out.push({ type: "out", text: args.join(" ") });
+    else if (c === "neofetch")
+      out.push(
+        { type: "out", text: "pochonski@portfolio" },
+        { type: "out", text: "-------------------" },
+        { type: "out", text: "OS: Arch Linux x86_64" },
+        { type: "out", text: "Host: vscode-portfolio" },
+        { type: "out", text: "Shell: porto-sh 1.0" },
+        { type: "out", text: "DE: VS Code (web)" },
+        { type: "out", text: "Stack: React · Next.js · Supabase" },
+        { type: "out", text: "Uptime: always on" }
+      );
+    else if (c === "sudo")
+      out.push({
+        type: "err",
+        text: es
+          ? "pochonski no está en el archivo sudoers. Este incidente será reportado a Joseph."
+          : "pochonski is not in the sudoers file. This incident will be reported to Joseph.",
+      });
+    else if (c === "vim")
+      out.push(
+        { type: "out", text: es ? "Vim. Ambicioso." : "Vim. Bold move." },
+        { type: "out", text: es ? "Escribe «:q!» para escapar." : "Type «:q!» to escape." }
+      );
+    else if (c === ":q!") out.push({ type: "out", text: es ? "Uf. A salvo." : "Phew. Safe." });
     else out.push({ type: "err", text: es ? `No encontrado: ${c}. Prueba “help”.` : `Not found: ${c}. Try “help”.` });
 
     print(out);
