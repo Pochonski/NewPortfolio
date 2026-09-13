@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { IDE_FILES } from "@/lib/files";
-import { FileIcon } from "./FileIcon";
+import { IDE_FILES, IDE_FOLDERS } from "@/lib/files";
+import { FileIcon, FolderIcon } from "./FileIcon";
 
 export function Explorer() {
   const [open, setOpen] = useState(true);
   const [drawer, setDrawer] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
 
@@ -18,6 +19,45 @@ export function Explorer() {
     window.addEventListener("porto-toggle-explorer", h);
     return () => window.removeEventListener("porto-toggle-explorer", h);
   }, []);
+
+  const toggleFolder = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const renderFile = (f: (typeof IDE_FILES)[number], depth: number) => {
+    const active = clean === f.route;
+    return (
+      <li key={f.id} role="treeitem" aria-selected={active} aria-level={depth + 1}>
+        <Link
+          href={f.route as "/"}
+          onClick={(e) => {
+            setDrawer(false);
+            if (e.altKey) {
+              e.preventDefault();
+              window.dispatchEvent(
+                new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
+              );
+            }
+          }}
+          title={`${f.filename} — Alt+click opens to the side`}
+          className="flex items-center gap-2 py-[5px] pr-4 text-[13px]"
+          style={{
+            paddingLeft: `${12 + depth * 14}px`,
+            background: active ? "var(--ide-explorer-hover)" : "transparent",
+            color: active ? "var(--ide-fg-bright)" : "var(--ide-fg)",
+            borderLeft: active ? "2px solid var(--ide-accent)" : "2px solid transparent",
+          }}
+        >
+          <FileIcon file={f} />
+          <span className="truncate font-mono">{f.filename}</span>
+        </Link>
+      </li>
+    );
+  };
 
   const list = (
     <div role="tree" aria-label="Portfolio files">
@@ -36,37 +76,32 @@ export function Explorer() {
       </button>
       {open && (
         <ul className="pb-2">
-          {IDE_FILES.map((f) => {
-            const active = clean === f.route;
+          {IDE_FOLDERS.map((folder) => {
+            const files = IDE_FILES.filter((f) => f.folder === folder.id);
+            if (files.length === 0) return null;
+            const isCollapsed = collapsed.has(folder.id);
             return (
-              <li key={f.id} role="treeitem" aria-selected={active}>
-                <Link
-                  href={f.route as "/"}
-                  onClick={(e) => {
-                    setDrawer(false);
-                    if (e.altKey) {
-                      e.preventDefault();
-                      window.dispatchEvent(
-                        new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
-                      );
-                    }
-                  }}
-                  title={`${f.filename} — Alt+click opens to the side`}
-                  className="flex items-center gap-2 px-4 py-[5px] text-[13px]"
-                  style={{
-                    background: active ? "var(--ide-explorer-hover)" : "transparent",
-                    color: active ? "var(--ide-fg-bright)" : "var(--ide-fg)",
-                    borderLeft: active
-                      ? "2px solid var(--ide-accent)"
-                      : "2px solid transparent",
-                  }}
+              <li key={folder.id} role="treeitem" aria-expanded={!isCollapsed} aria-selected={false} aria-level={1}>
+                <button
+                  onClick={() => toggleFolder(folder.id)}
+                  className="flex w-full items-center gap-1.5 py-[4px] pr-4 text-[13px]"
+                  style={{ paddingLeft: "12px", color: "var(--ide-fg)" }}
+                  title={folder.name}
                 >
-                  <FileIcon file={f} />
-                  <span className="truncate font-mono">{f.filename}</span>
-                </Link>
+                  {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  <FolderIcon kind={folder.icon} open={!isCollapsed} />
+                  <span className="truncate font-medium">{folder.name}</span>
+                </button>
+                {!isCollapsed && (
+                  <ul role="group">{files.map((f) => renderFile(f, 1))}</ul>
+                )}
               </li>
             );
           })}
+          {/* Files without a known folder fall back to root level */}
+          {IDE_FILES.filter((f) => !IDE_FOLDERS.some((g) => g.id === f.folder)).map((f) =>
+            renderFile(f, 0)
+          )}
         </ul>
       )}
     </div>

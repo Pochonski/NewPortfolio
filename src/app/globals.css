@@ -241,6 +241,15 @@ body {
   user-select: none;
 }
 
+/* Find matches inside code panes */
+.codepane .line.find-hit {
+  background: rgba(var(--ide-accent-rgb), 0.16);
+}
+.codepane .line.find-current {
+  background: rgba(var(--ide-accent-rgb), 0.28);
+  outline: 1px solid var(--ide-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

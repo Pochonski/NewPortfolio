@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Files,
+  Search,
   User,
   Briefcase,
   GraduationCap,
@@ -12,6 +14,12 @@ import {
   Github,
 } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
+
+export type SidebarView = "files" | "search";
+
+export function setSidebarView(view: SidebarView) {
+  window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view } }));
+}
 
 const TOP = [
   { Icon: Files, route: "/", label: "Explorer / Home" },
@@ -27,6 +35,16 @@ const TOP = [
 export function ActivityBar() {
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+  const [view, setView] = useState<SidebarView>("files");
+
+  useEffect(() => {
+    const h = (e: Event) => {
+      const v = (e as CustomEvent).detail?.view;
+      if (v === "files" || v === "search") setView(v);
+    };
+    window.addEventListener("porto-sidebar", h as EventListener);
+    return () => window.removeEventListener("porto-sidebar", h as EventListener);
+  }, []);
 
   return (
     <aside
@@ -41,6 +59,7 @@ export function ActivityBar() {
             <Link
               key={route}
               href={route as "/"}
+              onClick={() => setSidebarView("files")}
               title={label}
               aria-label={label}
               aria-current={active ? "page" : undefined}
@@ -56,6 +75,20 @@ export function ActivityBar() {
             </Link>
           );
         })}
+        <button
+          onClick={() => setSidebarView("search")}
+          title="Search (Ctrl+Shift+F)"
+          aria-label="Search"
+          className="relative rounded-md p-2 transition-opacity"
+          style={{ opacity: view === "search" ? 1 : 0.55 }}
+        >
+          <span
+            aria-hidden
+            className="absolute top-1 bottom-1 left-0 w-0.5 rounded-full max-md:hidden"
+            style={{ background: view === "search" ? "var(--ide-sidebar-active)" : "transparent" }}
+          />
+          <Search size={19} style={{ color: view === "search" ? "var(--ide-sidebar-active)" : "var(--ide-fg)" }} />
+        </button>
       </div>
       <Link
         href="/settings"

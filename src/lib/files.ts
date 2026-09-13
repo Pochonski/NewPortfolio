@@ -1,21 +1,38 @@
+export type FolderIconKind = "src" | "docs" | "database" | "css" | "config";
+
+export interface IdeFolder {
+  id: string;
+  name: string;
+  icon: FolderIconKind;
+}
+
 export interface IdeFile {
   id: string;
   filename: string;
   route: string;
-  /** kind drives the file icon color/letter */
+  /** kind drives the language label + fallback icon */
   kind: "tsx" | "md" | "json" | "js" | "ts" | "css";
+  /** folder group shown in the Explorer tree */
+  folder: string;
 }
 
+export const IDE_FOLDERS: IdeFolder[] = [
+  { id: "src", name: "src", icon: "src" },
+  { id: "docs", name: "docs", icon: "docs" },
+  { id: "data", name: "data", icon: "database" },
+  { id: "styles", name: "styles", icon: "css" },
+];
+
 export const IDE_FILES: IdeFile[] = [
-  { id: "home", filename: "home.tsx", route: "/", kind: "tsx" },
-  { id: "about", filename: "about.md", route: "/about", kind: "md" },
-  { id: "experience", filename: "experience.json", route: "/experience", kind: "json" },
-  { id: "studies", filename: "studies.md", route: "/studies", kind: "md" },
-  { id: "projects", filename: "projects.js", route: "/projects", kind: "js" },
-  { id: "skills", filename: "skills.ts", route: "/skills", kind: "ts" },
-  { id: "github", filename: "github.md", route: "/github", kind: "md" },
-  { id: "contact", filename: "contact.css", route: "/contact", kind: "css" },
-  { id: "settings", filename: "settings.json", route: "/settings", kind: "json" },
+  { id: "home", filename: "home.tsx", route: "/", kind: "tsx", folder: "src" },
+  { id: "about", filename: "about.md", route: "/about", kind: "md", folder: "docs" },
+  { id: "experience", filename: "experience.json", route: "/experience", kind: "json", folder: "data" },
+  { id: "studies", filename: "studies.md", route: "/studies", kind: "md", folder: "docs" },
+  { id: "projects", filename: "projects.js", route: "/projects", kind: "js", folder: "src" },
+  { id: "skills", filename: "skills.ts", route: "/skills", kind: "ts", folder: "src" },
+  { id: "github", filename: "github.md", route: "/github", kind: "md", folder: "docs" },
+  { id: "contact", filename: "contact.css", route: "/contact", kind: "css", folder: "styles" },
+  { id: "settings", filename: "settings.json", route: "/settings", kind: "json", folder: "data" },
 ];
 
 export const KIND_COLORS: Record<IdeFile["kind"], string> = {

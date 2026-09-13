@@ -1,15 +1,66 @@
-import { KIND_COLORS, type IdeFile } from "@/lib/files";
+import type { IdeFile } from "@/lib/files";
+import {
+  CssIcon,
+  FolderConfigIcon,
+  FolderCssIcon,
+  FolderDatabaseIcon,
+  FolderDocsIcon,
+  FolderSrcIcon,
+  JavaScriptIcon,
+  JsonIcon,
+  MarkdownIcon,
+  ReactIcon,
+  TypeScriptIcon,
+} from "./icons";
+import type { FolderIconKind } from "@/lib/files";
 
-export function FileIcon({ file, size = 16 }: { file: IdeFile; size?: number }) {
-  const color = KIND_COLORS[file.kind];
-  const letter = file.kind.toUpperCase().slice(0, 2);
-  return (
-    <span
-      aria-hidden
-      style={{ color, width: size, height: size, fontSize: size * 0.52 }}
-      className="inline-flex shrink-0 items-center justify-center rounded-[3px] border font-mono font-bold"
-    >
-      {letter}
-    </span>
-  );
+function IconForFilename({ filename, size }: { filename: string; size: number }) {
+  const lower = filename.toLowerCase();
+  // VS Code Material Icon Theme resolves by exact file name first, then
+  // by extension — replicate that for the 9 portfolio files.
+  if (lower.endsWith(".tsx") || lower.endsWith(".jsx")) return <ReactIcon size={size} />;
+  if (lower.endsWith(".ts")) return <TypeScriptIcon size={size} />;
+  if (lower.endsWith(".js")) return <JavaScriptIcon size={size} />;
+  if (lower.endsWith(".json")) return <JsonIcon size={size} />;
+  if (lower.endsWith(".md")) return <MarkdownIcon size={size} />;
+  if (lower.endsWith(".css")) return <CssIcon size={size} />;
+  return <ReactIcon size={size} />;
+}
+
+/** VS Code-style file icon (Material Icon Theme artwork, vendored). */
+export function FileIcon({
+  file,
+  filename,
+  size = 16,
+}: {
+  file?: IdeFile;
+  filename?: string;
+  size?: number;
+}) {
+  const name = filename ?? file?.filename ?? "file";
+  return <IconForFilename filename={name} size={size} />;
+}
+
+/** VS Code-style folder icon with open/closed state. */
+export function FolderIcon({
+  kind,
+  open,
+  size = 16,
+}: {
+  kind: FolderIconKind;
+  open?: boolean;
+  size?: number;
+}) {
+  switch (kind) {
+    case "src":
+      return <FolderSrcIcon open={open} size={size} />;
+    case "docs":
+      return <FolderDocsIcon open={open} size={size} />;
+    case "database":
+      return <FolderDatabaseIcon open={open} size={size} />;
+    case "css":
+      return <FolderCssIcon open={open} size={size} />;
+    case "config":
+      return <FolderConfigIcon open={open} size={size} />;
+  }
 }

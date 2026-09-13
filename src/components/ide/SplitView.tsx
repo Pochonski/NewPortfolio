@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Code2,
   Columns2,
   Copy,
@@ -69,6 +71,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
   if (entry?.codeHtml) {
     return (
       <div
+        data-codepane={fileId}
         className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-6 max-lg:overflow-visible"
         dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
       />
@@ -76,7 +79,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
   }
   if (entry?.code) {
     return (
-      <div className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
+      <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
         <pre className="font-mono text-[12.5px] leading-6" style={{ color: "var(--ide-fg)" }}>
           {entry.code}
         </pre>
@@ -395,12 +398,165 @@ function CopyButton({ group }: { group: GroupId }) {
   );
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchLines(code: string, query: string): number[] {
+  if (!query || !code) return [];
+  const re = new RegExp(escapeRegExp(query), "gi");
+  const lines: number[] = [];
+  code.split("\n").forEach((text, i) => {
+    re.lastIndex = 0;
+    if (re.test(text)) lines.push(i + 1);
+  });
+  return lines;
+}
+
+// Floating find widget (Ctrl+F): searches the active code tab of the
+// last-active group, jumps across shiki `.line` spans. Client-only.
+function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | null> }) {
+  const { state, lastActive } = useEditors();
+  const locale = useLocale();
+  const liveTheme = useLiveTheme();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [shown, setShown] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => subscribeSource(bump), []);
+
+  useEffect(() => {
+    const h = () => {
+      setQuery("");
+      setShown(0);
+      setOpen(true);
+    };
+    window.addEventListener("porto-find", h);
+    return () => window.removeEventListener("porto-find", h);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 10);
+    return () => clearTimeout(t);
+  }, [open ]);
+
+  const group: GroupId = state.right && lastActive === "right" ? "right" : "left";
+  const tabs = group === "left" ? state.left : (state.right ?? state.left);
+  const activeTab = tabs[group === "left" ? state.activeLeft : state.activeRight];
+  const fileId = activeTab?.kind === "code" ? activeTab.fileId : null;
+  const tag = fileId === "settings" ? liveTheme : "";
+  const code = fileId ? (readSource(sourceKey(locale, fileId, tag))?.code ?? "") : "";
+
+  const matches = useMemo(() => matchLines(code, query), [code, query]);
+  const current = matches.length === 0 ? 0 : Math.min(Math.max(shown, 1), matches.length);
+
+  function clearMarks() {
+    rootRef.current
+      ?.querySelectorAll(".codepane .line.find-hit, .codepane .line.find-current")
+      .forEach((el) => el.classList.remove("find-hit", "find-current"));
+  }
+
+  function paint(lineIdx: number, lines: number[]) {
+    if (!fileId || lines.length === 0) return;
+    const line = lines[lineIdx];
+    clearMarks();
+    const pane = rootRef.current?.querySelector(`[data-codepane="${CSS.escape(fileId)}"]`);
+    const el = pane?.querySelector(`.line:nth-child(${line})`);
+    pane?.querySelectorAll(".line").forEach((l, i) => {
+      if (lines.includes(i + 1)) l.classList.add("find-hit");
+    });
+    el?.classList.add("find-current");
+    el?.scrollIntoView({ block: "center" });
+  }
+
+  function go(n: number) {
+    if (matches.length === 0) return;
+    const w = ((n % matches.length) + matches.length) % matches.length;
+    setShown(w + 1);
+    paint(w, matches);
+  }
+
+  useEffect(() => {
+    if (open && query && matches.length > 0) paint(0, matches);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, code]);
+
+  if (!open || !fileId) return null;
+
+  return (
+    <div
+      role="search"
+      aria-label="Find in file"
+      className="absolute top-2 right-2 z-20 flex items-center gap-1 rounded-md border px-2 py-1.5 shadow-xl"
+      style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
+    >
+      <input
+        ref={inputRef}
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setShown(e.target.value ? 1 : 0);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            go(e.shiftKey ? current - 2 : current);
+          } else if (e.key === "Escape") {
+            clearMarks();
+            setOpen(false);
+          }
+        }}
+        placeholder="Find"
+        aria-label="Find in file"
+        spellCheck={false}
+        autoComplete="off"
+        className="w-36 bg-transparent font-mono text-xs outline-none placeholder:opacity-50"
+        style={{ color: "var(--ide-fg-bright)" }}
+      />
+      <span className="font-mono text-[10px]" style={{ color: "var(--ide-fg-dim)" }}>
+        {query ? `${current}/${matches.length}` : ""}
+      </span>
+      <button
+        onClick={() => go(current - 2)}
+        aria-label="Previous match"
+        className="rounded p-0.5"
+        style={{ color: "var(--ide-fg-dim)" }}
+      >
+        <ChevronUp size={13} />
+      </button>
+      <button
+        onClick={() => go(current)}
+        aria-label="Next match"
+        className="rounded p-0.5"
+        style={{ color: "var(--ide-fg-dim)" }}
+      >
+        <ChevronDown size={13} />
+      </button>
+      <button
+        onClick={() => {
+          clearMarks();
+          setOpen(false);
+        }}
+        aria-label="Close find"
+        className="rounded p-0.5"
+        style={{ color: "var(--ide-fg-dim)" }}
+      >
+        <X size={13} />
+      </button>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Split root: groups + sash + mobile group switcher.
 // ---------------------------------------------------------------------------
 export function SplitView({ preview }: { preview: React.ReactNode }) {
   const { state, setRatio } = useEditors();
   const [mobileGroup, setMobileGroup] = useState<GroupId>("right");
+  const rootRef = useRef<HTMLDivElement>(null);
   // Collapse to the single group automatically — no effect needed.
   const visible: GroupId = state.right ? mobileGroup : "left";
 
@@ -417,7 +573,8 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
       : "Preview";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div ref={rootRef} className="relative flex min-h-0 flex-1 flex-col">
+      <FindWidget rootRef={rootRef} />
       {state.right && (
         <div
           role="tablist"

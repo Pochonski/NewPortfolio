@@ -138,6 +138,19 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
           return;
         }
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+        if (!palette) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view: "search" } }));
+          return;
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "f") {
+        if (inField || palette) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent("porto-find"));
+        return;
+      }
       if (palette || inField) return;
       const k = e.key.toLowerCase();
       if (chord === "g" && CHORDS[k]) {
