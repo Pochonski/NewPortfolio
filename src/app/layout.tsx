@@ -7,7 +7,7 @@ import "./globals.css";
 const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://joseph-fonseca.vercel.app"),
+  metadataBase: new URL("https://joseph-fonseca-dev.vercel.app"),
 };
 
 // Next 16 requires <html>/<body> here. The per-locale `lang` is synced

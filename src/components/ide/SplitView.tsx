@@ -38,7 +38,7 @@ import {
   subscribeSource,
 } from "@/lib/source-cache";
 
-const SITE_URL = "https://joseph-fonseca-vscode.vercel.app";
+const SITE_URL = "https://joseph-fonseca-dev.vercel.app";
 
 function fileOf(tab: EditorTab) {
   return tab.kind === "code" ? IDE_FILES.find((f) => f.id === tab.fileId) : undefined;

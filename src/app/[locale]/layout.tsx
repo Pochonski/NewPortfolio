@@ -7,7 +7,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { IdeShell } from "@/components/ide/IdeShell";
 import { LocaleLang } from "@/components/LocaleLang";
 
-const SITE = "https://joseph-fonseca.vercel.app";
+const SITE = "https://joseph-fonseca-dev.vercel.app";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
