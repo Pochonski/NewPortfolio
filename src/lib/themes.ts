@@ -1,16 +1,56 @@
+import type { ThemeLogoKind } from "@/components/ide/theme-logos";
+
 export interface IdeTheme {
   id: string;
   name: string;
   publisher: string;
   dark: boolean;
+  logo: ThemeLogoKind;
+  /** Authentic palette: [background, foreground, accent, syntaxA, syntaxB] */
+  palette: [string, string, string, string, string];
 }
 
 export const IDE_THEMES: IdeTheme[] = [
-  { id: "porto-dark", name: "Porto Dark", publisher: "Joseph Fonseca", dark: true },
-  { id: "porto-light", name: "Porto Light", publisher: "Joseph Fonseca", dark: false },
-  { id: "dracula", name: "Dracula", publisher: "Dracula Theme", dark: true },
-  { id: "nord", name: "Nord", publisher: "Arctic Ice Studio", dark: true },
-  { id: "one-dark", name: "One Dark", publisher: "Binaryify", dark: true },
+  {
+    id: "porto-dark",
+    name: "Porto Dark",
+    publisher: "Joseph Fonseca",
+    dark: true,
+    logo: "porto-dark",
+    palette: ["#1c1c1c", "#aed9e0", "#b8f2e6", "#7ee787", "#7aa2f7"],
+  },
+  {
+    id: "porto-light",
+    name: "Porto Light",
+    publisher: "Joseph Fonseca",
+    dark: false,
+    logo: "porto-light",
+    palette: ["#fafafa", "#5e6472", "#5e6472", "#0a7a42", "#0f6fde"],
+  },
+  {
+    id: "dracula",
+    name: "Dracula",
+    publisher: "Dracula Theme",
+    dark: true,
+    logo: "dracula",
+    palette: ["#282a36", "#f8f8f2", "#bd93f9", "#ff79c6", "#50fa7b"],
+  },
+  {
+    id: "nord",
+    name: "Nord",
+    publisher: "Arctic Ice Studio",
+    dark: true,
+    logo: "nord",
+    palette: ["#2e3440", "#d8dee9", "#88c0d0", "#a3be8c", "#b48ead"],
+  },
+  {
+    id: "one-dark",
+    name: "One Dark",
+    publisher: "Binaryify",
+    dark: true,
+    logo: "one-dark",
+    palette: ["#282c34", "#abb2bf", "#61afef", "#98c379", "#c678dd"],
+  },
 ];
 
 export const DEFAULT_THEME = "porto-dark";

@@ -3,6 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { IDE_FILES } from "@/lib/files";
 import { THEME_IDS } from "@/lib/themes";
+import { trackEvent } from "@/lib/analytics";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import {
@@ -105,6 +106,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     const out: TermLine[] = [{ type: "in", text: `${prompt} ${cmd}` }];
     const [name, ...args] = cmd.split(/\s+/);
     const c = name.toLowerCase();
+    trackEvent("terminal_command", { cmd: c });
 
     const go = (route: string) => {
       // next-intl router localizes automatically — never pre-prefix.

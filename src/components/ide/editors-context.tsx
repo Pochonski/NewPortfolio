@@ -13,6 +13,7 @@ import { useLocale } from "next-intl";
 import { IDE_FILES, fileForRoute } from "@/lib/files";
 import { DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
 import { pushRecent } from "@/lib/recents";
+import { trackEvent } from "@/lib/analytics";
 import {
   seedSource,
   sourceKey,
@@ -224,6 +225,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       openFile: (fileId: string, toSide = false) => {
         if (!IDE_FILES.some((f) => f.id === fileId)) return;
         pushRecent(fileId);
+        trackEvent("file_open", { file: fileId });
         const target: GroupId = toSide ? (lastActive === "left" ? "right" : "left") : lastActive;
         setLastActive(target);
         setState((s) => {

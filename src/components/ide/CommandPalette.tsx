@@ -8,6 +8,7 @@ import { readRecents } from "@/lib/recents";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { FileIcon } from "./FileIcon";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 interface Item {
   key: string;
@@ -34,6 +35,8 @@ export function CommandPalette({
   const [themeMode, setThemeMode] = useState(false);
   const [sidePicker, setSidePicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(boxRef, open);
 
   const items: Item[] = useMemo(() => {
     const nav: Item[] = IDE_FILES.map((f) => ({
@@ -169,6 +172,7 @@ export function CommandPalette({
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-24" role="dialog" aria-modal="true" aria-label="Command Palette">
       <div className="absolute inset-0 bg-black/55" onClick={onClose} />
       <div
+        ref={boxRef}
         className="relative w-full max-w-xl overflow-hidden rounded-lg border shadow-2xl"
         style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
       >

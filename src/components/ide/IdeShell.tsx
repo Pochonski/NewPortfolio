@@ -11,6 +11,7 @@ import { BottomPanel, type PanelTab } from "./BottomPanel";
 import { CommandPalette } from "./CommandPalette";
 import { EditorsProvider } from "./editors-context";
 import { logOutput } from "@/lib/output-log";
+import { trackEvent } from "@/lib/analytics";
 import { IDE_THEMES, DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
 
 const PANEL_STORE_KEY = "porto-panel";
@@ -52,6 +53,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
       const id = (e as CustomEvent).detail as string;
       setTheme(id);
       logOutput(`Theme set to ${id}`);
+      trackEvent("theme_change", { theme: id });
     };
     const onLog = (e: Event) => {
       const message = (e as CustomEvent).detail?.message;

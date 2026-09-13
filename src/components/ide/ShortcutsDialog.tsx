@@ -3,10 +3,12 @@
 import { useEffect, useRef } from "react";
 import { Keyboard, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
   const t = useTranslations("shortcuts");
   const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {

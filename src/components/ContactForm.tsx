@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { trackEvent } from "@/lib/analytics";
 
 export function ContactForm() {
   const t = useTranslations("contact.form");
@@ -21,6 +22,7 @@ export function ContactForm() {
       if (!res.ok) throw new Error("send failed");
       setState("ok");
       setForm({ name: "", email: "", message: "" });
+      trackEvent("contact_sent");
       window.dispatchEvent(
         new CustomEvent("porto-log", { detail: { message: `Contact message sent from ${form.email}` } })
       );
