@@ -1,26 +1,251 @@
 @import "tailwindcss";
 
+@theme {
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ============ IDE semantic tokens (default: porto-dark) ============ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ide-bg: #1c1c1c;
+  --ide-titlebar: #161616;
+  --ide-sidebar: #1c1c1c;
+  --ide-sidebar-active: #b8f2e6;
+  --ide-explorer: #161616;
+  --ide-explorer-hover: #242424;
+  --ide-editor: #1c1c1c;
+  --ide-tabs: #161616;
+  --ide-tab-active: #1c1c1c;
+  --ide-tab-border: #2d2d2d;
+  --ide-statusbar: #161616;
+  --ide-fg: #aed9e0;
+  --ide-fg-bright: #b8f2e6;
+  --ide-fg-dim: rgba(174, 217, 224, 0.55);
+  --ide-accent: #b8f2e6;
+  --ide-accent-rgb: 184, 242, 230;
+  --ide-border: #2d2d2d;
+  --ide-button: #b8f2e6;
+  --ide-button-fg: #1c1c1c;
+  --ide-terminal: #161616;
+  --ide-error: #f97583;
+  --ide-warn: #e6b450;
+  --ide-success: #7ee787;
+  /* Shiki css-variables theme tokens (code follows the IDE theme) */
+  --shiki-foreground: #aed9e0;
+  --shiki-background: transparent;
+  --shiki-token-constant: #e6b450;
+  --shiki-token-string: #7ee787;
+  --shiki-token-comment: rgba(174, 217, 224, 0.45);
+  --shiki-token-keyword: #b8f2e6;
+  --shiki-token-parameter: #aed9e0;
+  --shiki-token-function: #7aa2f7;
+  --shiki-token-string-expression: #7ee787;
+  --shiki-token-punctuation: rgba(174, 217, 224, 0.6);
+  --shiki-token-link: #b8f2e6;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Porto light */
+[data-theme="porto-light"] {
+  --ide-bg: #fafafa;
+  --ide-titlebar: #eceff1;
+  --ide-sidebar: #eceff1;
+  --ide-sidebar-active: #5e6472;
+  --ide-explorer: #eceff1;
+  --ide-explorer-hover: #dde3e6;
+  --ide-editor: #fafafa;
+  --ide-tabs: #eceff1;
+  --ide-tab-active: #fafafa;
+  --ide-tab-border: #d3d9dd;
+  --ide-statusbar: #eceff1;
+  --ide-fg: #5e6472;
+  --ide-fg-bright: #37414f;
+  --ide-fg-dim: rgba(94, 100, 114, 0.6);
+  --ide-accent: #5e6472;
+  --ide-accent-rgb: 94, 100, 114;
+  --ide-border: #d3d9dd;
+  --ide-button: #5e6472;
+  --ide-button-fg: #fafafa;
+  --ide-terminal: #eceff1;
+  --shiki-foreground: #5e6472;
+  --shiki-background: transparent;
+  --shiki-token-constant: #b35c00;
+  --shiki-token-string: #0a7a42;
+  --shiki-token-comment: #9aa3b2;
+  --shiki-token-keyword: #0f6fde;
+  --shiki-token-parameter: #5e6472;
+  --shiki-token-function: #0f6fde;
+  --shiki-token-string-expression: #0a7a42;
+  --shiki-token-punctuation: #9aa3b2;
+  --shiki-token-link: #0f6fde;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dracula (inspired, own values) */
+[data-theme="dracula"] {
+  --ide-bg: #282a36;
+  --ide-titlebar: #1e1f29;
+  --ide-sidebar: #282a36;
+  --ide-sidebar-active: #bd93f9;
+  --ide-explorer: #21222c;
+  --ide-explorer-hover: #343746;
+  --ide-editor: #282a36;
+  --ide-tabs: #191a21;
+  --ide-tab-active: #282a36;
+  --ide-tab-border: #191a21;
+  --ide-statusbar: #191a21;
+  --ide-fg: #f8f8f2;
+  --ide-fg-bright: #ffffff;
+  --ide-fg-dim: rgba(248, 248, 242, 0.55);
+  --ide-accent: #bd93f9;
+  --ide-accent-rgb: 189, 147, 249;
+  --ide-border: #44475a;
+  --ide-button: #44475a;
+  --ide-button-fg: #f8f8f2;
+  --ide-terminal: #21222c;
+  --shiki-foreground: #f8f8f2;
+  --shiki-background: transparent;
+  --shiki-token-constant: #bd93f9;
+  --shiki-token-string: #f1fa8c;
+  --shiki-token-comment: #6272a4;
+  --shiki-token-keyword: #ff79c6;
+  --shiki-token-parameter: #f8f8f2;
+  --shiki-token-function: #50fa7b;
+  --shiki-token-string-expression: #f1fa8c;
+  --shiki-token-punctuation: #8a8fa8;
+  --shiki-token-link: #8be9fd;
+}
+
+/* Nord (inspired, own values) */
+[data-theme="nord"] {
+  --ide-bg: #2e3440;
+  --ide-titlebar: #242933;
+  --ide-sidebar: #2e3440;
+  --ide-sidebar-active: #88c0d0;
+  --ide-explorer: #2e3440;
+  --ide-explorer-hover: #434c5e;
+  --ide-editor: #2e3440;
+  --ide-tabs: #242933;
+  --ide-tab-active: #3b4252;
+  --ide-tab-border: transparent;
+  --ide-statusbar: #3b4252;
+  --ide-fg: #d8dee9;
+  --ide-fg-bright: #eceff4;
+  --ide-fg-dim: rgba(216, 222, 233, 0.55);
+  --ide-accent: #88c0d0;
+  --ide-accent-rgb: 136, 192, 208;
+  --ide-border: #434c5e;
+  --ide-button: #434c5e;
+  --ide-button-fg: #eceff4;
+  --ide-terminal: #242933;
+  --shiki-foreground: #d8dee9;
+  --shiki-background: transparent;
+  --shiki-token-constant: #b48ead;
+  --shiki-token-string: #a3be8c;
+  --shiki-token-comment: #616e88;
+  --shiki-token-keyword: #81a1c1;
+  --shiki-token-parameter: #d8dee9;
+  --shiki-token-function: #88c0d0;
+  --shiki-token-string-expression: #a3be8c;
+  --shiki-token-punctuation: #6b7a99;
+  --shiki-token-link: #88c0d0;
+}
+
+/* One Dark (inspired, own values) */
+[data-theme="one-dark"] {
+  --ide-bg: #282c34;
+  --ide-titlebar: #21252b;
+  --ide-sidebar: #282c34;
+  --ide-sidebar-active: #61afef;
+  --ide-explorer: #21252b;
+  --ide-explorer-hover: #2c313a;
+  --ide-editor: #282c34;
+  --ide-tabs: #21252b;
+  --ide-tab-active: #282c34;
+  --ide-tab-border: #181a1f;
+  --ide-statusbar: #21252b;
+  --ide-fg: #abb2bf;
+  --ide-fg-bright: #ffffff;
+  --ide-fg-dim: rgba(171, 178, 191, 0.55);
+  --ide-accent: #61afef;
+  --ide-accent-rgb: 97, 175, 239;
+  --ide-border: #3e4451;
+  --ide-button: #61afef;
+  --ide-button-fg: #282c34;
+  --ide-terminal: #21252b;
+  --shiki-foreground: #abb2bf;
+  --shiki-background: transparent;
+  --shiki-token-constant: #d19a66;
+  --shiki-token-string: #98c379;
+  --shiki-token-comment: #5c6370;
+  --shiki-token-keyword: #c678dd;
+  --shiki-token-parameter: #abb2bf;
+  --shiki-token-function: #61afef;
+  --shiki-token-string-expression: #98c379;
+  --shiki-token-punctuation: #7f848e;
+  --shiki-token-link: #56b6c2;
+}
+
+html {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ide-bg);
+  color: var(--ide-fg);
+  font-family: var(--font-sans);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+::selection {
+  background: rgba(var(--ide-accent-rgb), 0.35);
+}
+
+/* Scrollbars IDE */
+.ide-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.ide-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ide-scroll::-webkit-scrollbar-thumb {
+  background: var(--ide-border);
+  border-radius: 8px;
+  border: 2px solid var(--ide-bg);
+}
+
+/* Shiki code pane: transparent bg (pane provides it) + line numbers */
+.codepane pre.shiki {
+  background: transparent !important;
+  margin: 0;
+}
+.codepane pre.shiki code {
+  counter-reset: step;
+  display: block;
+}
+.codepane pre.shiki .line {
+  display: block;
+  padding-left: 0.5rem;
+}
+.codepane pre.shiki .line::before {
+  counter-increment: step;
+  content: counter(step);
+  display: inline-block;
+  width: 2rem;
+  margin-right: 1rem;
+  padding-right: 0.6rem;
+  border-right: 1px solid var(--ide-border);
+  text-align: right;
+  color: var(--ide-fg-dim);
+  opacity: 0.6;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

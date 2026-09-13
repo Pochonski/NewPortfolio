@@ -1,0 +1,203 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "experience": "Experiencia",
+    "studies": "Estudios",
+    "projects": "Proyectos",
+    "about": "Sobre mí",
+    "skills": "Habilidades",
+    "contact": "Contacto",
+    "portfolio": "Portafolio",
+    "viewCaseStudy": "Ver caso de estudio"
+  },
+  "hero": {
+    "greeting": "¡Hola! Soy",
+    "role": "Ingeniero de Software — Full-Stack React, Next.js & Supabase",
+    "viewResume": "Ver CV",
+    "getInTouch": "Contáctame",
+    "location": "Costa Rica · Remoto"
+  },
+  "experience": {
+    "title": "Experiencia",
+    "items": [
+      {
+        "title": "Desarrollador Full Stack",
+        "company": "ScoreHub (Proyecto Personal)",
+        "link": "https://scorehub-pocho.vercel.app",
+        "period": "2026 - Presente",
+        "location": "Costa Rica",
+        "type": "Proyecto Personal",
+        "points": [
+          "Asistente multi-competición de fútbol con bot de Telegram, dashboard React y admin sobre Supabase PostgreSQL.",
+          "ETL con cron y 20 jobs programados sincronizando datos en vivo de 365scores.",
+          "Lector OCR de tickets con Tesseract.js y NLU con Gemini 2.5 Flash."
+        ]
+      },
+      {
+        "title": "Líder de Equipo & Full Stack",
+        "company": "StickerHub (Proyecto Universitario)",
+        "link": "https://stickerhubs.vercel.app/",
+        "period": "May 2026 - Jun 2026",
+        "location": "Costa Rica",
+        "type": "Equipo de 2",
+        "points": [
+          "Álbum Panini digital del Mundial 2026 con Next.js 16, TypeScript y Supabase.",
+          "Flipbook interactivo, apertura animada de sobres y marketplace con ejecución en tiempo real.",
+          "Economía de monedas, magic-link auth y CI/CD con GitHub + Vercel."
+        ]
+      },
+      {
+        "title": "Desarrollador Full Stack",
+        "company": "Perfumes El Pocho (Negocio propio)",
+        "link": "https://perfumes-el-pocho.vercel.app/",
+        "period": "Ene 2026 - Feb 2026",
+        "location": "Costa Rica",
+        "type": "E-commerce real",
+        "points": [
+          "E-commerce en producción con catálogo de +4.000 fragancias y pedidos por WhatsApp.",
+          "Scraper en Python para indexar precios, descripciones e imágenes.",
+          "Logística y entregas a nivel nacional."
+        ]
+      },
+      {
+        "title": "Customer Service Representative",
+        "company": "SECSA",
+        "link": "https://secsacr.net/",
+        "period": "Feb 2023 – Jun 2025",
+        "location": "Orotina, Costa Rica",
+        "type": "Remoto",
+        "points": [
+          "Soporte al cliente por teléfono y mensajería.",
+          "Mejora de usabilidad en interfaces internas."
+        ]
+      }
+    ]
+  },
+  "studies": {
+    "title": "Estudios",
+    "items": [
+      {
+        "degree": "Ingeniería en Computadores",
+        "institution": "Tecnológico de Costa Rica (TEC)",
+        "link": "https://www.tec.ac.cr/",
+        "period": "2023 - Presente",
+        "location": "Costa Rica",
+        "points": [
+          "Bachillerato en curso, foco en software, algoritmos y estructuras de datos."
+        ]
+      },
+      {
+        "degree": "Azure Cloud Support Specialist",
+        "institution": "Teknowledge",
+        "link": "https://www.tek-experts.com/",
+        "period": "Ago 2025 - Nov 2025",
+        "location": "Costa Rica",
+        "points": [
+          "Infraestructura Azure, redes, VMs y soporte profesional."
+        ]
+      }
+    ]
+  },
+  "projects": {
+    "title": "Proyectos",
+    "subtitle": "Cuatro proyectos principales que uso y mantengo, más un archivo compacto.",
+    "viewMore": "Ver más en GitHub",
+    "viewLive": "Ver en vivo",
+    "caseStudy": "Caso de estudio",
+    "archiveTitle": "Archivo",
+    "featured": [
+      {
+        "slug": "scorehub",
+        "title": "ScoreHub",
+        "description": "Asistente de fútbol multi-competición: bot de Telegram con español natural (Gemini 2.5 Flash), OCR de tickets (Tesseract.js) y dashboard React con live scores y brackets sobre Supabase.",
+        "tags": ["Next.js", "React", "Supabase", "Telegram API", "Gemini", "Tesseract.js"],
+        "link": "https://scorehub-pocho.vercel.app",
+        "github": "https://github.com/Pochonski/ScoreHub"
+      },
+      {
+        "slug": "stickerhub",
+        "title": "StickerHub",
+        "description": "Álbum Panini digital del Mundial 2026: flipbook interactivo, apertura animada de sobres, marketplace en tiempo real y economía de monedas. 871 jugadores, 48 equipos.",
+        "tags": ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Tailwind"],
+        "link": "https://stickerhubs.vercel.app/",
+        "github": "https://github.com/Pochonski/stickerhub"
+      },
+      {
+        "slug": "perfumes-el-pocho",
+        "title": "Perfumes El Pocho",
+        "description": "E-commerce real con el que vendo perfumes: +4.000 fragancias, scraper Python, diseño responsivo y pedidos por WhatsApp con entrega nacional.",
+        "tags": ["Next.js", "React", "Tailwind", "Python", "WhatsApp API"],
+        "link": "https://perfumes-el-pocho.vercel.app/",
+        "github": "https://github.com/Pochonski/PerfumesElPocho"
+      },
+      {
+        "slug": "prestamos-mi-principe",
+        "title": "Préstamos Mi Príncipe",
+        "description": "Gestión de cobros para Costa Rica: modelo solo-intereses + abonos, multi-tenant con RLS, reportes visuales, CSV y backup JSON.",
+        "tags": ["React", "Vite", "Supabase", "Tailwind", "TanStack Query"],
+        "link": "https://prestamos-mi-principe.vercel.app",
+        "github": "https://github.com/Pochonski/PrestamosMiPrincipe"
+      }
+    ],
+    "archive": [
+      {
+        "title": "FetchCPU-Pocho",
+        "description": "Simulador de CPU Fetch/Decode/Execute sin dependencias, con breakpoints y modos de direccionamiento.",
+        "tags": ["JavaScript", "Vite", "Vitest"],
+        "link": "https://fetchcpu-pocho.vercel.app",
+        "github": "https://github.com/Pochonski/fetchcpu-pocho"
+      },
+      {
+        "title": "TuImpostor",
+        "description": "Juego web de deducción social con estado tipo Redux y arquitectura de componentes.",
+        "tags": ["JavaScript", "Vite", "Capacitor"],
+        "link": "https://tu-impostor.vercel.app/",
+        "github": "https://github.com/Pochonski/TuImpostor"
+      }
+    ]
+  },
+  "about": {
+    "title": "Sobre mí",
+    "p1": "Soy estudiante de Ingeniería en Computadores y construyo productos web que la gente usa de verdad: e-commerce, dashboards en tiempo real y bots.",
+    "p2": "Me especializo en React/Next.js + Supabase + despliegues en Vercel con CI/CD. Aprendo rápido y documento lo que construyo."
+  },
+  "skills": {
+    "title": "Habilidades",
+    "subtitle": "Nivel honesto por años de uso real, no porcentajes inflados.",
+    "frontend": "Frontend",
+    "backend": "Backend",
+    "tools": "Herramientas",
+    "years": "años"
+  },
+  "contact": {
+    "title": "Contáctame",
+    "connect": "Conectemos",
+    "connectDesc": "¿Tienes un proyecto o una vacante? Escríbeme, respondo en <24h.",
+    "form": {
+      "name": "Nombre",
+      "email": "Correo",
+      "message": "Mensaje",
+      "namePlaceholder": "Tu nombre",
+      "emailPlaceholder": "tu@correo.com",
+      "messagePlaceholder": "Cuéntame del proyecto…",
+      "send": "Enviar mensaje",
+      "sending": "Enviando…",
+      "success": "¡Mensaje enviado! Te respondo pronto.",
+      "error": "No se pudo enviar. Inténtalo más tarde.",
+      "spamBlocked": "Bloqueado por seguridad. Inténtalo de nuevo."
+    }
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "backToTop": "Volver arriba"
+  },
+  "caseStudy": {
+    "back": "Volver a proyectos",
+    "stack": "Stack",
+    "live": "Demo en vivo",
+    "code": "Código",
+    "challenge": "Reto",
+    "solution": "Solución",
+    "results": "Resultados"
+  }
+}
