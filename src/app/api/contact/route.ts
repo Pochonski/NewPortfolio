@@ -11,6 +11,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    const bodyLocale = body?.locale === "en" ? "en" : "es";
     const parsed = contactSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid" }, { status: 400 });
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       from,
       to,
       replyTo: email,
-      subject: `Portfolio — mensaje de ${name}`,
+      subject: bodyLocale === "en" ? `Portfolio — message from ${name}` : `Portfolio — mensaje de ${name}`,
       text: `De: ${name} <${email}>\n\n${message}`,
     });
     if (error) {

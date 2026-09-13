@@ -14,6 +14,7 @@ import {
   Github,
 } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 export type SidebarView = "files" | "search";
 
@@ -22,17 +23,18 @@ export function setSidebarView(view: SidebarView) {
 }
 
 const TOP = [
-  { Icon: Files, route: "/", label: "Explorer / Home" },
-  { Icon: User, route: "/about", label: "About" },
-  { Icon: Briefcase, route: "/experience", label: "Experience" },
-  { Icon: GraduationCap, route: "/studies", label: "Studies" },
-  { Icon: FolderGit2, route: "/projects", label: "Projects" },
-  { Icon: Star, route: "/skills", label: "Skills" },
-  { Icon: Github, route: "/github", label: "GitHub" },
-  { Icon: Mail, route: "/contact", label: "Contact" },
-];
+  { Icon: Files, route: "/", key: "home" },
+  { Icon: User, route: "/about", key: "about" },
+  { Icon: Briefcase, route: "/experience", key: "experience" },
+  { Icon: GraduationCap, route: "/studies", key: "studies" },
+  { Icon: FolderGit2, route: "/projects", key: "projects" },
+  { Icon: Star, route: "/skills", key: "skills" },
+  { Icon: Github, route: "/github", key: "github" },
+  { Icon: Mail, route: "/contact", key: "contact" },
+] as const;
 
 export function ActivityBar() {
+  const t = useTranslations("ide.activity");
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
   const [view, setView] = useState<SidebarView>("files");
@@ -48,13 +50,14 @@ export function ActivityBar() {
 
   return (
     <aside
-      aria-label="Activity Bar"
+      aria-label={t("bar")}
       className="flex w-11 shrink-0 flex-col items-center justify-between border-r py-2 max-md:fixed max-md:inset-x-0 max-md:bottom-6 max-md:z-30 max-md:mx-3 max-md:w-auto max-md:flex-row max-md:rounded-xl max-md:border max-md:py-1.5 max-md:px-2"
       style={{ background: "var(--ide-sidebar)", borderColor: "var(--ide-border)" }}
     >
       <div className="flex flex-col items-center gap-0.5 max-md:flex-row max-md:gap-1">
-        {TOP.map(({ Icon, route, label }) => {
+        {TOP.map(({ Icon, route, key }) => {
           const active = clean === route;
+          const label = t(key);
           return (
             <Link
               key={route}
@@ -77,8 +80,8 @@ export function ActivityBar() {
         })}
         <button
           onClick={() => setSidebarView("search")}
-          title="Search (Ctrl+Shift+F)"
-          aria-label="Search"
+          title={t("searchHint")}
+          aria-label={t("search")}
           className="relative rounded-md p-2 transition-opacity"
           style={{ opacity: view === "search" ? 1 : 0.55 }}
         >
@@ -92,8 +95,8 @@ export function ActivityBar() {
       </div>
       <Link
         href="/settings"
-        title="Settings"
-        aria-label="Settings"
+        title={t("settings")}
+        aria-label={t("settings")}
         aria-current={clean === "/settings" ? "page" : undefined}
         className="rounded-md p-2 max-md:hidden"
         style={{ opacity: clean === "/settings" ? 1 : 0.55 }}

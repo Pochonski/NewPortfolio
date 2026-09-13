@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { fileForRoute } from "@/lib/files";
 import { clearTermLines } from "@/lib/terminal-store";
 import { ShortcutsDialog } from "./ShortcutsDialog";
@@ -33,6 +34,7 @@ function openPanel(tab: "problems" | "output" | "terminal") {
 
 // Arch Linux custom titlebar: app icon + menubar | command center | layout + window controls.
 export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onTerminal: () => void }) {
+  const t = useTranslations("ide.titlebar");
   const pathname = usePathname();
   const router = useRouter();
   const file = fileForRoute(pathname);
@@ -97,62 +99,62 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
   const menus: { id: string; label: string; items: MenuItemDef[] }[] = [
     {
       id: "File",
-      label: "File",
+      label: t("file"),
       items: [
-        { label: "Download CV", action: () => window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener") },
+        { label: t("downloadCv"), action: () => window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener") },
         { label: "", separator: true },
-        { label: "New Window", disabled: true },
-        { label: "Open File…", disabled: true },
-        { label: "Save", hint: "Ctrl+S", disabled: true },
+        { label: t("newWindow"), disabled: true },
+        { label: t("openFile"), disabled: true },
+        { label: t("save"), hint: "Ctrl+S", disabled: true },
         { label: "", separator: true },
-        { label: "Exit", disabled: true },
+        { label: t("exit"), disabled: true },
       ],
     },
     {
       id: "Edit",
-      label: "Edit",
+      label: t("edit"),
       items: [
-        { label: "Undo", hint: "Ctrl+Z", disabled: true },
-        { label: "Redo", hint: "Ctrl+Y", disabled: true },
+        { label: t("undo"), hint: "Ctrl+Z", disabled: true },
+        { label: t("redo"), hint: "Ctrl+Y", disabled: true },
         { label: "", separator: true },
-        { label: "Cut", hint: "Ctrl+X", disabled: true },
-        { label: "Copy", hint: "Ctrl+C", disabled: true },
-        { label: "Paste", hint: "Ctrl+V", disabled: true },
+        { label: t("cut"), hint: "Ctrl+X", disabled: true },
+        { label: t("copy"), hint: "Ctrl+C", disabled: true },
+        { label: t("paste"), hint: "Ctrl+V", disabled: true },
         { label: "", separator: true },
-        { label: "Find in Files…", hint: "Ctrl+K", action: onPalette },
+        { label: t("findInFiles"), hint: "Ctrl+K", action: onPalette },
       ],
     },
     {
       id: "Selection",
-      label: "Selection",
+      label: t("selection"),
       items: [
         {
-          label: "Select All",
+          label: t("selectAll"),
           hint: "Ctrl+A",
           action: () => document.getSelection()?.selectAllChildren(document.body),
         },
-        { label: "Expand Selection", disabled: true },
-        { label: "Shrink Selection", disabled: true },
+        { label: t("expandSelection"), disabled: true },
+        { label: t("shrinkSelection"), disabled: true },
       ],
     },
     {
       id: "View",
-      label: "View",
+      label: t("view"),
       items: [
-        { label: "Command Palette…", hint: "Ctrl+K", action: onPalette },
-        { label: "Terminal", hint: "Ctrl+`", action: onTerminal },
-        { label: "Split Editor", hint: "Ctrl+\\", action: toggleSplit },
+        { label: t("commandPalette"), hint: "Ctrl+K", action: onPalette },
+        { label: t("terminal"), hint: "Ctrl+`", action: onTerminal },
+        { label: t("splitEditor"), hint: "Ctrl+\\", action: toggleSplit },
         { label: "", separator: true },
-        { label: "Explorer", action: toggleExplorer },
-        { label: "Full Screen", hint: "F11", checked: isFs, action: toggleFs },
+        { label: t("explorer"), action: toggleExplorer },
+        { label: t("fullScreen"), hint: "F11", checked: isFs, action: toggleFs },
       ],
     },
     {
       id: "Go",
-      label: "Go",
+      label: t("go"),
       items: [
-        { label: "Back", hint: "Alt+←", action: () => router.back() },
-        { label: "Forward", hint: "Alt+→", action: () => router.forward() },
+        { label: t("back"), hint: "Alt+←", action: () => router.back() },
+        { label: t("forward"), hint: "Alt+→", action: () => router.forward() },
         { label: "", separator: true },
         { label: "home.tsx", action: () => router.push("/" as const) },
         { label: "about.md", action: () => router.push("/about" as const) },
@@ -163,39 +165,39 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
     },
     {
       id: "Run",
-      label: "Run",
+      label: t("run"),
       items: [
-        { label: "Reload Window", action: () => window.location.reload() },
+        { label: t("reloadWindow"), action: () => window.location.reload() },
         { label: "", separator: true },
-        { label: "Start Debugging", hint: "F5", disabled: true },
-        { label: "Run Without Debugging", hint: "Ctrl+F5", disabled: true },
+        { label: t("startDebugging"), hint: "F5", disabled: true },
+        { label: t("runWithoutDebugging"), hint: "Ctrl+F5", disabled: true },
       ],
     },
     {
       id: "Terminal",
-      label: "Terminal",
+      label: t("terminal"),
       items: [
         {
-          label: "New Terminal",
+          label: t("newTerminal"),
           action: () => {
             clearTermLines();
             openPanel("terminal");
           },
         },
-        { label: "Clear", action: () => clearTermLines() },
+        { label: t("clear"), action: () => clearTermLines() },
         { label: "", separator: true },
-        { label: "Toggle Terminal", hint: "Ctrl+`", action: onTerminal },
+        { label: t("toggleTerminal"), hint: "Ctrl+`", action: onTerminal },
       ],
     },
     {
       id: "Help",
-      label: "Help",
+      label: t("help"),
       items: [
-        { label: "About Joseph", action: () => router.push("/about" as const) },
-        { label: "Keyboard Shortcuts", action: () => setShortcutsOpen(true) },
+        { label: t("about"), action: () => router.push("/about" as const) },
+        { label: t("shortcuts"), action: () => setShortcutsOpen(true) },
         { label: "", separator: true },
         {
-          label: "Report Issue",
+          label: t("reportIssue"),
           action: () => window.open("https://github.com/Pochonski/NewPortfolio/issues/new", "_blank", "noopener"),
         },
       ],
@@ -225,14 +227,14 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
       {/* Left: app icon + menubar */}
       <Link
         href="/"
-        aria-label="Home"
-        title="Portfolio — Home"
+        aria-label={t("home")}
+        title={t("portfolioHome")}
         className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-[11px] font-bold"
         style={{ background: "var(--ide-accent)", color: "var(--ide-button-fg)" }}
       >
         JF
       </Link>
-      <div ref={menubarRef} role="menubar" aria-label="Application menu" data-menubar className="hidden items-center md:flex">
+      <div ref={menubarRef} role="menubar" aria-label={t("appMenu")} data-menubar className="hidden items-center md:flex">
         {menus.map((m) => (
           <div key={m.id} className="relative">
             <button
@@ -330,12 +332,12 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
       {/* Center: command center (desktop) / title (mobile) */}
       <button
         onClick={onPalette}
-        title="Command Palette (Ctrl+K)"
+        title={t("commandPalette")}
         className="mx-auto hidden w-full max-w-md items-center gap-2 rounded-md border px-3 py-1 font-mono text-[11px] md:flex"
         style={{ borderColor: "var(--ide-border)", background: "var(--ide-bg)", color: "var(--ide-fg-dim)" }}
       >
         <Search size={12} />
-        <span className="flex-1 truncate text-center">Search files or commands</span>
+        <span className="flex-1 truncate text-center">{t("commandCenter")}</span>
         <kbd className="text-[10px]">Ctrl+K</kbd>
       </button>
       <p className="flex-1 truncate text-center font-mono md:hidden" aria-live="polite">
@@ -344,32 +346,32 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
 
       {/* Right: layout controls + settings + window (Arch: right side) */}
       <div className="hidden items-center gap-0.5 md:flex" style={{ color: "var(--ide-fg-dim)" }}>
-        <button onClick={toggleExplorer} title="Toggle Explorer" aria-label="Toggle Explorer" className="rounded p-1.5 hover:opacity-100">
+        <button onClick={toggleExplorer} title={t("toggleExplorer")} aria-label={t("toggleExplorer")} className="rounded p-1.5 hover:opacity-100">
           <PanelLeft size={14} />
         </button>
-        <button onClick={onTerminal} title="Toggle Panel (Ctrl+`)" aria-label="Toggle panel" className="rounded p-1.5 hover:opacity-100">
+        <button onClick={onTerminal} title={t("togglePanel")} aria-label={t("togglePanel")} className="rounded p-1.5 hover:opacity-100">
           <PanelBottom size={14} />
         </button>
-        <button onClick={toggleSplit} title="Toggle Split Editor (Ctrl+\)" aria-label="Toggle split editor" className="rounded p-1.5 hover:opacity-100">
+        <button onClick={toggleSplit} title={t("toggleSplit")} aria-label={t("toggleSplit")} className="rounded p-1.5 hover:opacity-100">
           <Columns2 size={14} />
         </button>
-        <Link href="/settings" title="Settings" aria-label="Settings" className="rounded p-1.5 hover:opacity-100">
+        <Link href="/settings" title={t("settings")} aria-label={t("settings")} className="rounded p-1.5 hover:opacity-100">
           <Settings size={14} />
         </Link>
         <span aria-hidden className="mx-1 h-4 w-px" style={{ background: "var(--ide-border)" }} />
-        <span title="Minimize (unavailable in browser)" aria-hidden className="cursor-default rounded p-1.5 opacity-40">
+        <span title={t("minimize")} aria-hidden className="cursor-default rounded p-1.5 opacity-40">
           <Minus size={14} />
         </span>
         <button
           onClick={toggleFs}
-          title={isFs ? "Exit full screen" : "Full screen"}
-          aria-label={isFs ? "Exit full screen" : "Full screen"}
+          title={isFs ? t("exitFullScreen") : t("fullScreenBtn")}
+          aria-label={isFs ? t("exitFullScreen") : t("fullScreenBtn")}
           aria-pressed={isFs}
           className="rounded p-1.5 hover:opacity-100"
         >
           {isFs ? <Minimize size={13} /> : <Maximize size={13} />}
         </button>
-        <span title="Close (unavailable in browser)" aria-hidden className="cursor-default rounded p-1.5 opacity-40 hover:opacity-70">
+        <span title={t("close")} aria-hidden className="cursor-default rounded p-1.5 opacity-40 hover:opacity-70">
           <X size={14} />
         </span>
       </div>

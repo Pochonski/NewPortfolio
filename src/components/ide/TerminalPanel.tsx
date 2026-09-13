@@ -5,7 +5,8 @@ import { IDE_FILES } from "@/lib/files";
 import { THEME_IDS } from "@/lib/themes";
 import { trackEvent } from "@/lib/analytics";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/routing";
 import {
   clearTermLines,
   getTermHistory,
@@ -16,15 +17,15 @@ import {
   type TermLine,
 } from "@/lib/terminal-store";
 
-const HELP = (es: boolean) => [
-  es ? "Comandos disponibles:" : "Available commands:",
+const HELP = (t: (key: string) => string) => [
+  t("available"),
   "  help / ayuda",
   "  ls · pwd · whoami · date",
-  "  open <archivo> [--side]  — ej: open projects.js --side",
-  "  go <ruta>       — ej: go /skills",
+  `  ${t("openHelp")}`,
+  `  ${t("goHelp")}`,
   "  about · skills · projects · contact · socials",
   "  neofetch · sudo · vim",
-  "  split     - Toggle code/preview split editor",
+  `  ${t("splitHelp")}`,
   "  themes · theme <id> · lang <es|en> · cv · clear",
 ];
 
@@ -57,8 +58,7 @@ const COMMANDS = [
 export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale();
-  const es = locale === "es";
+  const tt = useTranslations("terminal");
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
   const prompt = `pochonski@portfolio:~${clean === "/" ? "" : clean}$`;
 
@@ -75,7 +75,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
   useEffect(() => {
     if (getTermLines().length === 0) {
       pushTermLines([
-        { type: "out", text: es ? "Terminal interactiva — escribe “help”." : "Interactive terminal — type “help”." },
+        { type: "out", text: tt("welcome") },
         { type: "out", text: "" },
       ]);
     }
@@ -114,14 +114,14 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
       out.push({ type: "out", text: `→ ${route}` });
     };
 
-    if (c === "help" || c === "ayuda") out.push(...HELP(es).map((text) => ({ type: "out" as const, text })));
+    if (c === "help" || c === "ayuda") out.push(...HELP(tt).map((text) => ({ type: "out" as const, text })));
     else if (c === "ls") out.push({ type: "out", text: IDE_FILES.map((f) => f.filename).join("  ") });
     else if (c === "pwd") out.push({ type: "out", text: "/home/pochonski/portfolio" });
-    else if (c === "whoami") out.push({ type: "out", text: es ? "visitante — explorando el portfolio de Joseph" : "visitor — exploring Joseph's portfolio" });
+    else if (c === "whoami") out.push({ type: "out", text: tt("whoami") });
     else if (c === "date") out.push({ type: "out", text: new Date().toString() });
     else if (c === "about" || c === "socials" || c === "contact")
       out.push(
-        { type: "out", text: "Joseph Fonseca — Costa Rica · Remoto" },
+        { type: "out", text: tt("aboutLine") },
         { type: "out", text: "GitHub: github.com/Pochonski" },
         { type: "out", text: "LinkedIn: linkedin.com/in/joseph-fonseca-n" },
         { type: "out", text: "Email: joseph19102005@gmail.com" }
@@ -131,7 +131,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     else if (c === "projects") go("/projects");
     else if (c === "split") {
       window.dispatchEvent(new CustomEvent("porto-split"));
-      out.push({ type: "out", text: es ? "Split editor alternado." : "Split editor toggled." });
+      out.push({ type: "out", text: tt("splitToggled") });
     } else if (c === "cv") {
       window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener");
       out.push({ type: "out", text: "CV → /cv/Joseph-Fonseca-CV.pdf" });
@@ -145,13 +145,14 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
         } catch {}
         window.dispatchEvent(new CustomEvent("porto-theme", { detail: id }));
         out.push({ type: "out", text: `Theme → ${id}` });
-      } else out.push({ type: "err", text: es ? "Uso: theme <id>. Prueba “themes”." : "Usage: theme <id>. Try “themes”." });
+      } else out.push({ type: "err", text: tt("usageTheme") });
     } else if (c === "lang") {
       const l = args[0];
       if (l === "es" || l === "en") {
+        // SPA locale switch via next-intl (no full reload, route preserved).
         const cleanPath = window.location.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-        window.location.href = l === "es" ? cleanPath : `/${l}${cleanPath === "/" ? "" : cleanPath}`;
-      } else out.push({ type: "err", text: "Uso: lang <es|en>" });
+        router.replace(cleanPath as "/", { locale: l as Locale });
+      } else out.push({ type: "err", text: tt("usageLang") });
     } else if (c === "open") {
       const toSide = args.includes("--side");
       const target = args.find((a) => a !== "--side");
@@ -161,13 +162,13 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
           window.dispatchEvent(
             new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
           );
-          out.push({ type: "out", text: `→ ${f.filename} (to the side)` });
+          out.push({ type: "out", text: `→ ${f.filename} ${tt("openSideSuffix")}` });
         } else go(f.route);
-      } else out.push({ type: "err", text: es ? `Archivo desconocido: ${target || ""}` : `Unknown file: ${target || ""}` });
+      } else out.push({ type: "err", text: tt("unknownFile", { target: target || "" }) });
     } else if (c === "go") {
       const f = IDE_FILES.find((x) => x.route === args[0] || x.id === args[0]);
       if (f) go(f.route);
-      else out.push({ type: "err", text: es ? `Ruta desconocida: ${args[0] || ""}` : `Unknown route: ${args[0] || ""}` });
+      else out.push({ type: "err", text: tt("unknownRoute", { target: args[0] || "" }) });
     } else if (c === "echo") out.push({ type: "out", text: args.join(" ") });
     else if (c === "neofetch")
       out.push(
@@ -183,17 +184,15 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     else if (c === "sudo")
       out.push({
         type: "err",
-        text: es
-          ? "pochonski no está en el archivo sudoers. Este incidente será reportado a Joseph."
-          : "pochonski is not in the sudoers file. This incident will be reported to Joseph.",
+        text: tt("sudo"),
       });
     else if (c === "vim")
       out.push(
-        { type: "out", text: es ? "Vim. Ambicioso." : "Vim. Bold move." },
-        { type: "out", text: es ? "Escribe «:q!» para escapar." : "Type «:q!» to escape." }
+        { type: "out", text: tt("vim1") },
+        { type: "out", text: tt("vim2") }
       );
-    else if (c === ":q!") out.push({ type: "out", text: es ? "Uf. A salvo." : "Phew. Safe." });
-    else out.push({ type: "err", text: es ? `No encontrado: ${c}. Prueba “help”.` : `Not found: ${c}. Try “help”.` });
+    else if (c === ":q!") out.push({ type: "out", text: tt("phew") });
+    else out.push({ type: "err", text: tt("notFound", { cmd: c }) });
 
     print(out);
   }
@@ -298,7 +297,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
           style={{ color: "var(--ide-fg-bright)" }}
           autoComplete="off"
           spellCheck={false}
-          aria-label="Terminal input"
+          aria-label={tt("inputLabel")}
         />
       </form>
     </div>
@@ -308,13 +307,13 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
 
   return (
     <section
-      aria-label="Terminal"
+      aria-label={tt("label")}
       className="flex h-56 shrink-0 flex-col border-t"
       style={{ background: "var(--ide-terminal)", borderColor: "var(--ide-border)" }}
     >
       <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-mono" style={{ color: "var(--ide-fg-dim)" }}>
-        <span>TERMINAL — zsh</span>
-        <button onClick={onClose} aria-label="Close terminal" className="px-2 py-0.5 hover:opacity-100">
+        <span>{tt("header")}</span>
+        <button onClick={onClose} aria-label={tt("closeTerminal")} className="px-2 py-0.5 hover:opacity-100">
           ✕
         </button>
       </div>

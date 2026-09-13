@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { TerminalPanel } from "./TerminalPanel";
+import { useTranslations } from "next-intl";
 import {
   clearOutput,
   getOutputEntries,
@@ -30,6 +31,7 @@ const DEFAULT_VH = 28;
 const MAX_VH = 62;
 
 function ProblemsView() {
+  const t = useTranslations("ide.panel");
   const [, bump] = useReducer((x: number) => x + 1, 0);
   useEffect(() => subscribeTerminal(bump), []);
   const errors = getTermLines().filter((l) => l.type === "err");
@@ -43,12 +45,12 @@ function ProblemsView() {
     return (
       <div className="flex flex-1 items-center justify-center gap-2 font-mono text-xs" style={{ color: "var(--ide-fg-dim)" }}>
         <CheckCircle2 size={14} style={{ color: "var(--ide-success)" }} />
-        No problems detected in this workspace.
+        {t("noProblems")}
       </div>
     );
   }
   return (
-    <div ref={ref} role="log" aria-label="Problems" className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
+    <div ref={ref} role="log" aria-label={t("problems")} className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
       {errors.map((l, i) => (
         <div key={i} className="flex items-start gap-2 py-0.5 font-mono text-[12.5px] leading-5">
           <XCircle size={14} className="mt-0.5 shrink-0" style={{ color: "var(--ide-error)" }} />
@@ -60,6 +62,7 @@ function ProblemsView() {
 }
 
 function OutputView() {
+  const t = useTranslations("ide.panel");
   const [, bump] = useReducer((x: number) => x + 1, 0);
   useEffect(() => subscribeOutput(bump), []);
   const entries = getOutputEntries();
@@ -73,12 +76,12 @@ function OutputView() {
     return (
       <div className="flex flex-1 items-center justify-center gap-2 font-mono text-xs" style={{ color: "var(--ide-fg-dim)" }}>
         <ScrollText size={14} />
-        Output channel is idle. Interact with the portfolio to log events.
+        {t("outputIdle")}
       </div>
     );
   }
   return (
-    <div ref={ref} role="log" aria-label="Output" className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
+    <div ref={ref} role="log" aria-label={t("output")} className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
       {entries.map((e, i) => (
         <div key={i} className="py-px font-mono text-[12.5px] leading-5">
           <span style={{ color: "var(--ide-fg-dim)" }}>
@@ -110,6 +113,7 @@ export function BottomPanel({
   maximized: boolean;
   onToggleMax: () => void;
 }) {
+  const t = useTranslations("ide.panel");
   const [, bump] = useReducer((x: number) => x + 1, 0);
   useEffect(() => subscribeTerminal(bump), []);
   const problemCount = getTermLines().filter((l) => l.type === "err").length;
@@ -134,14 +138,14 @@ export function BottomPanel({
   };
 
   const tabs: { id: PanelTab; label: string; Icon: typeof SquareTerminal; badge?: number }[] = [
-    { id: "problems", label: "Problems", Icon: AlertTriangle, badge: problemCount },
-    { id: "output", label: "Output", Icon: ScrollText },
-    { id: "terminal", label: "Terminal", Icon: SquareTerminal },
+    { id: "problems", label: t("problems"), Icon: AlertTriangle, badge: problemCount },
+    { id: "output", label: t("output"), Icon: ScrollText },
+    { id: "terminal", label: t("terminal"), Icon: SquareTerminal },
   ];
 
   return (
     <section
-      aria-label="Panel"
+      aria-label={t("panel")}
       className="flex shrink-0 flex-col border-t"
       style={{
         background: "var(--ide-terminal)",
@@ -153,7 +157,7 @@ export function BottomPanel({
       <div
         role="separator"
         aria-orientation="horizontal"
-        aria-label="Resize panel"
+        aria-label={t("resize")}
         tabIndex={0}
         onPointerDown={startDrag}
         onPointerMove={onDrag}
@@ -166,14 +170,14 @@ export function BottomPanel({
           else if (e.key === "ArrowDown") onHeight(Math.max(12, cur - 2));
         }}
         className="-mb-1 z-10 flex h-[7px] cursor-row-resize items-center justify-center outline-none"
-        title="Drag to resize (double-click maximizes)"
+        title={t("resizeHint")}
       >
         <div className="h-px w-full" style={{ background: "var(--ide-border)" }} />
       </div>
 
       {/* Tab bar */}
       <div className="flex shrink-0 items-center justify-between border-b" style={{ borderColor: "var(--ide-border)" }}>
-        <div role="tablist" aria-label="Panel tabs" className="flex items-stretch">
+        <div role="tablist" aria-label={t("panelTabs")} className="flex items-stretch">
           {tabs.map(({ id, label, Icon, badge }) => {
             const active = tab === id;
             return (
@@ -205,16 +209,16 @@ export function BottomPanel({
         <div className="flex items-center gap-0.5 px-2" style={{ color: "var(--ide-fg-dim)" }}>
           <button
             onClick={clearActive}
-            title={`Clear ${tab}`}
-            aria-label={`Clear ${tab}`}
+            title={t("clearItem", { tab: t(tab) })}
+            aria-label={t("clearItem", { tab: t(tab) })}
             className="rounded p-1.5 hover:opacity-100"
           >
             <Trash2 size={13} />
           </button>
           <button
             onClick={onToggleMax}
-            title={maximized ? "Restore panel" : "Maximize panel"}
-            aria-label={maximized ? "Restore panel" : "Maximize panel"}
+            title={maximized ? t("restore") : t("maximize")}
+            aria-label={maximized ? t("restore") : t("maximize")}
             aria-pressed={maximized}
             className="rounded p-1.5 hover:opacity-100"
           >
@@ -222,8 +226,8 @@ export function BottomPanel({
           </button>
           <button
             onClick={onClose}
-            title="Close panel"
-            aria-label="Close panel"
+            title={t("closePanel")}
+            aria-label={t("closePanel")}
             className="rounded p-1.5 hover:opacity-100"
           >
             <X size={14} />

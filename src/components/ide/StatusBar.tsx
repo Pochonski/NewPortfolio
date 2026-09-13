@@ -1,7 +1,7 @@
 "use client";
 
 import { GitBranch, XCircle, AlertTriangle, Bell, TerminalSquare } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { IDE_FILES, KIND_LANGUAGE, fileForRoute } from "@/lib/files";
 import { useEditors } from "./editors-context";
@@ -20,6 +20,7 @@ export function StatusBar({
   themeName: string;
 }) {
   const locale = useLocale();
+  const t = useTranslations("ide.status");
   const { state } = useEditors();
   const pathname = usePathname();
   const [, bump] = useReducer((x: number) => x + 1, 0);
@@ -43,14 +44,14 @@ export function StatusBar({
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1 hover:opacity-100"
-          title="GitHub — main branch"
+          title={t("githubMain")}
         >
           <GitBranch size={12} /> main
         </a>
         <button
           onClick={onProblems}
-          title={errors > 0 ? `${errors} problems — open Problems` : "No problems — open Problems"}
-          aria-label="Open Problems"
+          title={errors > 0 ? t("problemsOpen", { count: errors }) : t("noProblemsOpen")}
+          aria-label={t("openProblems")}
           className="flex items-center gap-1 rounded px-1 hover:opacity-100"
         >
           <XCircle size={12} style={errors > 0 ? { color: "var(--ide-error)" } : undefined} />
@@ -66,7 +67,7 @@ export function StatusBar({
           style={{
             color: terminalActive ? "var(--ide-accent)" : "var(--ide-fg-dim)",
           }}
-          title="Toggle Terminal (Ctrl+`)"
+          title={t("toggleTerminal")}
           aria-pressed={terminalActive}
         >
           <TerminalSquare size={12} /> {terminalActive ? "▼" : "▲"}

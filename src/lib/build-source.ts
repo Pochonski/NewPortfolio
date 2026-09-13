@@ -25,7 +25,7 @@ interface MessagesDict {
     items: { title: string; company: string; period: string; location: string; type: string; points: string[] }[];
   };
   studies: {
-    items: { degree: string; institution: string; period: string; location: string; points: string[] }[];
+    items: { degree: string; institution: string; link: string; period: string; location: string; points: string[] }[];
   };
   projects: { featured: { title: string; tags: string[]; link: string }[] };
 }
@@ -51,17 +51,17 @@ export function buildFileSource(
     case "studies":
       return studiesMd(dict.studies.items);
     case "projects":
-      return projectsJs(dict.projects.featured);
+      return projectsJs(dict.projects.featured, locale);
     case "skills":
       return skillsTs([
         { key: "frontend", items: skills.frontend },
         { key: "backend", items: skills.backend },
         { key: "tools", items: skills.tools },
-      ]);
+      ], locale);
     case "github":
       return githubMd(locale);
     case "contact":
-      return contactCss();
+      return contactCss(locale);
     default:
       return settingsJson(safeTheme, locale);
   }

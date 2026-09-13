@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { IDE_FILES, fileForRoute } from "@/lib/files";
 import { FileIcon } from "./FileIcon";
@@ -27,7 +28,6 @@ import {
   type EditorTab,
   type GroupId,
 } from "./editors-context";
-import { Minimap } from "./Minimap";
 import { readRecents } from "@/lib/recents";
 import {
   fetchSource,
@@ -48,11 +48,11 @@ function fileOf(tab: EditorTab) {
 function CodeTabContent({ fileId }: { fileId: string }) {
   const locale = useLocale();
   const liveTheme = useLiveTheme();
+  const ts = useTranslations("ide.split");
   const tag = fileId === "settings" ? liveTheme : "";
   const key = sourceKey(locale, fileId, tag);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [failed, setFailed] = useState(false);
-  const paneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => subscribeSource(bump), []);
 
@@ -73,38 +73,31 @@ function CodeTabContent({ fileId }: { fileId: string }) {
 
   if (entry?.codeHtml) {
     return (
-      <div className="flex min-h-0 flex-1">
-        <div
-          ref={paneRef}
-          data-codepane={fileId}
-          className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-6 max-lg:overflow-visible"
-          dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
-        />
-        <Minimap html={entry.codeHtml} paneRef={paneRef} />
-      </div>
+      <div
+        data-codepane={fileId}
+        className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-6 max-lg:overflow-visible"
+        dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
+      />
     );
   }
   if (entry?.code) {
     return (
-      <div className="flex min-h-0 flex-1">
-        <div ref={paneRef} data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
-          <pre className="font-mono text-[12.5px] leading-6" style={{ color: "var(--ide-fg)" }}>
-            {entry.code}
-          </pre>
-        </div>
-        <Minimap text={entry.code} paneRef={paneRef} />
+      <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
+        <pre className="font-mono text-[12.5px] leading-6" style={{ color: "var(--ide-fg)" }}>
+          {entry.code}
+        </pre>
       </div>
     );
   }
   if (failed) {
     return (
       <p className="p-4 font-mono text-xs" style={{ color: "var(--ide-error)" }}>
-        Failed to load source.
+        {ts("failedLoad")}
       </p>
     );
   }
   return (
-    <div className="flex flex-1 flex-col gap-2 p-4" aria-label="Loading source">
+    <div className="flex flex-1 flex-col gap-2 p-4" aria-label={ts("loadingSource")}>
       {[90, 70, 80, 55, 75].map((w, i) => (
         <div
           key={i}
@@ -122,6 +115,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
 function BrowserBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const ts = useTranslations("ide.split");
   const [spinning, setSpinning] = useState(false);
   const [copied, setCopied] = useState(false);
   const url = `${SITE_URL}${pathname}`;
@@ -149,16 +143,16 @@ function BrowserBar() {
       className="flex shrink-0 items-center gap-1 border-b px-2 py-1.5"
       style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
     >
-      <button onClick={() => router.back()} title="Back" aria-label="Go back" className={btn}>
+      <button onClick={() => router.back()} title={ts("back")} aria-label={ts("goBack")} className={btn}>
         <ChevronLeft size={15} />
       </button>
-      <button onClick={() => router.forward()} title="Forward" aria-label="Go forward" className={btn}>
+      <button onClick={() => router.forward()} title={ts("forward")} aria-label={ts("goForward")} className={btn}>
         <ChevronRight size={15} />
       </button>
       <button
         onClick={reload}
-        title="Reload"
-        aria-label="Reload preview"
+        title={ts("reload")}
+        aria-label={ts("reloadPreview")}
         className={btn}
         style={{ color: spinning ? "var(--ide-accent)" : undefined }}
       >
@@ -166,8 +160,8 @@ function BrowserBar() {
       </button>
       <button
         onClick={copyUrl}
-        title={copied ? "Copied!" : "Copy URL"}
-        aria-label="Copy page URL"
+        title={copied ? ts("copied") : ts("copyUrl")}
+        aria-label={ts("copyPageUrl")}
         className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px]"
         style={{ borderColor: "var(--ide-border)", background: "var(--ide-bg)" }}
       >
@@ -182,8 +176,8 @@ function BrowserBar() {
       </button>
       <button
         onClick={() => window.open(url, "_blank", "noopener")}
-        title="Open in browser"
-        aria-label="Open in browser"
+        title={ts("openBrowser")}
+        aria-label={ts("openBrowser")}
         className={btn}
       >
         <ExternalLink size={13} />
@@ -196,6 +190,7 @@ function BrowserBar() {
 // Draggable sash between groups (VS Code splitter).
 // ---------------------------------------------------------------------------
 function Sash({ ratio, onRatio }: { ratio: number; onRatio: (n: number) => void }) {
+  const ts = useTranslations("ide.split");
   const ref = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const [hot, setHot] = useState(false);
@@ -216,7 +211,7 @@ function Sash({ ratio, onRatio }: { ratio: number; onRatio: (n: number) => void 
       ref={ref}
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize editor groups"
+      aria-label={ts("resizeGroups")}
       aria-valuenow={Math.round(ratio)}
       aria-valuemin={25}
       aria-valuemax={75}
@@ -259,8 +254,7 @@ function Sash({ ratio, onRatio }: { ratio: number; onRatio: (n: number) => void 
 // ---------------------------------------------------------------------------
 function WelcomeView() {
   const { openFile } = useEditors();
-  const locale = useLocale();
-  const es = locale === "es";
+  const ts = useTranslations("ide.split");
   const [recents] = useState<string[]>(() => readRecents().slice().reverse());
 
   return (
@@ -274,7 +268,7 @@ function WelcomeView() {
       </div>
       <div>
         <p className="text-base font-semibold" style={{ color: "var(--ide-fg-bright)" }}>
-          {es ? "Sin editores abiertos" : "No editors open"}
+          {ts("noEditors")}
         </p>
         <p className="mt-1 font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
           Ctrl+K · Ctrl+Shift+F · Ctrl+`
@@ -286,7 +280,7 @@ function WelcomeView() {
             className="mb-2 text-left font-mono text-[10px] tracking-wider uppercase"
             style={{ color: "var(--ide-fg-dim)" }}
           >
-            {es ? "Recientes" : "Recent"}
+            {ts("recent")}
           </p>
           {recents.slice(0, 5).map((id) => {
             const file = IDE_FILES.find((f) => f.id === id);
@@ -323,6 +317,7 @@ function GroupView({
 }) {
   const { state, setActive, closeTab, moveTabToOtherSide, toggleSplit } = useEditors();
   const pathname = usePathname();
+  const ts = useTranslations("ide.split");
   const routeFile = fileForRoute(pathname);
   const tabs = group === "left" ? state.left : (state.right ?? []);
   const activeIdx = group === "left" ? state.activeLeft : state.activeRight;
@@ -330,7 +325,7 @@ function GroupView({
 
   return (
     <section
-      aria-label={group === "left" ? "Editor group 1" : "Editor group 2"}
+      aria-label={`${ts("editorGroup")} ${group === "left" ? 1 : 2}`}
       className={`min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-lg:w-full ${
         mobileVisible ? "flex" : "hidden"
       } lg:flex`}
@@ -339,13 +334,14 @@ function GroupView({
       {/* Tab bar */}
       <div
         role="tablist"
-        aria-label={group === "left" ? "Open files, group 1" : "Open files, group 2"}
+        aria-label={group === "left" ? ts("group1") : ts("group2")}
         className="flex shrink-0 items-stretch overflow-x-auto ide-scroll"
         style={{ background: "var(--ide-tabs)" }}
       >
         {tabs.map((tab, i) => {
           const file = fileOf(tab);
           const isActive = i === Math.min(activeIdx, tabs.length - 1);
+          const tabName = tab.kind === "code" ? (file?.filename ?? ts("editor")) : ts("preview");
           return (
             <div
               key={tab.kind === "code" ? `code-${tab.fileId}` : "preview"}
@@ -353,7 +349,7 @@ function GroupView({
               aria-selected={isActive}
               onClick={() => setActive(group, i)}
               onDoubleClick={() => moveTabToOtherSide(group, i)}
-              title={tab.kind === "code" ? `${file?.filename} — double-click moves to other side` : "Preview — double-click moves to other side"}
+              title={ts("moveSide", { name: tabName })}
               className="flex shrink-0 cursor-pointer items-center gap-2 border-r px-3 py-2 font-mono text-xs whitespace-nowrap"
               style={{
                 background: isActive ? "var(--ide-tab-active)" : "transparent",
@@ -367,7 +363,7 @@ function GroupView({
               ) : (
                 <Globe size={13} style={{ color: "var(--ide-accent)" }} />
               )}
-              <span>{tab.kind === "code" ? file?.filename : "Preview"}</span>
+              <span>{tabName}</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -375,12 +371,12 @@ function GroupView({
                 }}
                 title={
                   group === "right" && tabs.length === 1
-                    ? "Close group"
+                    ? ts("closeGroup")
                     : group === "left" && tabs.length === 1
-                      ? "Close (empty group)"
-                      : "Close"
+                      ? ts("closeEmpty")
+                      : ts("closeTab")
                 }
-                aria-label={tab.kind === "code" ? `Close ${file?.filename}` : "Close preview"}
+                aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : ts("closePreview")}
                 className="rounded p-0.5 opacity-60 hover:opacity-100"
               >
                 <X size={12} />
@@ -392,8 +388,8 @@ function GroupView({
           <CopyButton group={group} />
           <button
             onClick={toggleSplit}
-            title="Toggle split editor (Ctrl+\)"
-            aria-label="Toggle split editor"
+            title={ts("toggleSplitHint")}
+            aria-label={ts("toggleSplitHint")}
             className="rounded p-1.5 max-lg:hidden"
             style={{ color: "var(--ide-fg-dim)" }}
           >
@@ -411,14 +407,14 @@ function GroupView({
         <span>portfolio</span>
         <ChevronRight size={11} aria-hidden />
         {!active ? (
-          <span style={{ color: "var(--ide-fg)" }}>Welcome</span>
+          <span style={{ color: "var(--ide-fg)" }}>{ts("welcome")}</span>
         ) : active.kind === "code" && fileOf(active) ? (
           <span style={{ color: "var(--ide-fg)" }}>{fileOf(active)?.filename}</span>
         ) : (
           <>
             <span>{routeFile.filename}</span>
             <ChevronRight size={11} aria-hidden />
-            <span style={{ color: "var(--ide-fg)" }}>Preview</span>
+            <span style={{ color: "var(--ide-fg)" }}>{ts("preview")}</span>
           </>
         )}
       </div>
@@ -443,6 +439,7 @@ function GroupView({
 function CopyButton({ group }: { group: GroupId }) {
   const { state } = useEditors();
   const locale = useLocale();
+  const ts = useTranslations("ide.split");
   const [copied, setCopied] = useState(false);
   const tabs = group === "left" ? state.left : (state.right ?? []);
   const active = tabs[group === "left" ? state.activeLeft : state.activeRight];
@@ -460,8 +457,8 @@ function CopyButton({ group }: { group: GroupId }) {
           /* clipboard unavailable */
         }
       }}
-      title="Copy code"
-      aria-label="Copy code"
+      title={ts("copyCode")}
+      aria-label={ts("copyCode")}
       className="rounded p-1.5"
       style={{ color: "var(--ide-fg-dim)" }}
     >
@@ -490,6 +487,7 @@ function matchLines(code: string, query: string): number[] {
 function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | null> }) {
   const { state, lastActive } = useEditors();
   const locale = useLocale();
+  const ts = useTranslations("ide.split");
   const liveTheme = useLiveTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -561,7 +559,7 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
   return (
     <div
       role="search"
-      aria-label="Find in file"
+      aria-label={ts("findInFile")}
       className="absolute top-2 right-2 z-20 flex items-center gap-1 rounded-md border px-2 py-1.5 shadow-xl"
       style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
     >
@@ -581,8 +579,8 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
             setOpen(false);
           }
         }}
-        placeholder="Find"
-        aria-label="Find in file"
+        placeholder={ts("find")}
+        aria-label={ts("findInFile")}
         spellCheck={false}
         autoComplete="off"
         className="w-36 bg-transparent font-mono text-xs outline-none placeholder:opacity-50"
@@ -593,7 +591,7 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
       </span>
       <button
         onClick={() => go(current - 2)}
-        aria-label="Previous match"
+        aria-label={ts("prevMatch")}
         className="rounded p-0.5"
         style={{ color: "var(--ide-fg-dim)" }}
       >
@@ -601,7 +599,7 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
       </button>
       <button
         onClick={() => go(current)}
-        aria-label="Next match"
+        aria-label={ts("nextMatch")}
         className="rounded p-0.5"
         style={{ color: "var(--ide-fg-dim)" }}
       >
@@ -612,7 +610,7 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
           clearMarks();
           setOpen(false);
         }}
-        aria-label="Close find"
+        aria-label={ts("closeFind")}
         className="rounded p-0.5"
         style={{ color: "var(--ide-fg-dim)" }}
       >
@@ -627,6 +625,7 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
 // ---------------------------------------------------------------------------
 export function SplitView({ preview }: { preview: React.ReactNode }) {
   const { state, setRatio } = useEditors();
+  const ts = useTranslations("ide.split");
   const [mobileGroup, setMobileGroup] = useState<GroupId>("right");
   const rootRef = useRef<HTMLDivElement>(null);
   // Collapse to the single group automatically — no effect needed.
@@ -635,16 +634,16 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
   const leftTab = state.left[state.activeLeft];
   const leftName =
     !leftTab
-      ? "Welcome"
+      ? ts("welcome")
       : leftTab.kind === "code"
-        ? (IDE_FILES.find((f) => f.id === leftTab.fileId)?.filename ?? "Editor")
-        : "Preview";
+        ? (IDE_FILES.find((f) => f.id === leftTab.fileId)?.filename ?? ts("editor"))
+        : ts("preview");
   const rightTab = state.right?.[state.activeRight];
   const rightName = !state.right
     ? null
     : rightTab?.kind === "code"
-      ? (IDE_FILES.find((f) => f.id === rightTab.fileId)?.filename ?? "Editor")
-      : "Preview";
+      ? (IDE_FILES.find((f) => f.id === rightTab.fileId)?.filename ?? ts("editor"))
+      : ts("preview");
 
   return (
     <div ref={rootRef} className="relative flex min-h-0 flex-1 flex-col">
@@ -652,14 +651,14 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
       {state.right && (
         <div
           role="tablist"
-          aria-label="Editor group"
+          aria-label={ts("editorGroup")}
           className="mb-3 flex shrink-0 gap-1 self-start rounded-lg border p-1 lg:hidden"
           style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
         >
           {(
             [
               { id: "left", label: leftName, Icon: Code2 },
-              { id: "right", label: rightName ?? "Preview", Icon: Eye },
+              { id: "right", label: rightName ?? ts("preview"), Icon: Eye },
             ] as const
           ).map(({ id, label, Icon }) => (
             <button

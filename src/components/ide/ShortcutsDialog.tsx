@@ -72,7 +72,7 @@ export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
           <span className="flex-1 text-sm font-semibold">{t("title")}</span>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("close")}
             className="rounded p-1"
             style={{ color: "var(--ide-fg-dim)" }}
           >

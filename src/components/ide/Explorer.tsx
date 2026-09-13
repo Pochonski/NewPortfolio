@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { IDE_FILES, IDE_FOLDERS } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 
 export function Explorer() {
+  const t = useTranslations("ide.explorer");
   const [open, setOpen] = useState(true);
   const [drawer, setDrawer] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -43,7 +45,7 @@ export function Explorer() {
               );
             }
           }}
-          title={`${f.filename} — Alt+click opens to the side`}
+          title={t("openSideHint", { file: f.filename })}
           className="flex items-center gap-2 py-[5px] pr-4 text-[13px]"
           style={{
             paddingLeft: `${12 + depth * 14}px`,
@@ -60,7 +62,7 @@ export function Explorer() {
   };
 
   const list = (
-    <div role="tree" aria-label="Portfolio files">
+    <div role="tree" aria-label={t("files")}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -72,7 +74,7 @@ export function Explorer() {
           className="transition-transform"
           style={{ transform: open ? "none" : "rotate(-90deg)" }}
         />
-        Portfolio
+        {t("portfolio")}
       </button>
       {open && (
         <ul className="pb-2">
@@ -119,12 +121,12 @@ export function Explorer() {
               color: "var(--ide-fg-dim)",
             }}
             onClick={() => setDrawer(true)}
-            aria-label="Open Explorer"
+            aria-label={t("openExplorer")}
           >
             ☰
           </button>
           <aside
-            aria-label="Explorer"
+            aria-label={t("explorer")}
             className="w-56 shrink-0 overflow-y-auto border-r max-md:hidden ide-scroll"
             style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
           >
@@ -132,12 +134,12 @@ export function Explorer() {
               className="px-4 pt-3 pb-1 text-[11px] tracking-wider uppercase"
               style={{ color: "var(--ide-fg-dim)" }}
             >
-              Explorer
+              {t("explorer")}
             </p>
             {list}
           </aside>
           {drawer && (
-            <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label="Explorer">
+            <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label={t("explorer")}>
               <div className="absolute inset-0 bg-black/50" onClick={() => setDrawer(false)} />
               <div
                 className="absolute top-0 bottom-0 left-0 w-64 overflow-y-auto border-r"
@@ -145,9 +147,9 @@ export function Explorer() {
               >
                 <div className="flex items-center justify-between px-3 py-2">
                   <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: "var(--ide-fg-dim)" }}>
-                    Explorer
+                    {t("explorer")}
                   </span>
-                  <button onClick={() => setDrawer(false)} aria-label="Close Explorer" className="px-2 py-1">
+                  <button onClick={() => setDrawer(false)} aria-label={t("closeExplorer")} className="px-2 py-1">
                     ✕
                   </button>
                 </div>

@@ -21,7 +21,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   const t = await getTranslations();
-  const src = contactCss();
+  const src = contactCss(locale);
 
   return (
     <EditorPage

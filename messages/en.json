@@ -1,14 +1,11 @@
 {
   "nav": {
-    "home": "Home",
     "experience": "Experience",
     "studies": "Studies",
     "projects": "Projects",
     "about": "About",
     "skills": "Skills",
-    "contact": "Contact",
-    "portfolio": "Portfolio",
-    "viewCaseStudy": "View case study"
+    "contact": "Contact"
   },
   "hero": {
     "greeting": "Hello! I'm",
@@ -155,15 +152,19 @@
   "about": {
     "title": "About Me",
     "p1": "I'm a Computer Engineering student building web products people actually use: e-commerce, realtime dashboards and bots.",
-    "p2": "I specialize in React/Next.js + Supabase + Vercel CI/CD. Fast learner, I document what I ship."
+    "p2": "I specialize in React/Next.js + Supabase + Vercel CI/CD. Fast learner, I document what I ship.",
+    "base": "Costa Rica · Remote · TEC"
   },
   "skills": {
     "title": "Skills",
-    "subtitle": "Honest level by years of real use, not inflated percentages.",
     "frontend": "Frontend",
     "backend": "Backend",
     "tools": "Tools",
-    "years": "yrs"
+    "levels": {
+      "familiar": "familiar",
+      "proficient": "proficient",
+      "expert": "expert"
+    }
   },
   "contact": {
     "title": "Get In Touch",
@@ -180,12 +181,9 @@
       "sending": "Sending…",
       "success": "Message sent! I'll reply soon.",
       "error": "Could not send. Try again later.",
-      "spamBlocked": "Blocked for security. Try again."
+      "logSent": "Contact message sent from {email}",
+      "logFailed": "Contact message failed to send"
     }
-  },
-  "footer": {
-    "rights": "All rights reserved.",
-    "backToTop": "Back to top"
   },
   "caseStudy": {
     "back": "Back to projects",
@@ -205,6 +203,7 @@
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
+    "close": "Close",
     "general": "General",
     "navigation": "Navigation",
     "editor": "Editor",
@@ -220,5 +219,223 @@
     "clearTerm": "Clear terminal",
     "cancel": "Cancel line",
     "history": "History"
+  },
+  "home": {
+    "featured": "4 featured + archive",
+    "experience": "2023 — present"
+  },
+  "github": {
+    "apiDown": "GitHub API unavailable right now —",
+    "openProfile": "open profile directly",
+    "repos": "repos",
+    "followers": "followers",
+    "profile": "Profile"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "IDE theme, language and preferences",
+    "themeSection": "Color Theme",
+    "languageSection": "Language",
+    "dark": "Dark",
+    "light": "Light",
+    "esName": "Español",
+    "esDesc": "Costa Rica · es",
+    "enName": "English",
+    "enDesc": "Worldwide · en",
+    "syncHint": "change the theme and watch the code update live"
+  },
+  "terminal": {
+    "available": "Available commands:",
+    "openHelp": "open <file> [--side]  — e.g.: open projects.js --side",
+    "goHelp": "go <route>      — e.g.: go /skills",
+    "splitHelp": "split     - Toggle code/preview split editor",
+    "welcome": "Interactive terminal — type “help”.",
+    "whoami": "visitor — exploring Joseph's portfolio",
+    "aboutLine": "Joseph Fonseca — Costa Rica · Remote",
+    "splitToggled": "Split editor toggled.",
+    "usageTheme": "Usage: theme <id>. Try “themes”.",
+    "usageLang": "Usage: lang <es|en>",
+    "unknownFile": "Unknown file: {target}",
+    "unknownRoute": "Unknown route: {target}",
+    "openSideSuffix": "(to the side)",
+    "sudo": "pochonski is not in the sudoers file. This incident will be reported to Joseph.",
+    "vim1": "Vim. Bold move.",
+    "vim2": "Type «:q!» to escape.",
+    "phew": "Phew. Safe.",
+    "notFound": "Not found: {cmd}. Try “help”.",
+    "label": "Terminal",
+    "header": "TERMINAL — zsh",
+    "closeTerminal": "Close terminal",
+    "inputLabel": "Terminal input"
+  },
+  "ide": {
+    "titlebar": {
+      "appMenu": "Application menu",
+      "home": "Home",
+      "portfolioHome": "Portfolio — Home",
+      "file": "File",
+      "downloadCv": "Download CV",
+      "newWindow": "New Window",
+      "openFile": "Open File…",
+      "save": "Save",
+      "exit": "Exit",
+      "edit": "Edit",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "findInFiles": "Find in Files…",
+      "selection": "Selection",
+      "selectAll": "Select All",
+      "expandSelection": "Expand Selection",
+      "shrinkSelection": "Shrink Selection",
+      "view": "View",
+      "commandPalette": "Command Palette…",
+      "terminal": "Terminal",
+      "splitEditor": "Split Editor",
+      "explorer": "Explorer",
+      "fullScreen": "Full Screen",
+      "go": "Go",
+      "back": "Back",
+      "forward": "Forward",
+      "run": "Run",
+      "reloadWindow": "Reload Window",
+      "startDebugging": "Start Debugging",
+      "runWithoutDebugging": "Run Without Debugging",
+      "newTerminal": "New Terminal",
+      "clear": "Clear",
+      "toggleTerminal": "Toggle Terminal",
+      "help": "Help",
+      "about": "About Joseph",
+      "shortcuts": "Keyboard Shortcuts",
+      "reportIssue": "Report Issue",
+      "commandCenter": "Search files or commands",
+      "toggleExplorer": "Toggle Explorer",
+      "togglePanel": "Toggle Panel",
+      "toggleSplit": "Toggle Split Editor",
+      "settings": "Settings",
+      "minimize": "Minimize (unavailable in browser)",
+      "exitFullScreen": "Exit full screen",
+      "fullScreenBtn": "Full screen",
+      "close": "Close (unavailable in browser)"
+    },
+    "palette": {
+      "title": "Command Palette",
+      "searchLabel": "Command search",
+      "clear": "Clear",
+      "goToFile": "Go to File",
+      "goTo": "Go to",
+      "terminal": "Terminal",
+      "toggleTerminal": "Toggle Terminal",
+      "view": "View",
+      "toggleSplit": "Toggle Split Editor (Code / Preview)",
+      "preferences": "Preferences",
+      "changeTheme": "Change Color Theme",
+      "help": "Help",
+      "showShortcuts": "Show Keyboard Shortcuts",
+      "openSideFile": "Open File to the Side…",
+      "colorTheme": "Color Theme",
+      "openToSide": "Open to the Side",
+      "selectTheme": "Select color theme",
+      "openSideSearch": "Open file to the side…",
+      "typeSearch": "Type a command or search files...",
+      "noMatch": "No matching commands",
+      "navigate": "navigate",
+      "select": "select",
+      "closeHint": "close",
+      "toSpanish": "Cambiar a Español",
+      "toEnglish": "Switch to English"
+    },
+    "panel": {
+      "panel": "Panel",
+      "problems": "Problems",
+      "output": "Output",
+      "terminal": "Terminal",
+      "noProblems": "No problems detected in this workspace.",
+      "outputIdle": "Output channel is idle. Interact with the portfolio to log events.",
+      "clearItem": "Clear {tab}",
+      "maximize": "Maximize panel",
+      "restore": "Restore panel",
+      "closePanel": "Close panel",
+      "resize": "Resize panel",
+      "resizeHint": "Drag to resize (double-click maximizes)",
+      "panelTabs": "Panel tabs"
+    },
+    "split": {
+      "preview": "Preview",
+      "welcome": "Welcome",
+      "editor": "Editor",
+      "failedLoad": "Failed to load source.",
+      "loadingSource": "Loading source",
+      "back": "Back",
+      "goBack": "Go back",
+      "forward": "Forward",
+      "goForward": "Go forward",
+      "reload": "Reload",
+      "reloadPreview": "Reload preview",
+      "copyUrl": "Copy URL",
+      "copied": "Copied!",
+      "copyPageUrl": "Copy page URL",
+      "openBrowser": "Open in browser",
+      "find": "Find",
+      "findInFile": "Find in file",
+      "prevMatch": "Previous match",
+      "nextMatch": "Next match",
+      "closeFind": "Close find",
+      "resizeGroups": "Resize editor groups",
+      "editorGroup": "Editor group",
+      "group1": "Open files, group 1",
+      "group2": "Open files, group 2",
+      "copyCode": "Copy code",
+      "toggleSplitHint": "Toggle split editor (Ctrl+\\)",
+      "closeTab": "Close",
+      "closeEmpty": "Close (empty group)",
+      "closeGroup": "Close group",
+      "closePreview": "Close preview",
+      "moveSide": "{name} — double-click moves to other side",
+      "noEditors": "No editors open",
+      "recent": "Recent"
+    },
+    "explorer": {
+      "explorer": "Explorer",
+      "portfolio": "Portfolio",
+      "files": "Portfolio files",
+      "openExplorer": "Open Explorer",
+      "closeExplorer": "Close Explorer",
+      "openSideHint": "{file} — Alt+click opens to the side"
+    },
+    "activity": {
+      "bar": "Activity Bar",
+      "home": "Explorer / Home",
+      "about": "About",
+      "experience": "Experience",
+      "studies": "Studies",
+      "projects": "Projects",
+      "skills": "Skills",
+      "github": "GitHub",
+      "contact": "Contact",
+      "search": "Search",
+      "searchHint": "Search (Ctrl+Shift+F)",
+      "settings": "Settings"
+    },
+    "status": {
+      "githubMain": "GitHub — main branch",
+      "problemsOpen": "{count} problems — open Problems",
+      "noProblemsOpen": "No problems — open Problems",
+      "openProblems": "Open Problems",
+      "toggleTerminal": "Toggle Terminal (Ctrl+`)"
+    },
+    "shell": {
+      "chordGo": "press h/a/e/s/p/g/c/t",
+      "chordTheme": "press t for theme"
+    },
+    "search": {
+      "placeholder": "Search files…",
+      "label": "Search files",
+      "noResults": "No results",
+      "hint": "Type 2+ characters. Click opens the file in the editor.",
+      "results": "Search results"
+    }
   }
 }

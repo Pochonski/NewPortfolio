@@ -1,7 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight, FileText, Mail, MapPin } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
@@ -62,7 +62,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <FileText size={16} /> {t("hero.viewResume")}
           </a>
           <Link
-            href={locale === "en" ? "/en/contact" : "/contact"}
+            href="/contact"
             className="flex items-center gap-2 rounded-md border px-5 py-3 text-sm font-semibold"
             style={{ borderColor: "var(--ide-accent)", color: "var(--ide-accent)" }}
           >
@@ -72,13 +72,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { href: locale === "en" ? "/en/projects" : "/projects", label: t("nav.projects"), desc: "4 featured + archive" },
-            { href: locale === "en" ? "/en/experience" : "/experience", label: t("nav.experience"), desc: "2023 — present" },
-            { href: locale === "en" ? "/en/github" : "/github", label: "GitHub", desc: "@Pochonski" },
+            { href: "/projects", label: t("nav.projects"), desc: t("home.featured") },
+            { href: "/experience", label: t("nav.experience"), desc: t("home.experience") },
+            { href: "/github", label: "GitHub", desc: "@Pochonski" },
           ].map((c) => (
             <Link
               key={c.label}
-              href={c.href}
+              href={c.href as "/"}
               className="group rounded-lg border p-4 transition-transform hover:-translate-y-0.5"
               style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
             >

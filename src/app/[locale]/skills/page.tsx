@@ -27,12 +27,13 @@ export default async function SkillsPage({ params }: { params: Promise<{ locale:
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   const t = await getTranslations();
+  const levelNames = t.raw("skills.levels") as Record<string, string>;
   const groups = [
     { key: "frontend", label: t("skills.frontend"), items: skills.frontend },
     { key: "backend", label: t("skills.backend"), items: skills.backend },
     { key: "tools", label: t("skills.tools"), items: skills.tools },
   ];
-  const src = skillsTs(groups.map((g) => ({ key: g.key, items: g.items })));
+  const src = skillsTs(groups.map((g) => ({ key: g.key, items: g.items })), locale);
 
   return (
     <EditorPage
@@ -50,7 +51,7 @@ export default async function SkillsPage({ params }: { params: Promise<{ locale:
               {g.items.map((s) => (
                 <div key={s.name} className="flex items-center gap-4">
                   <span className="w-40 shrink-0 truncate text-sm" style={{ color: "var(--ide-fg)" }}>{s.name}</span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--ide-border)" }} role="progressbar" aria-valuenow={LEVEL_PCT[s.level]} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name} ${s.level}`}>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--ide-border)" }} role="progressbar" aria-valuenow={LEVEL_PCT[s.level]} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name} ${levelNames[s.level] ?? s.level}`}>
                     <div className="h-full rounded-full" style={{ width: `${LEVEL_PCT[s.level]}%`, background: "var(--ide-accent)" }} />
                   </div>
                   <span className="w-16 shrink-0 text-right font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>

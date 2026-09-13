@@ -57,7 +57,7 @@ export default async function CaseStudyPage({
   const es = locale !== "en";
   const lang = es ? "es" : "en";
 
-  const src = projectJsSingle(project);
+  const src = projectJsSingle(project, locale);
 
   return (
     <EditorPage

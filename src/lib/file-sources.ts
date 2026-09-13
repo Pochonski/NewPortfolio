@@ -1,6 +1,7 @@
 import { IDE_FILES } from "./files";
 import { contactInfo, socialLinks } from "@/content/site";
 import type { Skill } from "@/content/skills";
+import type { GithubRepo, GithubUser } from "./github";
 
 // Code shown in the left pane of the split editor. Every builder generates
 // source from the SAME data that renders the preview (messages / content),
@@ -45,7 +46,7 @@ export default function Home() {
 }
 
 export function aboutMd(title: string, p1: string, p2: string): BuiltFileSource {
-  const code = `# ${title}\n\n${p1}\n\n${p2}\n\n- **Stack:** React · Next.js · Supabase · Vercel\n- **Base:** Costa Rica · Remoto\n`;
+  const code = `# ${title}\n\n${p1}\n\n${p2}\n\n- **Stack:** React · Next.js · Supabase · Vercel\n- **Base:** Costa Rica · Remoto\n- **Links:** [GitHub](https://github.com/Pochonski) · [LinkedIn](https://www.linkedin.com/in/joseph-fonseca-n)\n`;
   return pick("about", "Markdown", "markdown", code);
 }
 
@@ -73,6 +74,7 @@ export function experienceJson(items: ExpLite[]): BuiltFileSource {
 export interface StudyLite {
   degree: string;
   institution: string;
+  link: string;
   period: string;
   location: string;
   points: string[];
@@ -83,7 +85,7 @@ export function studiesMd(items: StudyLite[]): BuiltFileSource {
     items
       .map(
         (s) =>
-          `## ${s.degree}\n*${s.institution} — ${s.period} · ${s.location}*\n\n${s.points.map((p) => `- ${p}`).join("\n")}`
+          `## ${s.degree}\n*[${s.institution}](${s.link}) — ${s.period} · ${s.location}*\n\n${s.points.map((p) => `- ${p}`).join("\n")}`
       )
       .join("\n\n---\n\n") + "\n";
   return pick("studies", "Markdown", "markdown", code);
@@ -95,21 +97,35 @@ export interface ProjectLite {
   link: string;
 }
 
-export function projectsJs(featured: ProjectLite[]): BuiltFileSource {
+export function projectsJs(featured: ProjectLite[], locale: string): BuiltFileSource {
+  const es = locale !== "en";
   const items = featured
     .map(
       (p) =>
         `  {\n    title: ${JSON.stringify(p.title)},\n    stack: ${JSON.stringify(p.tags)},\n    live: ${JSON.stringify(p.link)},\n  }`
     )
     .join(",\n");
-  const code = `// portfolio/projects.js — featured work
+  const code = es
+    ? `// portfolio/projects.js — proyectos destacados
+// archivo completo en github.com/Pochonski
+export const projects = [\n${items},\n];\n`
+    : `// portfolio/projects.js — featured work
 // full archive lives on github.com/Pochonski
 export const projects = [\n${items},\n];\n`;
   return pick("projects", "JavaScript", "javascript", code);
 }
 
-export function projectJsSingle(p: ProjectLite & { slug?: string }): BuiltFileSource {
-  const code = `// portfolio/projects/${p.slug ?? "case"}.js — case study
+export function projectJsSingle(p: ProjectLite & { slug?: string }, locale: string): BuiltFileSource {
+  const es = locale !== "en";
+  const code = es
+    ? `// portfolio/projects/${p.slug ?? "case"}.js — caso de estudio
+export const project = {
+  title: ${JSON.stringify(p.title)},
+  stack: ${JSON.stringify(p.tags)},
+  live: ${JSON.stringify(p.link)},
+};
+`
+    : `// portfolio/projects/${p.slug ?? "case"}.js — case study
 export const project = {
   title: ${JSON.stringify(p.title)},
   stack: ${JSON.stringify(p.tags)},
@@ -119,14 +135,27 @@ export const project = {
   return pick("projects", "JavaScript", "javascript", code);
 }
 
-export function skillsTs(groups: { key: string; items: Skill[] }[]): BuiltFileSource {
+export function skillsTs(groups: { key: string; items: Skill[] }[], locale: string): BuiltFileSource {
+  const es = locale !== "en";
   const blocks = groups
     .map(
       (g) =>
         `export const ${g.key}: Skill[] = [\n${g.items.map((s) => `  { name: ${JSON.stringify(s.name)}, level: ${JSON.stringify(s.level)}, years: ${s.years} },`).join("\n")}\n];`
     )
     .join("\n\n");
-  const code = `// portfolio/skills.ts — honest levels, years of real use
+  const code = es
+    ? `// portfolio/skills.ts — niveles honestos, años de uso real
+export type Level = "familiar" | "proficient" | "expert";
+
+export interface Skill {
+  name: string;
+  level: Level;
+  years: number;
+}
+
+${blocks}
+`
+    : `// portfolio/skills.ts — honest levels, years of real use
 export type Level = "familiar" | "proficient" | "expert";
 
 export interface Skill {
@@ -140,19 +169,53 @@ ${blocks}
   return pick("skills", "TypeScript", "typescript", code);
 }
 
-export function githubMd(locale: string): BuiltFileSource {
+export function githubMd(
+  locale: string,
+  data?: { user: GithubUser; repos: GithubRepo[] } | null
+): BuiltFileSource {
   const es = locale === "es";
-  const code = `# @Pochonski\n\n> ${es ? "Perfil y repositorios en vivo desde la API de GitHub." : "Live profile and repos from the GitHub API."}\n\n- **Profile:** https://github.com/Pochonski\n- **Featured:** ScoreHub · StickerHub · Perfumes El Pocho\n- **Stack:** React · Next.js · Supabase\n`;
-  return pick("github", "Markdown", "markdown", code);
+  const head = `# @Pochonski\n\n> ${es ? "Perfil y repositorios en vivo desde la API de GitHub." : "Live profile and repos from the GitHub API."}\n`;
+  if (!data) {
+    return pick(
+      "github",
+      "Markdown",
+      "markdown",
+      head +
+        `\n- **Profile:** https://github.com/Pochonski\n- **Featured:** ScoreHub · StickerHub · Perfumes El Pocho\n- **Stack:** React · Next.js · Supabase\n`
+    );
+  }
+  const { user, repos } = data;
+  const stars = repos.reduce((a, r) => a + r.stargazers_count, 0);
+  const body = [
+    `![${user.login}](${user.avatar_url})`,
+    ``,
+    `- **Repos:** ${user.public_repos} · **Followers:** ${user.followers} · **Stars:** ${stars}`,
+    ``,
+    `## Repos`,
+    ...repos.map(
+      (r) =>
+        `- [${r.name}](${r.html_url})${r.description ? ` — ${r.description}` : ""}${r.language ? ` \`(${r.language})\`` : ""} ★ ${r.stargazers_count}`
+    ),
+    ``,
+    `[${es ? "Ver perfil" : "View profile"}](https://github.com/${user.login})`,
+  ].join("\n");
+  return pick("github", "Markdown", "markdown", head + "\n" + body + "\n");
 }
 
-export function contactCss(): BuiltFileSource {
+export function contactCss(locale: string): BuiltFileSource {
+  const es = locale !== "en";
   const lines = [
     `  email: ${JSON.stringify(contactInfo.email)};`,
     ...socialLinks.map((s) => `  ${s.name.toLowerCase()}: ${JSON.stringify(s.url.replace("https://", "").replace("www.", ""))};`),
     `  location: ${JSON.stringify(contactInfo.location)};`,
   ];
-  const code = `/* portfolio/contact.css — write me, I reply within 24h */
+  const code = es
+    ? `/* portfolio/contact.css — escríbeme, respondo en 24h */
+.socials {
+${lines.join("\n")}
+}
+`
+    : `/* portfolio/contact.css — write me, I reply within 24h */
 .socials {
 ${lines.join("\n")}
 }

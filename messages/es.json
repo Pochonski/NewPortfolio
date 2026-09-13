@@ -1,14 +1,11 @@
 {
   "nav": {
-    "home": "Inicio",
     "experience": "Experiencia",
     "studies": "Estudios",
     "projects": "Proyectos",
     "about": "Sobre mí",
     "skills": "Habilidades",
-    "contact": "Contacto",
-    "portfolio": "Portafolio",
-    "viewCaseStudy": "Ver caso de estudio"
+    "contact": "Contacto"
   },
   "hero": {
     "greeting": "¡Hola! Soy",
@@ -159,15 +156,19 @@
   "about": {
     "title": "Sobre mí",
     "p1": "Soy estudiante de Ingeniería en Computadores y construyo productos web que la gente usa de verdad: e-commerce, dashboards en tiempo real y bots.",
-    "p2": "Me especializo en React/Next.js + Supabase + despliegues en Vercel con CI/CD. Aprendo rápido y documento lo que construyo."
+    "p2": "Me especializo en React/Next.js + Supabase + despliegues en Vercel con CI/CD. Aprendo rápido y documento lo que construyo.",
+    "base": "Costa Rica · Remoto · TEC"
   },
   "skills": {
     "title": "Habilidades",
-    "subtitle": "Nivel honesto por años de uso real, no porcentajes inflados.",
     "frontend": "Frontend",
     "backend": "Backend",
     "tools": "Herramientas",
-    "years": "años"
+    "levels": {
+      "familiar": "familiar",
+      "proficient": "competente",
+      "expert": "experto"
+    }
   },
   "contact": {
     "title": "Contáctame",
@@ -184,12 +185,9 @@
       "sending": "Enviando…",
       "success": "¡Mensaje enviado! Te respondo pronto.",
       "error": "No se pudo enviar. Inténtalo más tarde.",
-      "spamBlocked": "Bloqueado por seguridad. Inténtalo de nuevo."
+      "logSent": "Mensaje de contacto enviado desde {email}",
+      "logFailed": "No se pudo enviar el mensaje de contacto"
     }
-  },
-  "footer": {
-    "rights": "Todos los derechos reservados.",
-    "backToTop": "Volver arriba"
   },
   "caseStudy": {
     "back": "Volver a proyectos",
@@ -209,6 +207,7 @@
   },
   "shortcuts": {
     "title": "Atajos de teclado",
+    "close": "Cerrar",
     "general": "General",
     "navigation": "Navegación",
     "editor": "Editor",
@@ -224,5 +223,223 @@
     "clearTerm": "Limpiar terminal",
     "cancel": "Cancelar línea",
     "history": "Historial"
+  },
+  "home": {
+    "featured": "4 destacados + archivo",
+    "experience": "2023 — presente"
+  },
+  "github": {
+    "apiDown": "GitHub API no disponible ahora mismo —",
+    "openProfile": "abre el perfil directamente",
+    "repos": "repos",
+    "followers": "seguidores",
+    "profile": "Perfil"
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Tema, idioma y preferencias del IDE",
+    "themeSection": "Tema de color",
+    "languageSection": "Idioma",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "esName": "Español",
+    "esDesc": "Costa Rica · es",
+    "enName": "English",
+    "enDesc": "Todo el mundo · en",
+    "syncHint": "cambia el tema y mira el código actualizarse en vivo"
+  },
+  "terminal": {
+    "available": "Comandos disponibles:",
+    "openHelp": "open <archivo> [--side]  — ej: open projects.js --side",
+    "goHelp": "go <ruta>       — ej: go /skills",
+    "splitHelp": "split     - Alternar editor dividido código/vista previa",
+    "welcome": "Terminal interactiva — escribe “help”.",
+    "whoami": "visitante — explorando el portfolio de Joseph",
+    "aboutLine": "Joseph Fonseca — Costa Rica · Remoto",
+    "splitToggled": "Split editor alternado.",
+    "usageTheme": "Uso: theme <id>. Prueba “themes”.",
+    "usageLang": "Uso: lang <es|en>",
+    "unknownFile": "Archivo desconocido: {target}",
+    "unknownRoute": "Ruta desconocida: {target}",
+    "openSideSuffix": "(al lado)",
+    "sudo": "pochonski no está en el archivo sudoers. Este incidente será reportado a Joseph.",
+    "vim1": "Vim. Ambicioso.",
+    "vim2": "Escribe «:q!» para escapar.",
+    "phew": "Uf. A salvo.",
+    "notFound": "No encontrado: {cmd}. Prueba “help”.",
+    "label": "Terminal",
+    "header": "TERMINAL — zsh",
+    "closeTerminal": "Cerrar terminal",
+    "inputLabel": "Entrada de terminal"
+  },
+  "ide": {
+    "titlebar": {
+      "appMenu": "Menú de aplicación",
+      "home": "Inicio",
+      "portfolioHome": "Portafolio — Inicio",
+      "file": "Archivo",
+      "downloadCv": "Descargar CV",
+      "newWindow": "Nueva ventana",
+      "openFile": "Abrir archivo…",
+      "save": "Guardar",
+      "exit": "Salir",
+      "edit": "Editar",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "cut": "Cortar",
+      "copy": "Copiar",
+      "paste": "Pegar",
+      "findInFiles": "Buscar en archivos…",
+      "selection": "Selección",
+      "selectAll": "Seleccionar todo",
+      "expandSelection": "Expandir selección",
+      "shrinkSelection": "Reducir selección",
+      "view": "Ver",
+      "commandPalette": "Paleta de comandos…",
+      "terminal": "Terminal",
+      "splitEditor": "Dividir editor",
+      "explorer": "Explorador",
+      "fullScreen": "Pantalla completa",
+      "go": "Ir",
+      "back": "Atrás",
+      "forward": "Adelante",
+      "run": "Ejecutar",
+      "reloadWindow": "Recargar ventana",
+      "startDebugging": "Iniciar depuración",
+      "runWithoutDebugging": "Ejecutar sin depurar",
+      "newTerminal": "Nueva terminal",
+      "clear": "Limpiar",
+      "toggleTerminal": "Mostrar u ocultar terminal",
+      "help": "Ayuda",
+      "about": "Sobre Joseph",
+      "shortcuts": "Atajos de teclado",
+      "reportIssue": "Reportar problema",
+      "commandCenter": "Buscar archivos o comandos",
+      "toggleExplorer": "Mostrar u ocultar explorador",
+      "togglePanel": "Mostrar u ocultar panel",
+      "toggleSplit": "Mostrar u ocultar editor dividido",
+      "settings": "Configuración",
+      "minimize": "Minimizar (no disponible en el navegador)",
+      "exitFullScreen": "Salir de pantalla completa",
+      "fullScreenBtn": "Pantalla completa",
+      "close": "Cerrar (no disponible en el navegador)"
+    },
+    "palette": {
+      "title": "Paleta de comandos",
+      "searchLabel": "Buscar comando",
+      "clear": "Limpiar",
+      "goToFile": "Ir al archivo",
+      "goTo": "Ir a",
+      "terminal": "Terminal",
+      "toggleTerminal": "Mostrar u ocultar terminal",
+      "view": "Ver",
+      "toggleSplit": "Mostrar u ocultar editor dividido (código / vista previa)",
+      "preferences": "Preferencias",
+      "changeTheme": "Cambiar tema de color",
+      "help": "Ayuda",
+      "showShortcuts": "Mostrar atajos de teclado",
+      "openSideFile": "Abrir archivo al lado…",
+      "colorTheme": "Tema de color",
+      "openToSide": "Abrir al lado",
+      "selectTheme": "Selecciona el tema de color",
+      "openSideSearch": "Abrir archivo al lado…",
+      "typeSearch": "Escribe un comando o busca archivos...",
+      "noMatch": "Sin comandos coincidentes",
+      "navigate": "navegar",
+      "select": "seleccionar",
+      "closeHint": "cerrar",
+      "toEnglish": "Switch to English",
+      "toSpanish": "Cambiar a Español"
+    },
+    "panel": {
+      "panel": "Panel",
+      "problems": "Problemas",
+      "output": "Salida",
+      "terminal": "Terminal",
+      "noProblems": "Sin problemas en este workspace.",
+      "outputIdle": "Canal de salida inactivo. Interactúa con el portfolio para registrar eventos.",
+      "clearItem": "Limpiar {tab}",
+      "maximize": "Maximizar panel",
+      "restore": "Restaurar panel",
+      "closePanel": "Cerrar panel",
+      "resize": "Redimensionar panel",
+      "resizeHint": "Arrastra para redimensionar (doble clic maximiza)",
+      "panelTabs": "Pestañas del panel"
+    },
+    "split": {
+      "preview": "Vista previa",
+      "welcome": "Bienvenida",
+      "editor": "Editor",
+      "failedLoad": "No se pudo cargar el código.",
+      "loadingSource": "Cargando código",
+      "back": "Atrás",
+      "goBack": "Volver",
+      "forward": "Adelante",
+      "goForward": "Avanzar",
+      "reload": "Recargar",
+      "reloadPreview": "Recargar vista previa",
+      "copyUrl": "Copiar URL",
+      "copied": "¡Copiado!",
+      "copyPageUrl": "Copiar URL de la página",
+      "openBrowser": "Abrir en el navegador",
+      "find": "Buscar",
+      "findInFile": "Buscar en el archivo",
+      "prevMatch": "Coincidencia anterior",
+      "nextMatch": "Coincidencia siguiente",
+      "closeFind": "Cerrar búsqueda",
+      "resizeGroups": "Redimensionar grupos",
+      "editorGroup": "Grupo de editores",
+      "group1": "Archivos abiertos, grupo 1",
+      "group2": "Archivos abiertos, grupo 2",
+      "copyCode": "Copiar código",
+      "toggleSplitHint": "Mostrar u ocultar editor dividido (Ctrl+\\)",
+      "closeTab": "Cerrar",
+      "closeEmpty": "Cerrar (grupo vacío)",
+      "closeGroup": "Cerrar grupo",
+      "closePreview": "Cerrar vista previa",
+      "moveSide": "{name} — doble clic mueve al otro lado",
+      "noEditors": "Sin editores abiertos",
+      "recent": "Recientes"
+    },
+    "explorer": {
+      "explorer": "Explorador",
+      "portfolio": "Portafolio",
+      "files": "Archivos del portfolio",
+      "openExplorer": "Abrir explorador",
+      "closeExplorer": "Cerrar explorador",
+      "openSideHint": "{file} — Alt+clic abre al lado"
+    },
+    "activity": {
+      "bar": "Barra de actividad",
+      "home": "Explorador / Inicio",
+      "about": "Sobre mí",
+      "experience": "Experiencia",
+      "studies": "Estudios",
+      "projects": "Proyectos",
+      "skills": "Habilidades",
+      "github": "GitHub",
+      "contact": "Contacto",
+      "search": "Buscar",
+      "searchHint": "Buscar (Ctrl+Shift+F)",
+      "settings": "Configuración"
+    },
+    "status": {
+      "githubMain": "GitHub — rama main",
+      "problemsOpen": "{count} problemas — abrir Problemas",
+      "noProblemsOpen": "Sin problemas — abrir Problemas",
+      "openProblems": "Abrir Problemas",
+      "toggleTerminal": "Mostrar u ocultar terminal (Ctrl+`)"
+    },
+    "shell": {
+      "chordGo": "pulsa h/a/e/s/p/g/c/t",
+      "chordTheme": "pulsa t para el tema"
+    },
+    "search": {
+      "placeholder": "Buscar en archivos…",
+      "label": "Buscar en archivos",
+      "noResults": "Sin resultados",
+      "hint": "Escribe 2+ letras. Click abre el archivo en el editor.",
+      "results": "Resultados de búsqueda"
+    }
   }
 }

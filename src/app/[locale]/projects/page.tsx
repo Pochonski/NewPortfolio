@@ -17,7 +17,7 @@ interface Project {
   github: string;
 }
 
-function ProjectCard({ p, caseLabel }: { p: Project; caseLabel: string }) {
+function ProjectCard({ p, liveLabel, codeLabel, caseLabel }: { p: Project; liveLabel: string; codeLabel: string; caseLabel: string }) {
   const hasStudy = !!p.slug && p.slug in caseStudies;
   return (
     <article className="flex flex-col rounded-lg border p-5" style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}>
@@ -32,10 +32,10 @@ function ProjectCard({ p, caseLabel }: { p: Project; caseLabel: string }) {
       </div>
       <div className="mt-4 flex gap-4 text-[13px] font-medium">
         <a href={p.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:underline" style={{ color: "var(--ide-accent)" }}>
-          Live <ExternalLink size={13} />
+          {liveLabel} <ExternalLink size={13} />
         </a>
         <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:underline" style={{ color: "var(--ide-fg-dim)" }}>
-          <Github size={14} /> Code
+          <Github size={14} /> {codeLabel}
         </a>
         {hasStudy && (
           <Link
@@ -68,7 +68,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
   const t = await getTranslations();
   const featured = t.raw("projects.featured") as Project[];
   const archive = t.raw("projects.archive") as Project[];
-  const src = projectsJs(featured);
+  const src = projectsJs(featured, locale);
 
   return (
     <EditorPage
@@ -78,7 +78,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
     >
       <div className="grid gap-4 md:grid-cols-2">
         {featured.map((p) => (
-          <ProjectCard key={p.title} p={p} caseLabel={t("projects.caseStudy")} />
+          <ProjectCard key={p.title} p={p} liveLabel={t("projects.viewLive")} codeLabel={t("caseStudy.code")} caseLabel={t("projects.caseStudy")} />
         ))}
       </div>
       <h2 className="mt-10 mb-4 font-mono text-xs tracking-wider uppercase" style={{ color: "var(--ide-fg-dim)" }}>
@@ -86,7 +86,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
       </h2>
       <div className="grid gap-4 md:grid-cols-2">
         {archive.map((p) => (
-          <ProjectCard key={p.title} p={p} caseLabel={t("projects.caseStudy")} />
+          <ProjectCard key={p.title} p={p} liveLabel={t("projects.viewLive")} codeLabel={t("caseStudy.code")} caseLabel={t("projects.caseStudy")} />
         ))}
       </div>
       <p className="mt-8 text-center">

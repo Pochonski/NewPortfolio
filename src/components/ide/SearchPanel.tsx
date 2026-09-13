@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SearchX } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { SearchHit } from "@/app/api/search/route";
 import { FileIcon } from "./FileIcon";
 import { IDE_FILES } from "@/lib/files";
@@ -14,6 +14,7 @@ function openFile(fileId: string) {
 // Sidebar search view (Ctrl+Shift+F): searches every file's display source.
 export function SearchPanel() {
   const locale = useLocale();
+  const t = useTranslations("ide.search");
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [busy, setBusy] = useState(false);
@@ -65,8 +66,8 @@ export function SearchPanel() {
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={locale === "es" ? "Buscar en archivos…" : "Search files…"}
-            aria-label={locale === "es" ? "Buscar en archivos" : "Search files"}
+            placeholder={t("placeholder")}
+            aria-label={t("label")}
             spellCheck={false}
             autoComplete="off"
             className="w-full bg-transparent text-[13px] outline-none placeholder:opacity-50"
@@ -74,7 +75,7 @@ export function SearchPanel() {
           />
         </div>
       </div>
-      <div className="ide-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3" role="list" aria-label="Search results">
+      <div className="ide-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-3" role="list" aria-label={t("results")}>
         {isActive && busy && (
           <p className="px-2 py-4 text-center font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
             …
@@ -83,14 +84,12 @@ export function SearchPanel() {
         {isActive && !busy && hits.length === 0 && (
           <p className="flex items-center justify-center gap-2 px-2 py-4 text-center font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
             <SearchX size={13} />
-            {locale === "es" ? "Sin resultados" : "No results"}
+            {t("noResults")}
           </p>
         )}
         {!isActive && (
           <p className="px-2 py-2 font-mono text-[11px] leading-5" style={{ color: "var(--ide-fg-dim)" }}>
-            {locale === "es"
-              ? "Escribe 2+ letras. Click abre el archivo en el editor."
-              : "Type 2+ characters. Click opens the file in the editor."}
+            {t("hint")}
           </p>
         )}
         {[...grouped.entries()].map(([fileId, arr]) => {

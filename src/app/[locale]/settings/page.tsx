@@ -8,6 +8,7 @@ import { SplitView } from "@/components/ide/SplitView";
 import { RegisterSource } from "@/components/ide/editors-context";
 import { ThemeLogo } from "@/components/ide/theme-logos";
 import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -15,9 +16,9 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState("porto-dark");
   const [loaded, setLoaded] = useState(false);
   const locale = useLocale();
+  const st = useTranslations("settings");
   const router = useRouter();
   const pathname = usePathname();
-  const es = locale === "es";
 
   // Hydration-safe: render default first, then sync saved theme on mount.
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <h1 className="sr-only">Settings</h1>
+      <h1 className="sr-only">{st("title")}</h1>
       <RegisterSource fileId="settings" code={settingsJsonString(theme, locale)} />
       <div className="flex min-h-0 flex-1 flex-col">
         <SplitView
@@ -64,10 +65,10 @@ export default function SettingsPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base font-bold" style={{ color: "var(--ide-fg-bright)" }}>
-                    Settings
+                    {st("title")}
                   </h2>
                   <p className="truncate font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
-                    {es ? "Tema, idioma y preferencias del IDE" : "IDE theme, language and preferences"}
+                    {st("subtitle")}
                   </p>
                 </div>
                 <span
@@ -88,7 +89,7 @@ export default function SettingsPage() {
                 style={{ color: "var(--ide-fg-dim)" }}
               >
                 <span aria-hidden className="h-px w-4" style={{ background: "var(--ide-accent)" }} />
-                {es ? "Tema de color" : "Color Theme"}
+                {st("themeSection")}
                 <span
                   className="rounded-full border px-2 py-0.5 font-mono text-[10px] normal-case"
                   style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
@@ -119,7 +120,7 @@ export default function SettingsPage() {
                             style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
                           >
                             {t.dark ? <Moon size={10} /> : <Sun size={10} />}
-                            {t.dark ? "Dark" : "Light"}
+                            {t.dark ? st("dark") : st("light")}
                           </span>
                           {active && (
                             <span
@@ -160,7 +161,7 @@ export default function SettingsPage() {
                 style={{ color: "var(--ide-fg-dim)" }}
               >
                 <span aria-hidden className="h-px w-4" style={{ background: "var(--ide-accent)" }} />
-                Language / Idioma
+                {st("languageSection")}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {(["es", "en"] as const).map((l) => {
@@ -189,10 +190,10 @@ export default function SettingsPage() {
                       </span>
                       <span className="flex-1">
                         <span className="block text-sm font-semibold" style={{ color: "var(--ide-fg-bright)" }}>
-                          {l === "es" ? "Español" : "English"}
+                          {l === "es" ? st("esName") : st("enName")}
                         </span>
                         <span className="block font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
-                          {l === "es" ? "Costa Rica · es" : "Worldwide · en"}
+                          {l === "es" ? st("esDesc") : st("enDesc")}
                         </span>
                       </span>
                       <Globe size={16} style={{ color: selected ? "var(--ide-accent)" : "var(--ide-fg-dim)" }} />
@@ -224,9 +225,7 @@ export default function SettingsPage() {
                 <p className="font-mono text-xs leading-5" style={{ color: "var(--ide-fg-dim)" }}>
                   <span style={{ color: "var(--ide-accent)" }}>settings.json</span>
                   {" — "}
-                  {es
-                    ? "cambia el tema y mira el código actualizarse en vivo"
-                    : "change the theme and watch the code update live"}
+                  {st("syncHint")}
                 </p>
               </div>
             </div>

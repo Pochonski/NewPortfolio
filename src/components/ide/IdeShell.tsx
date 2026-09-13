@@ -12,6 +12,7 @@ import { CommandPalette } from "./CommandPalette";
 import { EditorsProvider } from "./editors-context";
 import { logOutput } from "@/lib/output-log";
 import { trackEvent } from "@/lib/analytics";
+import { useTranslations } from "next-intl";
 import { IDE_THEMES, DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
 
 const PANEL_STORE_KEY = "porto-panel";
@@ -118,6 +119,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
     }
   }, [panelOpen, panelTab]);
   const openPalette = useCallback(() => setPalette(true), []);
+  const t = useTranslations("ide.shell");
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
@@ -226,7 +228,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
           style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)", color: "var(--ide-fg)" }}
           aria-live="polite"
         >
-          {chord} — {chord === "g" ? "press h/a/e/s/p/g/c/t" : "press t for theme"}
+          {chord} — {chord === "g" ? t("chordGo") : t("chordTheme")}
         </div>
       )}
     </div>

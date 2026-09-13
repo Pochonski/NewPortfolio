@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { trackEvent } from "@/lib/analytics";
 
 export function ContactForm() {
   const t = useTranslations("contact.form");
+  const locale = useLocale();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [state, setState] = useState<"idle" | "sending" | "ok" | "error">("idle");
   const [startedAt] = useState(() => Date.now());
@@ -17,19 +18,19 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, website: "", startedAt }),
+        body: JSON.stringify({ ...form, website: "", startedAt, locale }),
       });
       if (!res.ok) throw new Error("send failed");
       setState("ok");
       setForm({ name: "", email: "", message: "" });
       trackEvent("contact_sent");
       window.dispatchEvent(
-        new CustomEvent("porto-log", { detail: { message: `Contact message sent from ${form.email}` } })
+        new CustomEvent("porto-log", { detail: { message: t("logSent", { email: form.email }) } })
       );
     } catch {
       setState("error");
       window.dispatchEvent(
-        new CustomEvent("porto-log", { detail: { message: "Contact message failed to send" } })
+        new CustomEvent("porto-log", { detail: { message: t("logFailed") } })
       );
     }
   }
