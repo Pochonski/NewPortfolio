@@ -53,6 +53,12 @@ export function CommandPalette({
       },
       { key: "theme", group: "Preferences", label: "Change Color Theme", hint: "K T", run: () => { setThemeMode(true); setIdx(0); setQ(""); } },
       {
+        key: "shortcuts",
+        group: "Help",
+        label: "Show Keyboard Shortcuts",
+        run: () => window.dispatchEvent(new CustomEvent("porto-shortcuts")),
+      },
+      {
         key: "side",
         group: "View",
         label: "Open File to the Side…",

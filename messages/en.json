@@ -195,5 +195,23 @@
     "challenge": "Challenge",
     "solution": "Solution",
     "results": "Results"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "general": "General",
+    "navigation": "Navigation",
+    "editor": "Editor",
+    "terminal": "Terminal",
+    "palette": "Command palette",
+    "panel": "Panel (terminal / problems)",
+    "split": "Split editor",
+    "menu": "Focus menu",
+    "goFiles": "Go to file (G + letter)",
+    "openSide": "Open to the side (Alt + click)",
+    "moveTab": "Move tab (double-click)",
+    "complete": "Autocomplete",
+    "clearTerm": "Clear terminal",
+    "cancel": "Cancel line",
+    "history": "History"
   }
 }

@@ -199,5 +199,23 @@
     "challenge": "Reto",
     "solution": "Solución",
     "results": "Resultados"
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "general": "General",
+    "navigation": "Navegación",
+    "editor": "Editor",
+    "terminal": "Terminal",
+    "palette": "Paleta de comandos",
+    "panel": "Panel (terminal / problemas)",
+    "split": "Dividir editor",
+    "menu": "Enfocar menú",
+    "goFiles": "Ir a archivo (G + letra)",
+    "openSide": "Abrir al lado (Alt + click)",
+    "moveTab": "Mover tab (doble click)",
+    "complete": "Autocompletar",
+    "clearTerm": "Limpiar terminal",
+    "cancel": "Cancelar línea",
+    "history": "Historial"
   }
 }

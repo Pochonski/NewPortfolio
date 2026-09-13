@@ -1,57 +1,103 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { IDE_FILES } from "@/lib/files";
 import { THEME_IDS } from "@/lib/themes";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-
-interface Line {
-  type: "in" | "out" | "err";
-  text: string;
-}
+import {
+  clearTermLines,
+  getTermHistory,
+  getTermLines,
+  pushTermHistory,
+  pushTermLines,
+  subscribeTerminal,
+  type TermLine,
+} from "@/lib/terminal-store";
 
 const HELP = (es: boolean) => [
   es ? "Comandos disponibles:" : "Available commands:",
   "  help / ayuda",
   "  ls · pwd · whoami · date",
-  "  open <archivo> [--side] — ej: open projects.js --side",
+  "  open <archivo> [--side]  — ej: open projects.js --side",
   "  go <ruta>       — ej: go /skills",
   "  about · skills · projects · contact · socials",
   "  split     - Toggle code/preview split editor",
   "  themes · theme <id> · lang <es|en> · cv · clear",
 ];
 
-export function TerminalPanel({ onClose }: { onClose: () => void }) {
+const COMMANDS = [
+  "help",
+  "ls",
+  "pwd",
+  "whoami",
+  "date",
+  "about",
+  "socials",
+  "contact",
+  "skills",
+  "projects",
+  "split",
+  "cv",
+  "themes",
+  "theme",
+  "lang",
+  "open",
+  "go",
+  "echo",
+  "clear",
+];
+
+export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: boolean }) {
   const router = useRouter();
+  const pathname = usePathname();
   const locale = useLocale();
   const es = locale === "es";
-  const [lines, setLines] = useState<Line[]>([
-    { type: "out", text: es ? "Terminal interactiva — escribe “help”." : "Interactive terminal — type “help”." },
-  ]);
+  const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+  const prompt = `pochonski@portfolio:~${clean === "/" ? "" : clean}$`;
+
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+  useEffect(() => subscribeTerminal(bump), []);
+  const lines = getTermLines();
+
   const [value, setValue] = useState("");
-  const [hist, setHist] = useState<string[]>([]);
   const [hi, setHi] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => inputRef.current?.focus(), []);
+  // Seed welcome once per session (persisted lines survive reloads).
   useEffect(() => {
-    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
+    if (getTermLines().length === 0) {
+      pushTermLines([
+        { type: "out", text: es ? "Terminal interactiva — escribe “help”." : "Interactive terminal — type “help”." },
+        { type: "out", text: "" },
+      ]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
   }, [lines]);
 
-  function print(extra: Line[]) {
-    setLines((p) => [...p, ...extra]);
+  function print(extra: TermLine[]) {
+    pushTermLines(extra);
   }
 
   function run(raw: string) {
     const cmd = raw.trim();
     if (!cmd) return;
     if (cmd === "clear") {
-      setLines([]);
+      clearTermLines();
       return;
     }
-    const out: Line[] = [{ type: "in", text: `$ ${cmd}` }];
+    const out: TermLine[] = [{ type: "in", text: `${prompt} ${cmd}` }];
     const [name, ...args] = cmd.split(/\s+/);
     const c = name.toLowerCase();
 
@@ -79,8 +125,7 @@ export function TerminalPanel({ onClose }: { onClose: () => void }) {
     else if (c === "split") {
       window.dispatchEvent(new CustomEvent("porto-split"));
       out.push({ type: "out", text: es ? "Split editor alternado." : "Split editor toggled." });
-    }
-    else if (c === "cv") {
+    } else if (c === "cv") {
       window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener");
       out.push({ type: "out", text: "CV → /cv/Joseph-Fonseca-CV.pdf" });
     } else if (c === "themes") out.push({ type: "out", text: THEME_IDS.join("  ") });
@@ -97,8 +142,8 @@ export function TerminalPanel({ onClose }: { onClose: () => void }) {
     } else if (c === "lang") {
       const l = args[0];
       if (l === "es" || l === "en") {
-        const clean = window.location.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-        window.location.href = l === "es" ? clean : `/${l}${clean === "/" ? "" : clean}`;
+        const cleanPath = window.location.pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+        window.location.href = l === "es" ? cleanPath : `/${l}${cleanPath === "/" ? "" : cleanPath}`;
       } else out.push({ type: "err", text: "Uso: lang <es|en>" });
     } else if (c === "open") {
       const toSide = args.includes("--side");
@@ -122,6 +167,114 @@ export function TerminalPanel({ onClose }: { onClose: () => void }) {
     print(out);
   }
 
+  function complete() {
+    const trailingSpace = /\s$/.test(value);
+    const parts = value.split(/\s+/).filter((p, i, a) => p !== "" || i === a.length - 1);
+    const tokens = trailingSpace ? [...parts.filter(Boolean), ""] : parts;
+    let candidates: string[] = [];
+    if (tokens.length <= 1) {
+      const frag = tokens[0] ?? "";
+      candidates = COMMANDS.filter((c) => c.startsWith(frag.toLowerCase()));
+    } else {
+      const [cmd, ...rest] = tokens;
+      const frag = rest[rest.length - 1] ?? "";
+      if (cmd === "open" || cmd === "go") {
+        const pool = [
+          ...IDE_FILES.map((f) => f.filename),
+          ...IDE_FILES.map((f) => f.id),
+          ...IDE_FILES.map((f) => f.route),
+        ];
+        candidates = [...new Set(pool)].filter((p) => p.startsWith(frag));
+      } else if (cmd === "theme") {
+        candidates = THEME_IDS.filter((t) => t.startsWith(frag));
+      } else if (cmd === "lang") {
+        candidates = ["es", "en"].filter((l) => l.startsWith(frag));
+      }
+    }
+    if (candidates.length === 1) {
+      const head = tokens.slice(0, -1).filter(Boolean);
+      setValue([...head, candidates[0]].join(" ") + " ");
+    } else if (candidates.length > 1) {
+      print([
+        { type: "in", text: `${prompt} ${value}` },
+        { type: "out", text: candidates.join("  ") },
+      ]);
+    }
+  }
+
+  const body = (
+    <div ref={bodyRef} role="log" aria-live="polite" onClick={() => inputRef.current?.focus()} className="flex-1 cursor-text overflow-y-auto px-3 pb-2 font-mono text-[12.5px] leading-5 ide-scroll">
+      {lines.map((l, i) => (
+        <div
+          key={i}
+          style={{
+            color: l.type === "err" ? "var(--ide-error)" : l.type === "in" ? "var(--ide-fg-bright)" : "var(--ide-fg)",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {l.text}
+        </div>
+      ))}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = value;
+          setValue("");
+          setHi(-1);
+          pushTermHistory(v);
+          run(v);
+        }}
+        className="flex items-center gap-2"
+      >
+        <span className="shrink-0" style={{ color: "var(--ide-accent)" }}>{prompt}</span>
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            const hist = getTermHistory();
+            if (e.key === "Tab") {
+              e.preventDefault();
+              complete();
+            } else if (e.key === "l" && e.ctrlKey) {
+              e.preventDefault();
+              clearTermLines();
+            } else if (e.key === "c" && e.ctrlKey) {
+              e.preventDefault();
+              print([{ type: "in", text: `${prompt} ${value}^C` }]);
+              setValue("");
+              setHi(-1);
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              if (hist.length) {
+                const n = hi < hist.length - 1 ? hi + 1 : hi;
+                setHi(n);
+                setValue(hist[hist.length - 1 - n] ?? "");
+              }
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              if (hi > 0) {
+                const n = hi - 1;
+                setHi(n);
+                setValue(hist[hist.length - 1 - n] ?? "");
+              } else if (hi === 0) {
+                setHi(-1);
+                setValue("");
+              }
+            }
+          }}
+          className="w-full bg-transparent outline-none"
+          style={{ color: "var(--ide-fg-bright)" }}
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="Terminal input"
+        />
+      </form>
+    </div>
+  );
+
+  if (bare) return body;
+
   return (
     <section
       aria-label="Terminal"
@@ -134,62 +287,7 @@ export function TerminalPanel({ onClose }: { onClose: () => void }) {
           ✕
         </button>
       </div>
-      <div ref={bodyRef} role="log" aria-live="polite" onClick={() => inputRef.current?.focus()} className="flex-1 cursor-text overflow-y-auto px-3 pb-2 font-mono text-[12.5px] leading-5 ide-scroll">
-        {lines.map((l, i) => (
-          <div
-            key={i}
-            style={{
-              color: l.type === "err" ? "var(--ide-error)" : l.type === "in" ? "var(--ide-fg-bright)" : "var(--ide-fg)",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {l.text}
-          </div>
-        ))}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const v = value;
-            setValue("");
-            setHist((h) => (v.trim() ? [...h, v.trim()] : h));
-            setHi(-1);
-            run(v);
-          }}
-          className="flex items-center gap-2"
-        >
-          <span style={{ color: "var(--ide-accent)" }}>$</span>
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowUp") {
-                e.preventDefault();
-                if (hist.length) {
-                  const n = hi < hist.length - 1 ? hi + 1 : hi;
-                  setHi(n);
-                  setValue(hist[hist.length - 1 - n] ?? "");
-                }
-              } else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (hi > 0) {
-                  const n = hi - 1;
-                  setHi(n);
-                  setValue(hist[hist.length - 1 - n] ?? "");
-                } else if (hi === 0) {
-                  setHi(-1);
-                  setValue("");
-                }
-              }
-            }}
-            className="w-full bg-transparent outline-none"
-            style={{ color: "var(--ide-fg-bright)" }}
-            autoComplete="off"
-            spellCheck={false}
-            aria-label="Terminal input"
-          />
-        </form>
-      </div>
+      {body}
     </section>
   );
 }

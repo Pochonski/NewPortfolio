@@ -5,19 +5,26 @@ import { useLocale } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { IDE_FILES, KIND_LANGUAGE, fileForRoute } from "@/lib/files";
 import { useEditors } from "./editors-context";
+import { getTermLines, subscribeTerminal } from "@/lib/terminal-store";
+import { useEffect, useReducer } from "react";
 
 export function StatusBar({
   onTerminal,
-  terminalOpen,
+  onProblems,
+  terminalActive,
   themeName,
 }: {
   onTerminal: () => void;
-  terminalOpen: boolean;
+  onProblems: () => void;
+  terminalActive: boolean;
   themeName: string;
 }) {
   const locale = useLocale();
   const { state } = useEditors();
   const pathname = usePathname();
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+  useEffect(() => subscribeTerminal(bump), []);
+  const errors = getTermLines().filter((l) => l.type === "err").length;
   const leftTab = state.left[state.activeLeft];
   const langFileId = leftTab?.kind === "code" ? leftTab.fileId : fileForRoute(pathname).id;
   const language = KIND_LANGUAGE[IDE_FILES.find((f) => f.id === langFileId)?.kind ?? "md"];
@@ -40,21 +47,29 @@ export function StatusBar({
         >
           <GitBranch size={12} /> main
         </a>
-        <span className="flex items-center gap-1" title="No errors">
-          <XCircle size={12} /> 0 <AlertTriangle size={12} /> 0
-        </span>
+        <button
+          onClick={onProblems}
+          title={errors > 0 ? `${errors} problems — open Problems` : "No problems — open Problems"}
+          aria-label="Open Problems"
+          className="flex items-center gap-1 rounded px-1 hover:opacity-100"
+        >
+          <XCircle size={12} style={errors > 0 ? { color: "var(--ide-error)" } : undefined} />
+          <span style={errors > 0 ? { color: "var(--ide-error)" } : undefined}>{errors}</span>&nbsp;&nbsp;
+          <AlertTriangle size={12} />
+          <p>0</p>
+        </button>
       </div>
       <div className="flex items-center gap-3">
         <button
           onClick={onTerminal}
           className="flex items-center gap-1 rounded px-1"
           style={{
-            color: terminalOpen ? "var(--ide-accent)" : "var(--ide-fg-dim)",
+            color: terminalActive ? "var(--ide-accent)" : "var(--ide-fg-dim)",
           }}
           title="Toggle Terminal (Ctrl+`)"
-          aria-pressed={terminalOpen}
+          aria-pressed={terminalActive}
         >
-          <TerminalSquare size={12} /> {terminalOpen ? "▼" : "▲"}
+          <TerminalSquare size={12} /> {terminalActive ? "▼" : "▲"}
         </button>
         <span className="hidden sm:inline" title="Language mode">{language}</span>
         <span className="hidden sm:inline">UTF-8</span>

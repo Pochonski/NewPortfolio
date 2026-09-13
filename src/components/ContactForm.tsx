@@ -21,8 +21,14 @@ export function ContactForm() {
       if (!res.ok) throw new Error("send failed");
       setState("ok");
       setForm({ name: "", email: "", message: "" });
+      window.dispatchEvent(
+        new CustomEvent("porto-log", { detail: { message: `Contact message sent from ${form.email}` } })
+      );
     } catch {
       setState("error");
+      window.dispatchEvent(
+        new CustomEvent("porto-log", { detail: { message: "Contact message failed to send" } })
+      );
     }
   }
 
