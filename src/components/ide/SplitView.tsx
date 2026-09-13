@@ -75,7 +75,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
     return (
       <div
         data-codepane={fileId}
-        className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[12.5px] leading-6 max-lg:overflow-visible"
+        className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[13px] leading-[1.7] max-lg:overflow-visible"
         dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
       />
     );
@@ -83,7 +83,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
   if (entry?.code) {
     return (
       <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
-        <pre className="font-mono text-[12.5px] leading-6" style={{ color: "var(--ide-fg)" }}>
+        <pre className="font-mono text-[13px] leading-[1.7]" style={{ color: "var(--ide-fg)" }}>
           {entry.code}
         </pre>
       </div>

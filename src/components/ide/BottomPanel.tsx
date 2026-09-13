@@ -52,7 +52,7 @@ function ProblemsView() {
   return (
     <div ref={ref} role="log" aria-label={t("problems")} className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
       {errors.map((l, i) => (
-        <div key={i} className="flex items-start gap-2 py-0.5 font-mono text-[12.5px] leading-5">
+        <div key={i} className="flex items-start gap-2 py-0.5 font-mono text-[13px] leading-[1.7]">
           <XCircle size={14} className="mt-0.5 shrink-0" style={{ color: "var(--ide-error)" }} />
           <span style={{ color: "var(--ide-fg)", whiteSpace: "pre-wrap" }}>{l.text}</span>
         </div>
@@ -83,7 +83,7 @@ function OutputView() {
   return (
     <div ref={ref} role="log" aria-label={t("output")} className="ide-scroll min-h-0 flex-1 overflow-auto px-3 py-2">
       {entries.map((e, i) => (
-        <div key={i} className="py-px font-mono text-[12.5px] leading-5">
+        <div key={i} className="py-px font-mono text-[13px] leading-[1.7]">
           <span style={{ color: "var(--ide-fg-dim)" }}>
             [{new Date(e.time).toLocaleTimeString()}]{" "}
           </span>

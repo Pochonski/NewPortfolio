@@ -233,7 +233,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
   }
 
   const body = (
-    <div ref={bodyRef} role="log" aria-live="polite" onClick={() => inputRef.current?.focus()} className="flex-1 cursor-text overflow-y-auto px-3 pb-2 font-mono text-[12.5px] leading-5 ide-scroll">
+    <div ref={bodyRef} role="log" aria-live="polite" onClick={() => inputRef.current?.focus()} className="flex-1 cursor-text overflow-y-auto px-3 pb-2 font-mono text-[13px] leading-[1.7] ide-scroll">
       {lines.map((l, i) => (
         <div
           key={i}

@@ -214,7 +214,17 @@ body {
   border: 2px solid var(--ide-bg);
 }
 
-/* Shiki code pane: transparent bg (pane provides it) + line numbers */
+/* Shiki code pane: premium editorial typography */
+.codepane {
+  font-size: 13px;
+  line-height: 1.7;
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1;
+  font-variant-ligatures: contextual;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
 .codepane pre.shiki {
   background: transparent !important;
   margin: 0;
@@ -225,20 +235,37 @@ body {
 }
 .codepane pre.shiki .line {
   display: block;
-  padding-left: 0.5rem;
+  padding: 0 1rem 0 0.5rem;
+  border-radius: 4px;
+  /* indent guides: repeating 2ch columns sized by --n (set server-side) */
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--ide-border) 0 1px,
+    transparent 1px 2ch
+  );
+  background-size: calc(var(--n, 0) * 2ch) 62%;
+  background-repeat: no-repeat;
+  background-position: 4rem center;
+}
+.codepane pre.shiki .line:hover {
+  background-color: rgba(var(--ide-accent-rgb), 0.07);
 }
 .codepane pre.shiki .line::before {
   counter-increment: step;
   content: counter(step);
   display: inline-block;
-  width: 2rem;
+  width: 2.5rem;
   margin-right: 1rem;
   padding-right: 0.6rem;
   border-right: 1px solid var(--ide-border);
   text-align: right;
+  font-weight: 500;
   color: var(--ide-fg-dim);
   opacity: 0.6;
   user-select: none;
+}
+.codepane ::selection {
+  background: rgba(var(--ide-accent-rgb), 0.35);
 }
 
 /* Find matches inside code panes */

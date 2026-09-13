@@ -75,7 +75,7 @@ const components: Components = {
   ),
   pre: ({ children }) => (
     <pre
-      className="overflow-x-auto rounded-lg border p-4 font-mono text-[13px] leading-6 ide-scroll"
+      className="overflow-x-auto rounded-lg border p-4 font-mono text-[13px] leading-[1.7] ide-scroll"
       style={{ background: "var(--ide-terminal)", borderColor: "var(--ide-border)", color: "var(--ide-fg)" }}
     >
       {children}
