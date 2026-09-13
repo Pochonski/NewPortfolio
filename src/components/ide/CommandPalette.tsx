@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IDE_FILES } from "@/lib/files";
 import { IDE_THEMES } from "@/lib/themes";
+import { fuzzyScore } from "@/lib/fuzzy";
+import { readRecents } from "@/lib/recents";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { FileIcon } from "./FileIcon";
@@ -104,9 +106,23 @@ export function CommandPalette({
   }, [router, locale, onTerminal, onClose, themeMode, sidePicker]);
 
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return items;
-    return items.filter((i) => `${i.group} ${i.label}`.toLowerCase().includes(s));
+    const s = q.trim();
+    if (!s) {
+      // Empty query: recent files first, then everything else.
+      const recent = readRecents().slice().reverse();
+      const rank = (it: Item) => {
+        const m = it.key.match(/^(?:go|side)-(.+)$/);
+        if (!m) return 999;
+        const at = recent.indexOf(m[1]);
+        return at < 0 ? 999 : at;
+      };
+      return [...items].sort((a, b) => rank(a) - rank(b));
+    }
+    return items
+      .map((it) => ({ it, score: fuzzyScore(s, `${it.group} ${it.label}`) }))
+      .filter((r): r is { it: Item; score: number } => r.score !== null)
+      .sort((a, b) => b.score - a.score)
+      .map((r) => r.it);
   }, [items, q]);
 
   // Fresh state on every mount (parent mounts conditionally), autofocus only.

@@ -27,6 +27,7 @@ import {
   type EditorTab,
   type GroupId,
 } from "./editors-context";
+import { readRecents } from "@/lib/recents";
 import {
   fetchSource,
   readSource,
@@ -245,6 +246,61 @@ function Sash({ ratio, onRatio }: { ratio: number; onRatio: (n: number) => void 
 }
 
 // ---------------------------------------------------------------------------
+// Welcome view for empty groups: recents + shortcuts, VS Code style.
+// ---------------------------------------------------------------------------
+function WelcomeView() {
+  const { openFile } = useEditors();
+  const locale = useLocale();
+  const es = locale === "es";
+  const [recents] = useState<string[]>(() => readRecents().slice().reverse());
+
+  return (
+    <div className="ide-scroll flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-auto p-8 text-center">
+      <div
+        className="flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-bold"
+        style={{ background: "var(--ide-accent)", color: "var(--ide-button-fg)" }}
+        aria-hidden
+      >
+        JF
+      </div>
+      <div>
+        <p className="text-base font-semibold" style={{ color: "var(--ide-fg-bright)" }}>
+          {es ? "Sin editores abiertos" : "No editors open"}
+        </p>
+        <p className="mt-1 font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
+          Ctrl+K · Ctrl+Shift+F · Ctrl+`
+        </p>
+      </div>
+      {recents.length > 0 && (
+        <div suppressHydrationWarning className="w-full max-w-xs">
+          <p
+            className="mb-2 text-left font-mono text-[10px] tracking-wider uppercase"
+            style={{ color: "var(--ide-fg-dim)" }}
+          >
+            {es ? "Recientes" : "Recent"}
+          </p>
+          {recents.slice(0, 5).map((id) => {
+            const file = IDE_FILES.find((f) => f.id === id);
+            if (!file) return null;
+            return (
+              <button
+                key={id}
+                onClick={() => openFile(id)}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] hover:opacity-100"
+                style={{ color: "var(--ide-fg)" }}
+              >
+                <FileIcon file={file} size={14} />
+                <span className="truncate font-mono">{file.filename}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // One editor group: tab bar + breadcrumb + content.
 // ---------------------------------------------------------------------------
 function GroupView({
@@ -281,7 +337,6 @@ function GroupView({
         {tabs.map((tab, i) => {
           const file = fileOf(tab);
           const isActive = i === Math.min(activeIdx, tabs.length - 1);
-          const showX = tabs.length > 1 || group === "right";
           return (
             <div
               key={tab.kind === "code" ? `code-${tab.fileId}` : "preview"}
@@ -304,19 +359,23 @@ function GroupView({
                 <Globe size={13} style={{ color: "var(--ide-accent)" }} />
               )}
               <span>{tab.kind === "code" ? file?.filename : "Preview"}</span>
-              {showX && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(group, i);
-                  }}
-                  title={group === "right" && tabs.length === 1 ? "Close group" : "Close"}
-                  aria-label={tab.kind === "code" ? `Close ${file?.filename}` : "Close preview"}
-                  className="rounded p-0.5 opacity-60 hover:opacity-100"
-                >
-                  <X size={12} />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeTab(group, i);
+                }}
+                title={
+                  group === "right" && tabs.length === 1
+                    ? "Close group"
+                    : group === "left" && tabs.length === 1
+                      ? "Close (empty group)"
+                      : "Close"
+                }
+                aria-label={tab.kind === "code" ? `Close ${file?.filename}` : "Close preview"}
+                className="rounded p-0.5 opacity-60 hover:opacity-100"
+              >
+                <X size={12} />
+              </button>
             </div>
           );
         })}
@@ -342,7 +401,9 @@ function GroupView({
       >
         <span>portfolio</span>
         <ChevronRight size={11} aria-hidden />
-        {active && active.kind === "code" && fileOf(active) ? (
+        {!active ? (
+          <span style={{ color: "var(--ide-fg)" }}>Welcome</span>
+        ) : active.kind === "code" && fileOf(active) ? (
           <span style={{ color: "var(--ide-fg)" }}>{fileOf(active)?.filename}</span>
         ) : (
           <>
@@ -363,7 +424,9 @@ function GroupView({
         </div>
       ) : active ? (
         <CodeTabContent fileId={active.fileId} />
-      ) : null}
+      ) : (
+        <WelcomeView />
+      )}
     </section>
   );
 }
@@ -560,11 +623,13 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
   // Collapse to the single group automatically — no effect needed.
   const visible: GroupId = state.right ? mobileGroup : "left";
 
+  const leftTab = state.left[state.activeLeft];
   const leftName =
-    state.left[state.activeLeft]?.kind === "code"
-      ? (IDE_FILES.find((f) => f.id === (state.left[state.activeLeft] as { fileId: string }).fileId)
-          ?.filename ?? "Editor")
-      : "Preview";
+    !leftTab
+      ? "Welcome"
+      : leftTab.kind === "code"
+        ? (IDE_FILES.find((f) => f.id === leftTab.fileId)?.filename ?? "Editor")
+        : "Preview";
   const rightTab = state.right?.[state.activeRight];
   const rightName = !state.right
     ? null

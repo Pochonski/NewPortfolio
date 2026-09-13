@@ -12,6 +12,7 @@ import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { IDE_FILES, fileForRoute } from "@/lib/files";
 import { DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
+import { pushRecent } from "@/lib/recents";
 import {
   seedSource,
   sourceKey,
@@ -63,7 +64,7 @@ function defaultState(fileId: string): EditorsState {
 function sanitize(raw: unknown): EditorsState | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
-  if (!Array.isArray(o.left) || !o.left.every(isValidTab) || o.left.length === 0) return null;
+  if (!Array.isArray(o.left) || !o.left.every(isValidTab)) return null;
   if (
     o.right !== null &&
     (!Array.isArray(o.right) || !o.right.every(isValidTab) || o.right.length === 0)
@@ -168,15 +169,21 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reveal current file when navigating (does nothing if already open).
+  // Reveal current file when navigating. Fills an empty left group;
+  // otherwise appends when missing everywhere (does nothing if open).
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- route reconcile
     setState((s) => {
       if (!s.ready) return s;
+      if (s.left.length === 0) {
+        pushRecent(routeFileId);
+        return { ...s, left: [{ kind: "code", fileId: routeFileId }], activeLeft: 0 };
+      }
       const present =
         s.left.some((t) => t.kind === "code" && t.fileId === routeFileId) ||
         s.right?.some((t) => t.kind === "code" && t.fileId === routeFileId);
       if (present) return s;
+      pushRecent(routeFileId);
       return { ...s, left: [...s.left, { kind: "code", fileId: routeFileId }], activeLeft: s.left.length };
     });
   }, [pathname, routeFileId]);
@@ -216,6 +223,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       setActive,
       openFile: (fileId: string, toSide = false) => {
         if (!IDE_FILES.some((f) => f.id === fileId)) return;
+        pushRecent(fileId);
         const target: GroupId = toSide ? (lastActive === "left" ? "right" : "left") : lastActive;
         setLastActive(target);
         setState((s) => {
@@ -238,7 +246,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       closeTab: (group: GroupId, idx: number) => {
         setState((s) => {
           if (group === "left") {
-            if (s.left.length <= 1) return s;
+            // Closing the last tab leaves an empty group with a welcome view.
             const left = s.left.filter((_, i) => i !== idx);
             return { ...s, left, activeLeft: clampIdx(left, s.activeLeft) };
           }
@@ -252,8 +260,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       moveTabToOtherSide: (group: GroupId, idx: number) => {
         setState((s) => {
           const from = group === "left" ? s.left : s.right;
-          if (!from || idx < 0 || idx >= from.length) return s;
-          if (from.length <= 1 && group === "left") return s;
+          if (!from || from.length === 0 || idx < 0 || idx >= from.length) return s;
           const tab = from[idx];
           const dest: GroupId = group === "left" ? "right" : "left";
           const destTabs = dest === "left" ? s.left : (s.right ?? []);
@@ -267,6 +274,9 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
             if (group === "right") {
               next.right = null;
               next.activeRight = 0;
+            } else {
+              next.left = [];
+              next.activeLeft = 0;
             }
           } else {
             const kept = from.filter((_, i) => i !== idx);
