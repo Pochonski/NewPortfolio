@@ -1,4 +1,4 @@
-export type FolderIconKind = "src" | "docs" | "database" | "css" | "config";
+export type FolderIconKind = "src" | "docs" | "database" | "css" | "config" | "link";
 
 export interface IdeFolder {
   id: string;
@@ -21,6 +21,7 @@ export const IDE_FOLDERS: IdeFolder[] = [
   { id: "docs", name: "docs", icon: "docs" },
   { id: "data", name: "data", icon: "database" },
   { id: "styles", name: "styles", icon: "css" },
+  { id: "projects", name: "projects", icon: "link" },
 ];
 
 export const IDE_FILES: IdeFile[] = [
@@ -56,4 +57,38 @@ export const KIND_LANGUAGE: Record<IdeFile["kind"], string> = {
 export function fileForRoute(pathname: string): IdeFile {
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
   return IDE_FILES.find((f) => f.route === clean) ?? IDE_FILES[0];
+}
+
+// ---------------------------------------------------------------------------
+// Live sites: external projects opened in the integrated browser (SiteBrowser
+// tab). Prototype scope: Perfumes El Pocho only. Not part of IDE_FILES —
+// sites have no route, code pane or search index.
+// ---------------------------------------------------------------------------
+
+export interface IdeSite {
+  id: string;
+  /** Explorer row label (proper noun, not translated) */
+  label: string;
+  url: string;
+}
+
+export const IDE_SITES: IdeSite[] = [
+  {
+    id: "site-perfumes",
+    label: "Perfumes-el-pocho",
+    url: "https://perfumes-el-pocho.vercel.app/",
+  },
+];
+
+export function siteForId(siteId: string): IdeSite | undefined {
+  return IDE_SITES.find((s) => s.id === siteId);
+}
+
+/** Host shown as the browser tab label, e.g. "perfumes-el-pocho.vercel.app". */
+export function siteHost(site: IdeSite): string {
+  try {
+    return new URL(site.url).host;
+  } catch {
+    return site.label;
+  }
 }

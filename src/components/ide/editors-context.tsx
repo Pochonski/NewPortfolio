@@ -6,11 +6,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-import { IDE_FILES, fileForRoute } from "@/lib/files";
+import { IDE_FILES, fileForRoute, siteForId } from "@/lib/files";
 import { DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
 import { pushRecent } from "@/lib/recents";
 import { trackEvent } from "@/lib/analytics";
@@ -20,10 +21,13 @@ import {
   type SourcePayload,
 } from "@/lib/source-cache";
 
-export type EditorTab = { kind: "code"; fileId: string } | { kind: "preview" };
+export type EditorTab =
+  | { kind: "code"; fileId: string }
+  | { kind: "preview" }
+  | { kind: "site"; siteId: string };
 export type GroupId = "left" | "right";
 
-interface EditorsState {
+export interface EditorsState {
   left: EditorTab[];
   right: EditorTab[] | null;
   activeLeft: number;
@@ -39,6 +43,7 @@ function isValidTab(t: unknown): t is EditorTab {
   if (!t || typeof t !== "object") return false;
   const o = t as Record<string, unknown>;
   if (o.kind === "preview") return true;
+  if (o.kind === "site") return typeof o.siteId === "string" && !!siteForId(o.siteId);
   return (
     o.kind === "code" &&
     typeof o.fileId === "string" &&
@@ -49,6 +54,18 @@ function isValidTab(t: unknown): t is EditorTab {
 function clampIdx(tabs: EditorTab[], idx: number): number {
   if (tabs.length === 0) return 0;
   return Math.min(Math.max(idx, 0), tabs.length - 1);
+}
+
+/**
+ * Focus mode: when the last-active tab is a live site, it takes the full
+ * editor width (both grids). Derived — no extra state to persist/migrate.
+ */
+export function focusedSiteGroup(state: EditorsState, lastActive: GroupId): GroupId | null {
+  const tabs = lastActive === "left" ? state.left : state.right;
+  if (!tabs || tabs.length === 0) return null;
+  const idx = lastActive === "left" ? state.activeLeft : state.activeRight;
+  const tab = tabs[Math.min(idx, tabs.length - 1)];
+  return tab?.kind === "site" ? lastActive : null;
 }
 
 function defaultState(fileId: string): EditorsState {
@@ -124,6 +141,8 @@ interface EditorsApi {
   lastActive: GroupId;
   setActive: (group: GroupId, idx: number) => void;
   openFile: (fileId: string, toSide?: boolean) => void;
+  /** Open a live site in the integrated browser (right group, expanded). */
+  openSite: (siteId: string, toSide?: boolean) => void;
   closeTab: (group: GroupId, idx: number) => void;
   moveTabToOtherSide: (group: GroupId, idx: number) => void;
   toggleSplit: () => void;
@@ -189,6 +208,19 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
     });
   }, [pathname, routeFileId]);
 
+  // Exit site focus on route navigation (TabsBar / chords / palette / terminal
+  // all flow through pathname). No-op when no site is focused.
+  const prevPathname = useRef(pathname);
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
+      if (focusedSiteGroup(state, lastActive)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- exit focus on navigation
+        setLastActive("left");
+      }
+    }
+  }, [pathname, state, lastActive]);
+
   // Persist workspace.
   useEffect(() => {
     if (!state.ready) return;
@@ -243,6 +275,34 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           return target === "left"
             ? { ...s, left: [...s.left, tab], activeLeft: s.left.length }
             : { ...s, right: [...(s.right ?? []), tab], activeRight: (s.right ?? []).length };
+        });
+      },
+      openSite: (siteId: string, toSide = false) => {
+        if (!siteForId(siteId)) return;
+        pushRecent(siteId);
+        trackEvent("site_open", { site: siteId });
+        // Browser tabs live in the right group by default (Alt+click → left).
+        const target: GroupId = toSide ? "left" : "right";
+        setLastActive(target);
+        setState((s) => {
+          const tabs = target === "left" ? s.left : (s.right ?? []);
+          const existing = tabs.findIndex((t) => t.kind === "site" && t.siteId === siteId);
+          if (existing >= 0) {
+            return target === "left"
+              ? { ...s, activeLeft: existing }
+              : { ...s, right: s.right ?? [], activeRight: existing };
+          }
+          const tab: EditorTab = { kind: "site", siteId };
+          // Auto-expand the browser group on open (clamped 25–75 by setRatio).
+          const ratio = 28;
+          return target === "left"
+            ? { ...s, left: [...s.left, tab], activeLeft: s.left.length, ratio }
+            : {
+                ...s,
+                right: [...(s.right ?? []), tab],
+                activeRight: (s.right ?? []).length,
+                ratio,
+              };
         });
       },
       closeTab: (group: GroupId, idx: number) => {
@@ -316,11 +376,17 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       const d = (e as CustomEvent).detail as { fileId?: string; toSide?: boolean } | undefined;
       if (d?.fileId) api.openFile(d.fileId, d.toSide);
     };
+    const onOpenSite = (e: Event) => {
+      const d = (e as CustomEvent).detail as { siteId?: string; toSide?: boolean } | undefined;
+      if (d?.siteId) api.openSite(d.siteId, d.toSide);
+    };
     window.addEventListener("porto-split", onSplit);
     window.addEventListener("porto-open-file", onOpen as EventListener);
+    window.addEventListener("porto-open-site", onOpenSite as EventListener);
     return () => {
       window.removeEventListener("porto-split", onSplit);
       window.removeEventListener("porto-open-file", onOpen as EventListener);
+      window.removeEventListener("porto-open-site", onOpenSite as EventListener);
     };
   }, [api]);
 

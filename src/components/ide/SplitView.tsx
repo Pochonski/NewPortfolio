@@ -20,8 +20,10 @@ import {
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { IDE_FILES, fileForRoute } from "@/lib/files";
+import { IDE_FILES, fileForRoute, siteForId, siteHost } from "@/lib/files";
 import { FileIcon } from "./FileIcon";
+import { SiteBrowser } from "./SiteBrowser";
+import { focusedSiteGroup } from "./editors-context";
 import {
   useEditors,
   useLiveTheme,
@@ -341,10 +343,16 @@ function GroupView({
         {tabs.map((tab, i) => {
           const file = fileOf(tab);
           const isActive = i === Math.min(activeIdx, tabs.length - 1);
-          const tabName = tab.kind === "code" ? (file?.filename ?? ts("editor")) : ts("preview");
+          const site = tab.kind === "site" ? siteForId(tab.siteId) : undefined;
+          const tabName =
+            tab.kind === "code"
+              ? (file?.filename ?? ts("editor"))
+              : tab.kind === "site"
+                ? (site ? siteHost(site) : ts("editor"))
+                : ts("preview");
           return (
             <div
-              key={tab.kind === "code" ? `code-${tab.fileId}` : "preview"}
+              key={tab.kind === "code" ? `code-${tab.fileId}` : tab.kind === "site" ? `site-${tab.siteId}` : "preview"}
               role="tab"
               aria-selected={isActive}
               onClick={() => setActive(group, i)}
@@ -376,7 +384,7 @@ function GroupView({
                       ? ts("closeEmpty")
                       : ts("closeTab")
                 }
-                aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : ts("closePreview")}
+                aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : tab.kind === "site" ? `${ts("closeTab")} ${tabName}` : ts("closePreview")}
                 className="rounded p-0.5 opacity-60 hover:opacity-100"
               >
                 <X size={12} />
@@ -408,6 +416,12 @@ function GroupView({
         <ChevronRight size={11} aria-hidden />
         {!active ? (
           <span style={{ color: "var(--ide-fg)" }}>{ts("welcome")}</span>
+        ) : active.kind === "site" ? (
+          <>
+            <span>projects</span>
+            <ChevronRight size={11} aria-hidden />
+            <span style={{ color: "var(--ide-fg)" }}>{siteForId(active.siteId)?.label ?? active.siteId}</span>
+          </>
         ) : active.kind === "code" && fileOf(active) ? (
           <span style={{ color: "var(--ide-fg)" }}>{fileOf(active)?.filename}</span>
         ) : (
@@ -427,7 +441,9 @@ function GroupView({
             {preview}
           </div>
         </div>
-      ) : active ? (
+      ) : active?.kind === "site" ? (
+        <SiteBrowser siteId={active.siteId} />
+      ) : active && active.kind === "code" ? (
         <CodeTabContent fileId={active.fileId} />
       ) : (
         <WelcomeView />
@@ -624,79 +640,92 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
 // Split root: groups + sash + mobile group switcher.
 // ---------------------------------------------------------------------------
 export function SplitView({ preview }: { preview: React.ReactNode }) {
-  const { state, setRatio } = useEditors();
+  const { state, lastActive, setRatio } = useEditors();
   const ts = useTranslations("ide.split");
   const [mobileGroup, setMobileGroup] = useState<GroupId>("right");
   const rootRef = useRef<HTMLDivElement>(null);
   // Collapse to the single group automatically — no effect needed.
   const visible: GroupId = state.right ? mobileGroup : "left";
+  // Site focus: a live site takes the full editor width (both grids).
+  const focus = focusedSiteGroup(state, lastActive);
 
   const leftTab = state.left[state.activeLeft];
-  const leftName =
-    !leftTab
-      ? ts("welcome")
-      : leftTab.kind === "code"
-        ? (IDE_FILES.find((f) => f.id === leftTab.fileId)?.filename ?? ts("editor"))
-        : ts("preview");
+  const tabLabel = (t: (typeof state.left)[number] | undefined): string => {
+    if (!t) return ts("welcome");
+    if (t.kind === "code") return IDE_FILES.find((f) => f.id === t.fileId)?.filename ?? ts("editor");
+    if (t.kind === "site") {
+      const s = siteForId(t.siteId);
+      return s ? siteHost(s) : ts("editor");
+    }
+    return ts("preview");
+  };
+  const leftName = tabLabel(leftTab);
   const rightTab = state.right?.[state.activeRight];
-  const rightName = !state.right
-    ? null
-    : rightTab?.kind === "code"
-      ? (IDE_FILES.find((f) => f.id === rightTab.fileId)?.filename ?? ts("editor"))
-      : ts("preview");
+  const rightName = !state.right ? null : tabLabel(rightTab);
 
   return (
     <div ref={rootRef} className="relative flex min-h-0 flex-1 flex-col">
       <FindWidget rootRef={rootRef} />
-      {state.right && (
-        <div
-          role="tablist"
-          aria-label={ts("editorGroup")}
-          className="mb-3 flex shrink-0 gap-1 self-start rounded-lg border p-1 lg:hidden"
-          style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
-        >
-          {(
-            [
-              { id: "left", label: leftName, Icon: Code2 },
-              { id: "right", label: rightName ?? ts("preview"), Icon: Eye },
-            ] as const
-          ).map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={mobileGroup === id}
-              onClick={() => setMobileGroup(id)}
-              className="flex max-w-36 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium"
-              style={{
-                background: mobileGroup === id ? "var(--ide-explorer-hover)" : "transparent",
-                color: mobileGroup === id ? "var(--ide-fg-bright)" : "var(--ide-fg-dim)",
-              }}
-            >
-              <Icon size={13} />
-              <span className="truncate">{label}</span>
-            </button>
-          ))}
+      {focus ? (
+        // Site focus: single group at full width (mobile + desktop).
+        <div className="flex min-h-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <GroupView group={focus} preview={preview} mobileVisible />
+          </div>
         </div>
-      )}
-
-      <div className="flex min-h-0 flex-1 max-lg:block lg:flex-row">
-        <div
-          className={`min-h-0 min-w-0 flex-col ${visible === "left" ? "flex" : "hidden"} lg:flex`}
-          style={{ width: state.right ? undefined : "100%", flex: state.right ? `0 0 ${state.ratio}%` : "1 1 auto" }}
-        >
-          <GroupView group="left" preview={preview} mobileVisible={visible === "left"} />
-        </div>
-        {state.right && (
-          <>
-            <Sash ratio={state.ratio} onRatio={setRatio} />
+      ) : (
+        <>
+          {state.right && (
             <div
-              className={`min-h-0 min-w-0 flex-1 flex-col ${visible === "right" ? "flex" : "hidden"} lg:flex`}
+              role="tablist"
+              aria-label={ts("editorGroup")}
+              className="mb-3 flex shrink-0 gap-1 self-start rounded-lg border p-1 lg:hidden"
+              style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
             >
-              <GroupView group="right" preview={preview} mobileVisible={visible === "right"} />
+              {(
+                [
+                  { id: "left", label: leftName, Icon: Code2 },
+                  { id: "right", label: rightName ?? ts("preview"), Icon: Eye },
+                ] as const
+              ).map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={mobileGroup === id}
+                  onClick={() => setMobileGroup(id)}
+                  className="flex max-w-36 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    background: mobileGroup === id ? "var(--ide-explorer-hover)" : "transparent",
+                    color: mobileGroup === id ? "var(--ide-fg-bright)" : "var(--ide-fg-dim)",
+                  }}
+                >
+                  <Icon size={13} />
+                  <span className="truncate">{label}</span>
+                </button>
+              ))}
             </div>
-          </>
-        )}
-      </div>
+          )}
+
+          <div className="flex min-h-0 flex-1 max-lg:block lg:flex-row">
+            <div
+              className={`min-h-0 min-w-0 flex-col ${visible === "left" ? "flex" : "hidden"} lg:flex`}
+              style={{ width: state.right ? undefined : "100%", flex: state.right ? `0 0 ${state.ratio}%` : "1 1 auto" }}
+            >
+              <GroupView group="left" preview={preview} mobileVisible={visible === "left"} />
+            </div>
+            {state.right && (
+              <>
+                <Sash ratio={state.ratio} onRatio={setRatio} />
+                <div
+                  className={`min-h-0 min-w-0 flex-1 flex-col ${visible === "right" ? "flex" : "hidden"} lg:flex`}
+                >
+                  <GroupView group="right" preview={preview} mobileVisible={visible === "right"} />
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

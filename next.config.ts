@@ -32,6 +32,9 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://api.resend.com https://vitals.vercel-insights.com",
+              // Integrated browser (SiteBrowser iframe): only the portfolio's
+              // own live projects may be framed.
+              "frame-src https://perfumes-el-pocho.vercel.app",
             ].join("; "),
           },
         ],

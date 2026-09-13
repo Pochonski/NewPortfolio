@@ -440,6 +440,13 @@
       "noResults": "Sin resultados",
       "hint": "Escribe 2+ letras. Click abre el archivo en el editor.",
       "results": "Resultados de búsqueda"
+    },
+    "site": {
+      "live": "En vivo",
+      "expand": "Expandir navegador",
+      "collapse": "Reducir navegador",
+      "showCode": "Mostrar código",
+      "openSiteHint": "{site} — abre el sitio en vivo en el navegador interno"
     }
   }
 }

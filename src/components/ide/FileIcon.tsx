@@ -5,6 +5,7 @@ import {
   FolderCssIcon,
   FolderDatabaseIcon,
   FolderDocsIcon,
+  FolderLinkIcon,
   FolderSrcIcon,
   JavaScriptIcon,
   JsonIcon,
@@ -62,5 +63,7 @@ export function FolderIcon({
       return <FolderCssIcon open={open} size={size} />;
     case "config":
       return <FolderConfigIcon open={open} size={size} />;
+    case "link":
+      return <FolderLinkIcon open={open} size={size} />;
   }
 }

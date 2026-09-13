@@ -436,6 +436,13 @@
       "noResults": "No results",
       "hint": "Type 2+ characters. Click opens the file in the editor.",
       "results": "Search results"
+    },
+    "site": {
+      "live": "Live",
+      "expand": "Expand browser",
+      "collapse": "Collapse browser",
+      "showCode": "Show code",
+      "openSiteHint": "{site} — open the live site in the integrated browser"
     }
   }
 }

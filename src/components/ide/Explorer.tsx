@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Globe } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { IDE_FILES, IDE_FOLDERS } from "@/lib/files";
+import { IDE_FILES, IDE_FOLDERS, IDE_SITES } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
+import { useEditors } from "./editors-context";
 
 export function Explorer() {
   const t = useTranslations("ide.explorer");
+  const ts = useTranslations("ide.site");
+  const { state } = useEditors();
   const [open, setOpen] = useState(true);
   const [drawer, setDrawer] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -61,6 +64,47 @@ export function Explorer() {
     );
   };
 
+  const isSiteActive = (siteId: string) =>
+    (state.left[state.activeLeft]?.kind === "site" &&
+      (state.left[state.activeLeft] as { siteId: string }).siteId === siteId) ||
+    (state.right?.[state.activeRight]?.kind === "site" &&
+      (state.right?.[state.activeRight] as { siteId: string }).siteId === siteId);
+
+  const renderSite = (s: (typeof IDE_SITES)[number], depth: number) => {
+    const isActive = isSiteActive(s.id);
+    return (
+      <li key={s.id} role="treeitem" aria-selected={!!isActive} aria-level={depth + 1}>
+        <button
+          onClick={(e) => {
+            setDrawer(false);
+            window.dispatchEvent(
+              new CustomEvent("porto-open-site", {
+                detail: { siteId: s.id, toSide: e.altKey },
+              })
+            );
+          }}
+          title={ts("openSiteHint", { site: s.label })}
+          className="flex w-full items-center gap-2 py-[5px] pr-4 text-left text-[13px]"
+          style={{
+            paddingLeft: `${12 + depth * 14}px`,
+            background: isActive ? "var(--ide-explorer-hover)" : "transparent",
+            color: isActive ? "var(--ide-fg-bright)" : "var(--ide-fg)",
+            borderLeft: isActive ? "2px solid var(--ide-accent)" : "2px solid transparent",
+          }}
+        >
+          <Globe size={15} className="shrink-0" style={{ color: "var(--ide-accent)" }} />
+          <span className="truncate font-mono">{s.label}</span>
+          <span
+            className="ml-auto rounded-full border px-1.5 py-px font-mono text-[9px] tracking-wide uppercase"
+            style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
+          >
+            {ts("live")}
+          </span>
+        </button>
+      </li>
+    );
+  };
+
   const list = (
     <div role="tree" aria-label={t("files")}>
       <button
@@ -79,8 +123,10 @@ export function Explorer() {
       {open && (
         <ul className="pb-2">
           {IDE_FOLDERS.map((folder) => {
-            const files = IDE_FILES.filter((f) => f.folder === folder.id);
-            if (files.length === 0) return null;
+            // The projects/ folder lists live sites (no routes), not code files.
+            const sites = folder.id === "projects" ? IDE_SITES : [];
+            const files = folder.id === "projects" ? [] : IDE_FILES.filter((f) => f.folder === folder.id);
+            if (sites.length === 0 && files.length === 0) return null;
             const isCollapsed = collapsed.has(folder.id);
             return (
               <li key={folder.id} role="treeitem" aria-expanded={!isCollapsed} aria-selected={false} aria-level={1}>
@@ -95,7 +141,10 @@ export function Explorer() {
                   <span className="truncate font-medium">{folder.name}</span>
                 </button>
                 {!isCollapsed && (
-                  <ul role="group">{files.map((f) => renderFile(f, 1))}</ul>
+                  <ul role="group">
+                    {files.map((f) => renderFile(f, 1))}
+                    {sites.map((s) => renderSite(s, 1))}
+                  </ul>
                 )}
               </li>
             );
