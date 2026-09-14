@@ -58,3 +58,17 @@ test("multiple live sites stay open as tabs", async ({ page }) => {
   await page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" }).click();
   await expect(address).toHaveValue(/perfumes-el-pocho\.vercel\.app/);
 });
+
+test("navigating to a route exits live sites", async ({ page }) => {
+  await page.goto("/");
+  const tree = page.getByRole("tree");
+  await tree.getByText("Perfumes-el-pocho").click();
+  await tree.getByText("Préstamos-mi-príncipe").click();
+  await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
+  // Leaving the project for a route closes every site tab.
+  await tree.getByText("contact.css").click();
+  await expect(page).toHaveURL(/\/contact/);
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toHaveCount(0);
+  await expect(page.getByText("Conectemos")).toBeVisible();
+});

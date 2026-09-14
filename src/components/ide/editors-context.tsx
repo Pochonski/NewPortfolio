@@ -92,6 +92,28 @@ function pushRight(right: EditorTab[], tab: EditorTab): { right: EditorTab[]; id
 }
 
 /**
+ * Strip every site tab (both groups). The right group falls back to
+ * preview so the editor shows code + preview; ratio resets to default.
+ * Returns the state unchanged when no site is open (no-op).
+ */
+function withoutSites(s: EditorsState): EditorsState {
+  if (!s.left.some((t) => t.kind === "site") && !(s.right ?? []).some((t) => t.kind === "site")) {
+    return s;
+  }
+  const left = s.left.filter((t) => t.kind !== "site");
+  let right = (s.right ?? []).filter((t) => t.kind !== "site");
+  if (right.length === 0) right = [{ kind: "preview" }];
+  return {
+    ...s,
+    left,
+    right,
+    activeLeft: clampIdx(left, s.activeLeft),
+    activeRight: clampIdx(right, s.activeRight),
+    ratio: DEFAULT_RATIO,
+  };
+}
+
+/**
  * Focus mode: when the last-active tab is a live site, it takes the full
  * editor width (both grids). Derived — no extra state to persist/migrate.
  */
@@ -200,6 +222,8 @@ interface EditorsApi {
   openSite: (siteId: string, toSide?: boolean) => void;
   /** Reset the right browser slot back to the portfolio preview. */
   showPreview: () => void;
+  /** Close every open site tab (both groups), back to code + preview. */
+  closeSites: () => void;
   closeTab: (group: GroupId, idx: number) => void;
   moveTabToOtherSide: (group: GroupId, idx: number) => void;
   toggleSplit: () => void;
@@ -267,20 +291,17 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
     });
   }, [pathname, routeFileId]);
 
-  // On route navigation a focused site tab exits focus (back to the
-  // left group). Browser tabs are preserved — only the ratio resets.
-  // No-op when no site is focused.
+  // On route navigation every open site closes (projects never linger
+  // in the split): the route file reconcile above reveals the route's
+  // code + preview. No-op when no site is open.
   const prevPathname = useRef(pathname);
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
-      if (focusedSiteGroup(state, lastActive)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- exit focus on navigation
-        setState((s) => (s.ratio === DEFAULT_RATIO ? s : { ...s, ratio: DEFAULT_RATIO }));
-        setLastActive("left");
-      }
+      setState((s) => withoutSites(s));
+      setLastActive("left");
     }
-  }, [pathname, state, lastActive]);
+  }, [pathname]);
 
   // Persist workspace.
   useEffect(() => {
@@ -359,6 +380,10 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           const pushed = pushRight(s.right ?? [], { kind: "preview" });
           return { ...s, right: pushed.right, activeRight: pushed.idx };
         });
+      },
+      closeSites: () => {
+        setLastActive("left");
+        setState((s) => withoutSites(s));
       },
       closeTab: (group: GroupId, idx: number) => {
         setState((s) => {

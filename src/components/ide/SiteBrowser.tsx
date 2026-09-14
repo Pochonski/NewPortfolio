@@ -15,7 +15,8 @@ import {
   RotateCw,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { siteForId } from "@/lib/files";
+import { usePathname } from "@/i18n/navigation";
+import { fileForRoute, siteForId } from "@/lib/files";
 import { focusedSiteGroup, useEditors } from "./editors-context";
 
 interface PortoRouteMessage {
@@ -37,9 +38,10 @@ const lastUrlBySite = new Map<string, string>();
 
 export function SiteBrowser({ siteId }: { siteId: string }) {
   const site = siteForId(siteId);
+  const pathname = usePathname();
   const ts = useTranslations("ide.split");
   const tt = useTranslations("ide.site");
-  const { state, lastActive, showPreview, setRatio } = useEditors();
+  const { state, lastActive, closeSites, openFile, setRatio } = useEditors();
   const [reloadKey, setReloadKey] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -158,10 +160,12 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const expanded = state.ratio <= 28;
   const toggleExpand = () => setRatio(expanded ? 50 : 25);
 
-  // In focus, the toggle becomes "Show code" â†’ back to the portfolio
-  // preview in the single browser slot (which also exits focus).
+  // In focus, the toggle becomes "Show code" (see showCode below).
+  // In focus, the toggle becomes "Show code" → closes the site and
+  // reveals the current route's file (sites never linger in the split).
   const showCode = () => {
-    showPreview();
+    closeSites();
+    openFile(fileForRoute(pathname).id);
   };
 
   const copyUrl = async () => {
