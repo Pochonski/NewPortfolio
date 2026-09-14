@@ -446,6 +446,7 @@
       "expand": "Expandir navegador",
       "collapse": "Reducir navegador",
       "showCode": "Mostrar código",
+      "addressLabel": "Dirección del sitio",
       "openSiteHint": "{site} — abre el sitio en vivo en el navegador interno"
     }
   }

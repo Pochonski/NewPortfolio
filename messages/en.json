@@ -442,6 +442,7 @@
       "expand": "Expand browser",
       "collapse": "Collapse browser",
       "showCode": "Show code",
+      "addressLabel": "Site address",
       "openSiteHint": "{site} — open the live site in the integrated browser"
     }
   }

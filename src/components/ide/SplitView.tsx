@@ -442,7 +442,7 @@ function GroupView({
           </div>
         </div>
       ) : active?.kind === "site" ? (
-        <SiteBrowser siteId={active.siteId} />
+        <SiteBrowser key={active.siteId} siteId={active.siteId} />
       ) : active && active.kind === "code" ? (
         <CodeTabContent fileId={active.fileId} />
       ) : (
