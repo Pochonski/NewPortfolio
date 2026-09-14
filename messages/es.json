@@ -407,6 +407,7 @@
       "files": "Archivos del portfolio",
       "openExplorer": "Abrir explorador",
       "closeExplorer": "Cerrar explorador",
+      "resizeSidebar": "Redimensionar barra lateral",
       "openSideHint": "{file} — Alt+clic abre al lado"
     },
     "activity": {

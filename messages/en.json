@@ -403,6 +403,7 @@
       "files": "Portfolio files",
       "openExplorer": "Open Explorer",
       "closeExplorer": "Close Explorer",
+      "resizeSidebar": "Resize sidebar",
       "openSideHint": "{file} — Alt+click opens to the side"
     },
     "activity": {

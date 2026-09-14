@@ -1,12 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Globe } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { IDE_FILES, IDE_FOLDERS, IDE_SITES } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 import { useEditors } from "./editors-context";
+
+const SIDE_WIDTH_KEY = "porto-sidebar-width";
+const SIDE_WIDTH_DEFAULT = 224;
+const SIDE_WIDTH_MIN = 160;
+const SIDE_WIDTH_MAX = 420;
+const SIDE_WIDTH_STEP = 8;
+
+function clampSideWidth(n: number): number {
+  if (Number.isNaN(n)) return SIDE_WIDTH_DEFAULT;
+  return Math.min(SIDE_WIDTH_MAX, Math.max(SIDE_WIDTH_MIN, Math.round(n)));
+}
+
+// ---------------------------------------------------------------------------
+// Draggable sash on the Explorer's right edge (VS Code sidebar splitter).
+// Pixel-based: remembers the grab point and grows/shrinks from there.
+// ---------------------------------------------------------------------------
+function SideSash({
+  width,
+  onWidth,
+  onCommit,
+  label,
+}: {
+  width: number;
+  onWidth: (n: number) => void;
+  onCommit: (n: number) => void;
+  label: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ startX: number; startW: number } | null>(null);
+  const [hot, setHot] = useState(false);
+  const latest = useRef(width);
+  useEffect(() => {
+    latest.current = width;
+  });
+
+  return (
+    <div
+      ref={ref}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={label}
+      aria-valuenow={Math.round(width)}
+      aria-valuemin={SIDE_WIDTH_MIN}
+      aria-valuemax={SIDE_WIDTH_MAX}
+      tabIndex={0}
+      onPointerDown={(e) => {
+        drag.current = { startX: e.clientX, startW: latest.current };
+        setHot(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (drag.current) {
+          onWidth(clampSideWidth(drag.current.startW + (e.clientX - drag.current.startX)));
+        }
+      }}
+      onPointerUp={() => {
+        if (drag.current) {
+          onCommit(latest.current);
+          drag.current = null;
+        }
+        setHot(false);
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+        setHot(false);
+      }}
+      onDoubleClick={() => {
+        onWidth(SIDE_WIDTH_DEFAULT);
+        onCommit(SIDE_WIDTH_DEFAULT);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const next = clampSideWidth(width + (e.key === "ArrowRight" ? SIDE_WIDTH_STEP : -SIDE_WIDTH_STEP));
+          onWidth(next);
+          onCommit(next);
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          onWidth(SIDE_WIDTH_DEFAULT);
+          onCommit(SIDE_WIDTH_DEFAULT);
+        }
+      }}
+      className="z-10 flex w-[9px] shrink-0 cursor-col-resize items-stretch justify-center self-stretch outline-none max-md:hidden"
+      title={label}
+    >
+      <div
+        className="w-px transition-colors"
+        style={{ background: hot ? "var(--ide-accent)" : "var(--ide-border)" }}
+      />
+    </div>
+  );
+}
 
 export function Explorer() {
   const t = useTranslations("ide.explorer");
@@ -16,8 +108,30 @@ export function Explorer() {
   const [drawer, setDrawer] = useState(false);
   const [visible, setVisible] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [sideWidth, setSideWidth] = useState(SIDE_WIDTH_DEFAULT);
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+
+  // Restore persisted sidebar width once (hydration-safe mount sync).
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(SIDE_WIDTH_KEY);
+      if (raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe restore
+        setSideWidth(clampSideWidth(Number(raw)));
+      }
+    } catch {
+      /* storage blocked → default */
+    }
+  }, []);
+
+  const commitSideWidth = useCallback((n: number) => {
+    try {
+      window.localStorage.setItem(SIDE_WIDTH_KEY, String(clampSideWidth(n)));
+    } catch {
+      /* storage blocked */
+    }
+  }, []);
 
   useEffect(() => {
     const h = () => setVisible((v) => !v);
@@ -176,8 +290,8 @@ export function Explorer() {
           </button>
           <aside
             aria-label={t("explorer")}
-            className="w-56 shrink-0 overflow-y-auto border-r max-md:hidden ide-scroll"
-            style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
+            className="shrink-0 overflow-y-auto border-r max-md:hidden ide-scroll"
+            style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)", width: sideWidth }}
           >
             <p
               className="px-4 pt-3 pb-1 text-[11px] tracking-wider uppercase"
@@ -187,6 +301,12 @@ export function Explorer() {
             </p>
             {list}
           </aside>
+          <SideSash
+            width={sideWidth}
+            onWidth={setSideWidth}
+            onCommit={commitSideWidth}
+            label={t("resizeSidebar")}
+          />
           {drawer && (
             <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label={t("explorer")}>
               <div className="absolute inset-0 bg-black/50" onClick={() => setDrawer(false)} />
