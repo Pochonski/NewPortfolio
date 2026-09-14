@@ -436,7 +436,9 @@ function GroupView({
       >
         {tabs.length > 1 && <TabBar group={group} tabs={tabs} activeIdx={activeIdx} />}
         {active?.kind === "site" ? (
-          <SiteBrowser siteId={active.siteId} />
+          // Keyed per site: switching tabs remounts with that site's own
+          // URL state instead of reusing the previous tab's iframe.
+          <SiteBrowser key={active.siteId} siteId={active.siteId} />
         ) : active?.kind === "code" ? (
           <CodeTabContent fileId={active.fileId} />
         ) : (

@@ -51,4 +51,10 @@ test("multiple live sites stay open as tabs", async ({ page }) => {
   // Both browser tabs persist side by side (no replace).
   await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
+  // Each tab drives its own browser: the address follows the active tab.
+  const address = page.getByLabel("Dirección del sitio");
+  await page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" }).click();
+  await expect(address).toHaveValue(/prestamos-mi-principe\.vercel\.app/);
+  await page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" }).click();
+  await expect(address).toHaveValue(/perfumes-el-pocho\.vercel\.app/);
 });
