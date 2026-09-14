@@ -59,6 +59,9 @@ export function buildFileSource(
         { key: "tools", items: skills.tools },
       ], locale);
     case "github":
+      // Known limit: live GitHub data only exists in the page render
+      // (revalidated hourly). /api/source and /api/search get the static
+      // fallback here, so they may lag the preview — by design, no fetch.
       return githubMd(locale);
     case "contact":
       return contactCss(locale);

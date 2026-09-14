@@ -12,6 +12,7 @@ export interface GithubRepo {
   description: string | null;
   stargazers_count: number;
   forks: number;
+  fork: boolean;
   language: string | null;
   pushed_at: string;
 }

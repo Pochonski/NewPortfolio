@@ -181,20 +181,43 @@ export function githubMd(
       "Markdown",
       "markdown",
       head +
-        `\n- **Profile:** https://github.com/Pochonski\n- **Featured:** ScoreHub · StickerHub · Perfumes El Pocho\n- **Stack:** React · Next.js · Supabase\n`
+        `\n- **Profile:** https://github.com/Pochonski\n- **Featured:** ScoreHub · StickerHub · Perfumes El Pocho · Préstamos Mi Príncipe\n- **Stack:** React · Next.js · Supabase\n`
     );
   }
   const { user, repos } = data;
   const stars = repos.reduce((a, r) => a + r.stargazers_count, 0);
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const featuredOrder = ["scorehub", "stickerhub", "perfumeselpocho", "prestamosmiprincipe"];
+  const rank = (r: GithubRepo) => {
+    const i = featuredOrder.indexOf(norm(r.name));
+    return i === -1 ? featuredOrder.length : i;
+  };
+  const ordered = [...repos]
+    .filter((r) => !r.fork)
+    .sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime()
+    );
+  const relUpdated = (iso: string): string => {
+    const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+    if (days < 1) return es ? "hoy" : "today";
+    if (days < 2) return es ? "ayer" : "yesterday";
+    if (days < 30) return es ? `hace ${days} días` : `${days} days ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return es ? `hace ${months} ${months === 1 ? "mes" : "meses"}` : `${months} month${months === 1 ? "" : "s"} ago`;
+    const years = Math.floor(months / 12);
+    return es ? `hace ${years} ${years === 1 ? "año" : "años"}` : `${years} year${years === 1 ? "" : "s"} ago`;
+  };
   const body = [
     `![${user.login}](${user.avatar_url})`,
     ``,
     `- **Repos:** ${user.public_repos} · **Followers:** ${user.followers} · **Stars:** ${stars}`,
     ``,
     `## Repos`,
-    ...repos.map(
+    ...ordered.map(
       (r) =>
-        `- [${r.name}](${r.html_url})${r.description ? ` — ${r.description}` : ""}${r.language ? ` \`(${r.language})\`` : ""} ★ ${r.stargazers_count}`
+        `- [${r.name}](${r.html_url})${r.description ? ` — ${r.description}` : ""}${r.language ? ` \`(${r.language})\`` : ""} ★ ${r.stargazers_count} · ⑂ ${r.forks} · ${relUpdated(r.pushed_at)}`
     ),
     ``,
     `[${es ? "Ver perfil" : "View profile"}](https://github.com/${user.login})`,
