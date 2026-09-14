@@ -83,6 +83,11 @@ export const IDE_SITES: IdeSite[] = [
     label: "Préstamos-mi-príncipe",
     url: "https://prestamos-mi-principe.vercel.app",
   },
+  {
+    id: "site-scorehub",
+    label: "ScoreHub",
+    url: "https://scorehub-pocho.vercel.app",
+  },
 ];
 
 export function siteForId(siteId: string): IdeSite | undefined {
