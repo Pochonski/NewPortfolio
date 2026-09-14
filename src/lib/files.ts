@@ -61,8 +61,8 @@ export function fileForRoute(pathname: string): IdeFile {
 
 // ---------------------------------------------------------------------------
 // Live sites: external projects opened in the integrated browser (SiteBrowser
-// tab). Prototype scope: Perfumes El Pocho only. Not part of IDE_FILES —
-// sites have no route, code pane or search index.
+// tab). Only the portfolio's own live projects may be framed. Not part of
+// IDE_FILES — sites have no route, code pane or search index.
 // ---------------------------------------------------------------------------
 
 export interface IdeSite {
@@ -77,6 +77,11 @@ export const IDE_SITES: IdeSite[] = [
     id: "site-perfumes",
     label: "Perfumes-el-pocho",
     url: "https://perfumes-el-pocho.vercel.app/",
+  },
+  {
+    id: "site-prestamos",
+    label: "Préstamos-mi-príncipe",
+    url: "https://prestamos-mi-principe.vercel.app",
   },
 ];
 
