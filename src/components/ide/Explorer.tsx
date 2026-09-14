@@ -8,8 +8,9 @@ import { IDE_FILES, IDE_FOLDERS, IDE_SITES } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 import { useEditors } from "./editors-context";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { STORE_SIDEBAR } from "@/lib/storage-keys";
 
-const SIDE_WIDTH_KEY = "porto-sidebar-width";
+const SIDE_WIDTH_KEY = STORE_SIDEBAR;
 const SIDE_WIDTH_DEFAULT = 224;
 const SIDE_WIDTH_MIN = 160;
 const SIDE_WIDTH_MAX = 420;
