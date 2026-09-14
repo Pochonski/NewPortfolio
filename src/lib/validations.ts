@@ -6,6 +6,7 @@ export const contactSchema = z.object({
   message: z.string().trim().min(10).max(1000),
   website: z.string().max(0).optional(), // honeypot debe ir vacío
   startedAt: z.coerce.number().optional(), // time-trap
+  captchaToken: z.string().max(2048).optional(), // Turnstile (opcional)
 });
 
 export type ContactInput = z.infer<typeof contactSchema>;

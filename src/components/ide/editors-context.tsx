@@ -20,6 +20,7 @@ import {
   sourceKey,
   type SourcePayload,
 } from "@/lib/source-cache";
+import { STORE_EDITORS } from "@/lib/storage-keys";
 
 export type EditorTab =
   | { kind: "code"; fileId: string }
@@ -36,8 +37,9 @@ export interface EditorsState {
   ready: boolean;
 }
 
-const STORE_KEY = "porto-editors";
+const STORE_KEY = STORE_EDITORS;
 const DEFAULT_RATIO = 50;
+const MAX_LEFT_TABS = 9;
 
 function isValidTab(t: unknown): t is EditorTab {
   if (!t || typeof t !== "object") return false;
@@ -54,6 +56,13 @@ function isValidTab(t: unknown): t is EditorTab {
 function clampIdx(tabs: EditorTab[], idx: number): number {
   if (tabs.length === 0) return 0;
   return Math.min(Math.max(idx, 0), tabs.length - 1);
+}
+
+/** Append to the left group with LRU eviction (oldest first, cap 9). */
+function pushLeft(left: EditorTab[], tab: EditorTab): { left: EditorTab[]; idx: number } {
+  const next = [...left, tab];
+  const kept = next.length > MAX_LEFT_TABS ? next.slice(next.length - MAX_LEFT_TABS) : next;
+  return { left: kept, idx: kept.length - 1 };
 }
 
 /**
@@ -90,13 +99,29 @@ function sanitize(raw: unknown): EditorsState | null {
     return null;
   }
   const ratio = typeof o.ratio === "number" ? Math.min(75, Math.max(25, o.ratio)) : DEFAULT_RATIO;
-  const left = o.left as EditorTab[];
-  const right = o.right as EditorTab[] | null;
+  let left = o.left as EditorTab[];
+  let right = o.right as EditorTab[] | null;
+  // Right is a single browser slot (preview | site): collapse legacy
+  // [preview, site] stacks to the last browser tab, drop code tabs from right.
+  if (right) {
+    const browser = right.filter((t) => t.kind !== "code");
+    const codeInRight = right.filter((t) => t.kind === "code");
+    if (browser.length > 0) {
+      right = [browser[browser.length - 1]];
+    } else if (codeInRight.length > 0) {
+      right = null;
+    }
+    if (codeInRight.length > 0) {
+      const ids = new Set(left.filter((t) => t.kind === "code").map((t) => (t as { fileId: string }).fileId));
+      const missing = codeInRight.filter((t) => !ids.has((t as { fileId: string }).fileId));
+      if (missing.length > 0) left = [...left, ...missing];
+    }
+  }
   return {
     left,
     right,
     activeLeft: clampIdx(left, typeof o.activeLeft === "number" ? o.activeLeft : 0),
-    activeRight: right ? clampIdx(right, typeof o.activeRight === "number" ? o.activeRight : 0) : 0,
+    activeRight: 0,
     ratio,
     ready: true,
   };
@@ -140,9 +165,11 @@ interface EditorsApi {
   state: EditorsState;
   lastActive: GroupId;
   setActive: (group: GroupId, idx: number) => void;
-  openFile: (fileId: string, toSide?: boolean) => void;
+  openFile: (fileId: string) => void;
   /** Open a live site in the integrated browser (right group, expanded). */
   openSite: (siteId: string, toSide?: boolean) => void;
+  /** Reset the right browser slot back to the portfolio preview. */
+  showPreview: () => void;
   closeTab: (group: GroupId, idx: number) => void;
   moveTabToOtherSide: (group: GroupId, idx: number) => void;
   toggleSplit: () => void;
@@ -170,16 +197,17 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       const raw = window.localStorage.getItem(STORE_KEY);
       const restored = raw ? sanitize(JSON.parse(raw)) : null;
       if (restored) {
-        const hasCurrent =
-          restored.left.some((t) => t.kind === "code" && t.fileId === routeFileId) ||
-          restored.right?.some((t) => t.kind === "code" && t.fileId === routeFileId);
-        next = hasCurrent
-          ? restored
-          : {
-              ...restored,
-              left: [...restored.left, { kind: "code", fileId: routeFileId }],
-              activeLeft: restored.left.length,
-            };
+        const base =
+          restored.left.length > MAX_LEFT_TABS
+            ? restored.left.slice(restored.left.length - MAX_LEFT_TABS)
+            : restored.left;
+        const idx = base.findIndex((t) => t.kind === "code" && t.fileId === routeFileId);
+        if (idx >= 0) {
+          next = { ...restored, left: base, activeLeft: idx };
+        } else {
+          const pushed = pushLeft(base, { kind: "code", fileId: routeFileId });
+          next = { ...restored, left: pushed.left, activeLeft: pushed.idx };
+        }
       }
     } catch {
       /* corrupted storage → fresh defaults */
@@ -190,7 +218,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Reveal current file when navigating. Fills an empty left group;
-  // otherwise appends when missing everywhere (does nothing if open).
+  // activates the tab when already open, otherwise appends it.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- route reconcile
     setState((s) => {
@@ -199,27 +227,30 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
         pushRecent(routeFileId);
         return { ...s, left: [{ kind: "code", fileId: routeFileId }], activeLeft: 0 };
       }
-      const present =
-        s.left.some((t) => t.kind === "code" && t.fileId === routeFileId) ||
-        s.right?.some((t) => t.kind === "code" && t.fileId === routeFileId);
-      if (present) return s;
+      const idx = s.left.findIndex((t) => t.kind === "code" && t.fileId === routeFileId);
+      if (idx >= 0) {
+        return s.activeLeft === idx ? s : { ...s, activeLeft: idx };
+      }
       pushRecent(routeFileId);
-      return { ...s, left: [...s.left, { kind: "code", fileId: routeFileId }], activeLeft: s.left.length };
+      const pushed = pushLeft(s.left, { kind: "code", fileId: routeFileId });
+      return { ...s, left: pushed.left, activeLeft: pushed.idx };
     });
   }, [pathname, routeFileId]);
 
-  // Exit site focus on route navigation (TabsBar / chords / palette / terminal
-  // all flow through pathname). No-op when no site is focused.
+  // On route navigation the single browser slot follows the route: a site
+  // returns to preview (which also exits focus). No-op when already preview.
   const prevPathname = useRef(pathname);
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
-      if (focusedSiteGroup(state, lastActive)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- exit focus on navigation
-        setLastActive("left");
-      }
+      setState((s) => {
+        const active = s.right?.[Math.min(s.activeRight, s.right.length - 1)];
+        if (active?.kind !== "site") return s;
+        return { ...s, right: [{ kind: "preview" }], activeRight: 0, ratio: DEFAULT_RATIO };
+      });
+      setLastActive("left");
     }
-  }, [pathname, state, lastActive]);
+  }, [pathname]);
 
   // Persist workspace.
   useEffect(() => {
@@ -254,56 +285,45 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       state,
       lastActive,
       setActive,
-      openFile: (fileId: string, toSide = false) => {
+      openFile: (fileId: string) => {
         if (!IDE_FILES.some((f) => f.id === fileId)) return;
         pushRecent(fileId);
         trackEvent("file_open", { file: fileId });
-        const target: GroupId = toSide ? (lastActive === "left" ? "right" : "left") : lastActive;
-        setLastActive(target);
+        // Code lives in the left group; the right group is a single browser slot.
+        setLastActive("left");
         setState((s) => {
-          if (target === "right" && !s.right) {
-            return { ...s, right: [{ kind: "code", fileId }], activeRight: 0 };
-          }
-          const tabs = target === "left" ? s.left : (s.right ?? []);
-          const existing = tabs.findIndex((t) => t.kind === "code" && t.fileId === fileId);
+          const existing = s.left.findIndex((t) => t.kind === "code" && t.fileId === fileId);
           if (existing >= 0) {
-            return target === "left"
-              ? { ...s, activeLeft: existing }
-              : { ...s, activeRight: existing };
+            return { ...s, activeLeft: existing };
           }
-          const tab: EditorTab = { kind: "code", fileId };
-          return target === "left"
-            ? { ...s, left: [...s.left, tab], activeLeft: s.left.length }
-            : { ...s, right: [...(s.right ?? []), tab], activeRight: (s.right ?? []).length };
+          const pushed = pushLeft(s.left, { kind: "code", fileId });
+          return { ...s, left: pushed.left, activeLeft: pushed.idx };
         });
       },
       openSite: (siteId: string, toSide = false) => {
         if (!siteForId(siteId)) return;
         pushRecent(siteId);
         trackEvent("site_open", { site: siteId });
-        // Browser tabs live in the right group by default (Alt+click → left).
+        // Browser lives in the right slot by default (Alt+click → left).
         const target: GroupId = toSide ? "left" : "right";
         setLastActive(target);
         setState((s) => {
-          const tabs = target === "left" ? s.left : (s.right ?? []);
-          const existing = tabs.findIndex((t) => t.kind === "site" && t.siteId === siteId);
-          if (existing >= 0) {
-            return target === "left"
-              ? { ...s, activeLeft: existing }
-              : { ...s, right: s.right ?? [], activeRight: existing };
-          }
           const tab: EditorTab = { kind: "site", siteId };
           // Auto-expand the browser group on open (clamped 25–75 by setRatio).
           const ratio = 28;
-          return target === "left"
-            ? { ...s, left: [...s.left, tab], activeLeft: s.left.length, ratio }
-            : {
-                ...s,
-                right: [...(s.right ?? []), tab],
-                activeRight: (s.right ?? []).length,
-                ratio,
-              };
+          if (target === "left") {
+            const existing = s.left.findIndex((t) => t.kind === "site" && t.siteId === siteId);
+            if (existing >= 0) return { ...s, activeLeft: existing };
+            const pushed = pushLeft(s.left, tab);
+            return { ...s, left: pushed.left, activeLeft: pushed.idx, ratio };
+          }
+          // Single browser slot: replace preview/site instead of stacking tabs.
+          return { ...s, right: [tab], activeRight: 0, ratio };
         });
+      },
+      showPreview: () => {
+        setLastActive("right");
+        setState((s) => ({ ...s, right: [{ kind: "preview" }], activeRight: 0 }));
       },
       closeTab: (group: GroupId, idx: number) => {
         setState((s) => {
@@ -313,9 +333,12 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
             return { ...s, left, activeLeft: clampIdx(left, s.activeLeft) };
           }
           if (!s.right) return s;
-          if (s.right.length <= 1) return { ...s, right: null, activeRight: 0 };
-          const right = s.right.filter((_, i) => i !== idx);
-          return { ...s, right, activeRight: clampIdx(right, s.activeRight) };
+          const closing = s.right[Math.min(idx, s.right.length - 1)];
+          // Closing a site returns to preview; closing preview hides the slot.
+          if (closing?.kind === "site") {
+            return { ...s, right: [{ kind: "preview" }], activeRight: 0 };
+          }
+          return { ...s, right: null, activeRight: 0 };
         });
         if (group === "right") setLastActive("left");
       },
@@ -325,16 +348,19 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           if (!from || from.length === 0 || idx < 0 || idx >= from.length) return s;
           const tab = from[idx];
           const dest: GroupId = group === "left" ? "right" : "left";
+          // Right is browser-only: code tabs cannot move there.
+          if (dest === "right" && tab.kind === "code") return s;
           const destTabs = dest === "left" ? s.left : (s.right ?? []);
+          const pushed = dest === "left" ? pushLeft(destTabs, tab) : null;
           const next: EditorsState = {
             ...s,
-            ...(dest === "left"
-              ? { left: [...destTabs, tab], activeLeft: destTabs.length }
-              : { right: [...destTabs, tab], activeRight: destTabs.length }),
+            ...(pushed
+              ? { left: pushed.left, activeLeft: pushed.idx }
+              : { right: [tab], activeRight: 0 }),
           };
           if (from.length <= 1) {
             if (group === "right") {
-              next.right = null;
+              next.right = [{ kind: "preview" }];
               next.activeRight = 0;
             } else {
               next.left = [];
@@ -373,8 +399,8 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onSplit = () => api.toggleSplit();
     const onOpen = (e: Event) => {
-      const d = (e as CustomEvent).detail as { fileId?: string; toSide?: boolean } | undefined;
-      if (d?.fileId) api.openFile(d.fileId, d.toSide);
+      const d = (e as CustomEvent).detail as { fileId?: string } | undefined;
+      if (d?.fileId) api.openFile(d.fileId);
     };
     const onOpenSite = (e: Event) => {
       const d = (e as CustomEvent).detail as { siteId?: string; toSide?: boolean } | undefined;

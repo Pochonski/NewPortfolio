@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { Braces, Check, Globe, Moon, Settings as SettingsIcon, Sun, TerminalSquare } from "lucide-react";
-import { IDE_THEMES, getSavedTheme, applyTheme } from "@/lib/themes";
+import { IDE_THEMES, getSavedTheme, setTheme } from "@/lib/themes";
 import { settingsJsonString } from "@/lib/file-sources";
 import { SplitView } from "@/components/ide/SplitView";
 import { RegisterSource } from "@/components/ide/editors-context";
 import { ThemeLogo } from "@/components/ide/theme-logos";
+import { PreviewCard } from "@/components/preview";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 export default function SettingsPage() {
-  const [theme, setTheme] = useState("porto-dark");
+  const [theme, setThemeState] = useState("porto-dark");
   const [loaded, setLoaded] = useState(false);
   const locale = useLocale();
   const st = useTranslations("settings");
@@ -23,13 +24,12 @@ export default function SettingsPage() {
   // Hydration-safe: render default first, then sync saved theme on mount.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe mount sync
-    setTheme(getSavedTheme());
+    setThemeState(getSavedTheme());
     setLoaded(true);
   }, []);
 
   function pick(id: string) {
-    setTheme(applyTheme(id));
-    window.dispatchEvent(new CustomEvent("porto-theme", { detail: id }));
+    setThemeState(setTheme(id));
   }
 
   function switchLang(next: string) {
@@ -105,7 +105,7 @@ export default function SettingsPage() {
                       key={t.id}
                       onClick={() => pick(t.id)}
                       aria-pressed={active}
-                      className="group rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                      className="card-premium group rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5"
                       style={{
                         borderColor: active ? "var(--ide-accent)" : "var(--ide-border)",
                         background: "var(--ide-terminal)",
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                       key={l}
                       onClick={() => switchLang(l)}
                       aria-pressed={selected}
-                      className="flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5"
+                      className="card-premium flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5"
                       style={{
                         borderColor: selected ? "var(--ide-accent)" : "var(--ide-border)",
                         background: "var(--ide-terminal)",
@@ -204,10 +204,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Live-sync hint */}
-              <div
-                className="mt-8 flex items-center gap-3 rounded-xl border p-4"
-                style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
-              >
+              <PreviewCard hover={false} className="mt-8 flex items-center gap-3 p-4">
                 <span className="flex gap-1.5" aria-hidden>
                   <span
                     className="flex h-8 w-8 items-center justify-center rounded-lg"
@@ -227,7 +224,7 @@ export default function SettingsPage() {
                   {" — "}
                   {st("syncHint")}
                 </p>
-              </div>
+              </PreviewCard>
             </div>
           }
         />

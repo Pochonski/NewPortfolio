@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { IDE_FILES, IDE_FOLDERS, IDE_SITES } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 import { useEditors } from "./editors-context";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 const SIDE_WIDTH_KEY = "porto-sidebar-width";
 const SIDE_WIDTH_DEFAULT = 224;
@@ -111,6 +112,8 @@ export function Explorer() {
   const [sideWidth, setSideWidth] = useState(SIDE_WIDTH_DEFAULT);
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(drawerRef, drawer);
 
   // Restore persisted sidebar width once (hydration-safe mount sync).
   useEffect(() => {
@@ -139,6 +142,18 @@ export function Explorer() {
     return () => window.removeEventListener("porto-toggle-explorer", h);
   }, []);
 
+  // Drawer a11y: focus the close button on open, Esc closes.
+  useEffect(() => {
+    if (!drawer) return;
+    const close = drawerRef.current?.querySelector<HTMLButtonElement>("button");
+    close?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawer(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawer]);
+
   const toggleFolder = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -153,16 +168,10 @@ export function Explorer() {
       <li key={f.id} role="treeitem" aria-selected={active} aria-level={depth + 1}>
         <Link
           href={f.route as "/"}
-          onClick={(e) => {
+          onClick={() => {
             setDrawer(false);
-            if (e.altKey) {
-              e.preventDefault();
-              window.dispatchEvent(
-                new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
-              );
-            }
           }}
-          title={t("openSideHint", { file: f.filename })}
+          title={f.filename}
           className="flex items-center gap-2 py-[5px] pr-4 text-[13px]"
           style={{
             paddingLeft: `${12 + depth * 14}px`,
@@ -308,7 +317,13 @@ export function Explorer() {
             label={t("resizeSidebar")}
           />
           {drawer && (
-            <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-label={t("explorer")}>
+            <div
+              ref={drawerRef}
+              className="fixed inset-0 z-40 md:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("explorer")}
+            >
               <div className="absolute inset-0 bg-black/50" onClick={() => setDrawer(false)} />
               <div
                 className="absolute top-0 bottom-0 left-0 w-64 overflow-y-auto border-r"

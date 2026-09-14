@@ -12,10 +12,12 @@
     "role": "Software Engineer — Full-Stack React, Next.js & Supabase",
     "viewResume": "View Resume",
     "getInTouch": "Get In Touch",
-    "location": "Costa Rica · Remote"
+    "location": "Costa Rica · Remote",
+    "openToWork": "Open to work"
   },
   "experience": {
     "title": "Experience",
+    "pageDesc": "Work experience of Joseph Fonseca: ScoreHub, StickerHub, Perfumes El Pocho, SECSA.",
     "items": [
       {
         "title": "Full Stack Developer",
@@ -72,6 +74,7 @@
   },
   "studies": {
     "title": "Studies",
+    "pageDesc": "Studies of Joseph Fonseca: Computer Engineering (TEC) and Azure Cloud Support.",
     "items": [
       {
         "degree": "Computer Engineering",
@@ -164,12 +167,16 @@
       "familiar": "familiar",
       "proficient": "proficient",
       "expert": "expert"
-    }
+    },
+    "years": "{n}y",
+    "pageDesc": "Technical skills of Joseph Fonseca: React, Next.js, TypeScript, Supabase, Python, Azure."
   },
   "contact": {
     "title": "Get In Touch",
     "connect": "Let's Connect",
     "connectDesc": "Have a project or role in mind? Message me, I reply within <24h.",
+    "socialsAria": "Socials",
+    "profileAria": "{site} profile — opens in a new tab",
     "form": {
       "name": "Name",
       "email": "Email",
@@ -181,6 +188,7 @@
       "sending": "Sending…",
       "success": "Message sent! I'll reply soon.",
       "error": "Could not send. Try again later.",
+      "rateLimited": "Too many attempts. Wait a minute and try again.",
       "logSent": "Contact message sent from {email}",
       "logFailed": "Contact message failed to send"
     }
@@ -229,7 +237,8 @@
     "openProfile": "open profile directly",
     "repos": "repos",
     "followers": "followers",
-    "profile": "Profile"
+    "profile": "Profile",
+    "pageDesc": "Profile and repositories of @Pochonski on GitHub."
   },
   "settings": {
     "title": "Settings",
@@ -246,9 +255,27 @@
   },
   "terminal": {
     "available": "Available commands:",
-    "openHelp": "open <file> [--side]  — e.g.: open projects.js --side",
-    "goHelp": "go <route>      — e.g.: go /skills",
-    "splitHelp": "split     - Toggle code/preview split editor",
+    "helpNav": "Navigation",
+    "helpSys": "System",
+    "helpFun": "Fun",
+    "helpOpenDesc": "open a file · e.g.: open projects.js",
+    "helpGoDesc": "go to a route · e.g.: go /skills",
+    "helpShortcutsDesc": "shortcuts",
+    "helpCvDesc": "open the CV",
+    "helpUtilsDesc": "utilities",
+    "helpSplitDesc": "toggle split editor",
+    "helpThemesDesc": "IDE themes",
+    "helpMiscDesc": "language · echo · clear",
+    "helpFunDesc": "try them",
+    "helpStatsDesc": "stats",
+    "helpTip": "Tip: Tab completes · ↑↓ history · Ctrl+L clears",
+    "statsTitle": "Portfolio stats",
+    "statsFiles": "files",
+    "statsThemes": "themes",
+    "statsCommands": "commands",
+    "statsLocale": "language",
+    "openAmbiguous": "Multiple matches, be more specific:",
+    "themeSet": "Theme → {id}",
     "welcome": "Interactive terminal — type “help”.",
     "whoami": "visitor — exploring Joseph's portfolio",
     "aboutLine": "Joseph Fonseca — Costa Rica · Remote",
@@ -257,7 +284,6 @@
     "usageLang": "Usage: lang <es|en>",
     "unknownFile": "Unknown file: {target}",
     "unknownRoute": "Unknown route: {target}",
-    "openSideSuffix": "(to the side)",
     "sudo": "pochonski is not in the sudoers file. This incident will be reported to Joseph.",
     "vim1": "Vim. Bold move.",
     "vim2": "Type «:q!» to escape.",
@@ -275,21 +301,10 @@
       "portfolioHome": "Portfolio — Home",
       "file": "File",
       "downloadCv": "Download CV",
-      "newWindow": "New Window",
-      "openFile": "Open File…",
-      "save": "Save",
-      "exit": "Exit",
       "edit": "Edit",
-      "undo": "Undo",
-      "redo": "Redo",
-      "cut": "Cut",
-      "copy": "Copy",
-      "paste": "Paste",
       "findInFiles": "Find in Files…",
       "selection": "Selection",
       "selectAll": "Select All",
-      "expandSelection": "Expand Selection",
-      "shrinkSelection": "Shrink Selection",
       "view": "View",
       "commandPalette": "Command Palette…",
       "terminal": "Terminal",
@@ -301,8 +316,6 @@
       "forward": "Forward",
       "run": "Run",
       "reloadWindow": "Reload Window",
-      "startDebugging": "Start Debugging",
-      "runWithoutDebugging": "Run Without Debugging",
       "newTerminal": "New Terminal",
       "clear": "Clear",
       "toggleTerminal": "Toggle Terminal",
@@ -334,18 +347,19 @@
       "changeTheme": "Change Color Theme",
       "help": "Help",
       "showShortcuts": "Show Keyboard Shortcuts",
-      "openSideFile": "Open File to the Side…",
       "colorTheme": "Color Theme",
-      "openToSide": "Open to the Side",
       "selectTheme": "Select color theme",
-      "openSideSearch": "Open file to the side…",
       "typeSearch": "Type a command or search files...",
       "noMatch": "No matching commands",
       "navigate": "navigate",
       "select": "select",
       "closeHint": "close",
       "toSpanish": "Cambiar a Español",
-      "toEnglish": "Switch to English"
+      "toEnglish": "Switch to English",
+      "liveSite": "Live site",
+      "openLiveSite": "Open live site",
+      "reloadPreview": "Reload preview",
+      "copyPageUrl": "Copy page URL"
     },
     "panel": {
       "panel": "Panel",
@@ -395,7 +409,10 @@
       "closePreview": "Close preview",
       "moveSide": "{name} — double-click moves to other side",
       "noEditors": "No editors open",
-      "recent": "Recent"
+      "recent": "Recent",
+      "crumb": "Breadcrumb trail",
+      "codeLines": "{n} lines",
+      "resizeHint": "Drag to resize (double-click resets)"
     },
     "explorer": {
       "explorer": "Explorer",
@@ -425,11 +442,20 @@
       "problemsOpen": "{count} problems — open Problems",
       "noProblemsOpen": "No problems — open Problems",
       "openProblems": "Open Problems",
-      "toggleTerminal": "Toggle Terminal (Ctrl+`)"
+      "toggleTerminal": "Toggle Terminal (Ctrl+`)",
+      "openFiles": "{count} open files",
+      "cursor": "Line {ln}, column {col}",
+      "cursorFmt": "Ln {ln}, Col {col}",
+      "clock": "Local time",
+      "langMode": "Language mode",
+      "charset": "Encoding",
+      "langName": "Language",
+      "themeName": "Theme"
     },
     "shell": {
       "chordGo": "press h/a/e/s/p/g/c/t",
-      "chordTheme": "press t for theme"
+      "chordTheme": "press t for theme",
+      "skipToEditor": "Skip to editor"
     },
     "search": {
       "placeholder": "Search files…",

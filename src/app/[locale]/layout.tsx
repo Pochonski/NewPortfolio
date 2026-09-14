@@ -20,6 +20,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const es = locale !== "en";
+  const og = es ? "/opengraph-image" : "/en/opengraph-image";
   return {
     metadataBase: new URL(SITE),
     title: {
@@ -38,6 +39,18 @@ export async function generateMetadata({
       locale: es ? "es_CR" : "en_US",
       siteName: "Joseph Fonseca — Portfolio",
       title: "Joseph Fonseca — Software Engineer",
+      description: es
+        ? "Portfolio estilo VS Code de Joseph Fonseca — React, Next.js, Supabase."
+        : "Joseph Fonseca's VS Code-style portfolio — React, Next.js, Supabase.",
+      images: [{ url: og, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Joseph Fonseca — Software Engineer",
+      description: es
+        ? "Portfolio estilo VS Code — React, Next.js, Supabase."
+        : "VS Code-style portfolio — React, Next.js, Supabase.",
+      images: [og],
     },
   };
 }

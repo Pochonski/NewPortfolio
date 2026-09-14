@@ -8,6 +8,8 @@ import { EditorPage } from "@/components/ide/EditorPage";
 import { projectJsSingle } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
 import { caseStudies } from "@/content/case-studies";
+import { ctaClass, ctaStyle } from "@/components/chrome";
+import { SectionHeader, TagPill } from "@/components/preview";
 
 interface FeaturedProject {
   slug: string;
@@ -61,27 +63,27 @@ export default async function CaseStudyPage({
 
   return (
     <EditorPage
-      route="/projects"
       title={`${project.title} — ${t("projects.caseStudy")}`}
       initialSource={{ fileId: "projects", code: src.code, codeHtml: await highlightCode(src.code, src.shikiLang) }}
     >
       <Link
         href="/projects"
-        className="mb-6 flex items-center gap-1.5 text-[13px] font-medium hover:underline"
-        style={{ color: "var(--ide-fg-dim)" }}
+        className="mb-6 inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all hover:-translate-y-0.5"
+        style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)", color: "var(--ide-fg-dim)" }}
       >
         <ArrowLeft size={14} /> {t("caseStudy.back")}
       </Link>
 
-      <div className="flex flex-wrap gap-2">
+      <h2 className="text-xl font-bold tracking-tight" style={{ color: "var(--ide-fg-bright)" }}>
+        {project.title}
+      </h2>
+      <p className="mt-1 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--ide-fg-dim)" }}>
+        {project.description}
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {project.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded border px-2 py-0.5 font-mono text-[11px]"
-            style={{ borderColor: "var(--ide-border)", color: "var(--ide-accent)" }}
-          >
-            {tag}
-          </span>
+          <TagPill key={tag}>{tag}</TagPill>
         ))}
       </div>
 
@@ -92,33 +94,29 @@ export default async function CaseStudyPage({
         ] as const
       ).map(([heading, body]) => (
         <section key={heading} className="mt-8">
-          <h2 className="font-mono text-xs tracking-wider uppercase" style={{ color: "var(--ide-accent)" }}>
-            {heading}
-          </h2>
-          <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--ide-fg)" }}>
+          <SectionHeader label={heading} />
+          <p className="max-w-3xl text-[15px] leading-relaxed" style={{ color: "var(--ide-fg)" }}>
             {body}
           </p>
         </section>
       ))}
 
       <section className="mt-8">
-        <h2 className="font-mono text-xs tracking-wider uppercase" style={{ color: "var(--ide-accent)" }}>
-          {t("caseStudy.results")}
-        </h2>
-        <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed" style={{ color: "var(--ide-fg)" }}>
+        <SectionHeader label={t("caseStudy.results")} />
+        <ul className="flex max-w-3xl list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed marker:text-[var(--ide-accent)]" style={{ color: "var(--ide-fg)" }}>
           {study.results[lang].map((r) => (
             <li key={r.slice(0, 32)}>{r}</li>
           ))}
         </ul>
       </section>
 
-      <div className="mt-8 flex flex-wrap gap-4 text-[13px] font-medium">
+      <div className="mt-8 flex flex-wrap gap-3">
         <a
           href={project.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 hover:underline"
-          style={{ color: "var(--ide-accent)" }}
+          className={`flex items-center gap-1.5 ${ctaClass()}`}
+          style={ctaStyle("primary")}
         >
           <ExternalLink size={13} /> {t("caseStudy.live")}
         </a>
@@ -126,8 +124,8 @@ export default async function CaseStudyPage({
           href={project.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 hover:underline"
-          style={{ color: "var(--ide-fg-dim)" }}
+          className={`flex items-center gap-1.5 ${ctaClass()}`}
+          style={ctaStyle("ghost")}
         >
           <Github size={14} /> {t("caseStudy.code")}
         </a>

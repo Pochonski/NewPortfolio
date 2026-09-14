@@ -209,18 +209,25 @@ export function githubMd(
     const years = Math.floor(months / 12);
     return es ? `hace ${years} ${years === 1 ? "año" : "años"}` : `${years} year${years === 1 ? "" : "s"} ago`;
   };
+  const L = {
+    repos: es ? "Repositorios" : "Repos",
+    followers: es ? "Seguidores" : "Followers",
+    stars: es ? "Estrellas" : "Stars",
+    reposTitle: es ? "Repositorios" : "Repos",
+    viewProfile: es ? "Ver perfil" : "View profile",
+  };
   const body = [
     `![${user.login}](${user.avatar_url})`,
     ``,
-    `- **Repos:** ${user.public_repos} · **Followers:** ${user.followers} · **Stars:** ${stars}`,
+    `- **${L.repos}:** ${user.public_repos} · **${L.followers}:** ${user.followers} · **${L.stars}:** ${stars}`,
     ``,
-    `## Repos`,
+    `## ${L.reposTitle}`,
     ...ordered.map(
       (r) =>
         `- [${r.name}](${r.html_url})${r.description ? ` — ${r.description}` : ""}${r.language ? ` \`(${r.language})\`` : ""} ★ ${r.stargazers_count} · ⑂ ${r.forks} · ${relUpdated(r.pushed_at)}`
     ),
     ``,
-    `[${es ? "Ver perfil" : "View profile"}](https://github.com/${user.login})`,
+    `[${L.viewProfile}](https://github.com/${user.login})`,
   ].join("\n");
   return pick("github", "Markdown", "markdown", head + "\n" + body + "\n");
 }

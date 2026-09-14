@@ -15,9 +15,7 @@ export function EditorPage({
   initialSource,
   children,
 }: {
-  route: string;
   title: string;
-  subtitle?: string;
   initialSource: EditorInitialSource;
   children: React.ReactNode;
 }) {
@@ -30,28 +28,6 @@ export function EditorPage({
         codeHtml={initialSource.codeHtml}
       />
       <SplitView preview={children} />
-    </div>
-  );
-}
-
-export function CodeCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="overflow-hidden rounded-lg border"
-      style={{ background: "var(--ide-terminal)", borderColor: "var(--ide-border)" }}
-    >
-      <div
-        className="flex items-center gap-1.5 border-b px-3 py-2"
-        style={{ borderColor: "var(--ide-border)" }}
-        aria-hidden
-      >
-        <i className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-        <i className="h-2 w-2 rounded-full bg-[#febc2e]" />
-        <i className="h-2 w-2 rounded-full bg-[#28c840]" />
-      </div>
-      <div className="p-4 font-mono text-[13px] leading-6" style={{ color: "var(--ide-fg)" }}>
-        {children}
-      </div>
     </div>
   );
 }

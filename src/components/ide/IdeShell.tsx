@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { Titlebar } from "./Titlebar";
 import { ActivityBar } from "./ActivityBar";
 import { Explorer } from "./Explorer";
-import { TabsBar } from "./TabsBar";
 import { StatusBar } from "./StatusBar";
 import { BottomPanel, type PanelTab } from "./BottomPanel";
 import { CommandPalette } from "./CommandPalette";
@@ -14,8 +13,9 @@ import { logOutput } from "@/lib/output-log";
 import { trackEvent } from "@/lib/analytics";
 import { useTranslations } from "next-intl";
 import { IDE_THEMES, DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
+import { STORE_PANEL } from "@/lib/storage-keys";
 
-const PANEL_STORE_KEY = "porto-panel";
+const PANEL_STORE_KEY = STORE_PANEL;
 
 const CHORDS: Record<string, string> = {
   h: "/",
@@ -189,15 +189,25 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh flex-col" style={{ background: "var(--ide-bg)", color: "var(--ide-fg)" }}>
+      <a
+        href="#ide-editor"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("ide-editor")?.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-1 focus:left-1 focus:z-[60] focus:rounded focus:px-3 focus:py-1.5 focus:font-mono focus:text-xs"
+        style={{ background: "var(--ide-explorer)", color: "var(--ide-accent)" }}
+      >
+        {t("skipToEditor")}
+      </a>
       <Titlebar onPalette={openPalette} onTerminal={toggleTerminal} />
       <EditorsProvider>
         <div className="flex min-h-0 flex-1">
           <ActivityBar />
           <Explorer />
           <div className="flex min-w-0 flex-1 flex-col">
-            <TabsBar />
             <div className="flex min-h-0 flex-1 flex-col">
-              <main id="ide-editor" className="min-h-0 flex-1 overflow-y-auto ide-scroll">
+              <main id="ide-editor" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto ide-scroll outline-none">
                 {children}
               </main>
               {panelOpen && (

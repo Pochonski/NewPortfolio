@@ -16,10 +16,14 @@ function P({ children }: { children?: ReactNode }) {
 }
 
 const components: Components = {
+  // h1 demoted to h2: pages already render an sr-only h1 for SEO.
   h1: ({ children }) => (
-    <h1 className="text-2xl font-bold tracking-tight" style={bright}>
+    <h2
+      className="border-b pb-3 text-2xl font-bold tracking-tight"
+      style={{ ...bright, borderColor: "rgba(var(--ide-accent-rgb), 0.35)" }}
+    >
       {children}
-    </h1>
+    </h2>
   ),
   h2: ({ children }) => (
     <h2 className="mt-6 text-xl font-bold tracking-tight first:mt-0" style={bright}>
@@ -43,8 +47,8 @@ const components: Components = {
       <a
         href={href}
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-        className="hover:underline"
-        style={accent}
+        className="font-medium underline-offset-4 hover:underline"
+        style={{ ...accent, textDecorationColor: "rgba(var(--ide-accent-rgb), 0.5)" }}
       >
         {children}
       </a>
@@ -59,16 +63,21 @@ const components: Components = {
   ),
   blockquote: ({ children }) => (
     <blockquote
-      className="rounded-r-lg border-l-2 py-1 pr-3 pl-4 text-sm leading-relaxed"
-      style={{ borderColor: "var(--ide-accent)", background: "var(--ide-terminal)", color: "var(--ide-fg)" }}
+      className="rounded-r-xl border-l-[3px] py-2 pr-4 pl-4 text-sm leading-relaxed"
+      style={{
+        borderColor: "var(--ide-accent)",
+        background: "rgba(var(--ide-accent-rgb), 0.07)",
+        boxShadow: "0 8px 24px rgba(var(--ide-accent-rgb), 0.1)",
+        color: "var(--ide-fg)",
+      }}
     >
       {children}
     </blockquote>
   ),
   code: ({ children }) => (
     <code
-      className="rounded px-1.5 py-0.5 font-mono text-[0.85em]"
-      style={{ background: "var(--ide-terminal)", color: "var(--ide-accent)" }}
+      className="rounded-md border px-1.5 py-0.5 font-mono text-[0.85em]"
+      style={{ background: "var(--ide-terminal)", borderColor: "var(--ide-border)", color: "var(--ide-accent)" }}
     >
       {children}
     </code>
@@ -81,7 +90,12 @@ const components: Components = {
       {children}
     </pre>
   ),
-  hr: () => <hr className="my-6 border-0 border-t" style={{ borderColor: "var(--ide-border)" }} />,
+  hr: () => (
+    <hr
+      className="my-6 h-px border-0"
+      style={{ background: "linear-gradient(to right, var(--ide-accent), transparent)" }}
+    />
+  ),
   strong: ({ children }) => (
     <strong className="font-semibold" style={bright}>
       {children}
@@ -118,8 +132,11 @@ const components: Components = {
       src={src}
       alt={alt ?? ""}
       loading="lazy"
-      className="h-16 w-16 rounded-full border object-cover"
-      style={{ borderColor: "var(--ide-border)" }}
+      className="h-16 w-16 rounded-full object-cover"
+      style={{
+        border: "2px solid rgba(var(--ide-accent-rgb), 0.55)",
+        boxShadow: "0 8px 24px rgba(var(--ide-accent-rgb), 0.25)",
+      }}
     />
   ),
 };

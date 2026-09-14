@@ -36,15 +36,6 @@ export const IDE_FILES: IdeFile[] = [
   { id: "settings", filename: "settings.json", route: "/settings", kind: "json", folder: "data" },
 ];
 
-export const KIND_COLORS: Record<IdeFile["kind"], string> = {
-  tsx: "#61afef",
-  md: "#7ee787",
-  json: "#e6b450",
-  js: "#e8d44d",
-  ts: "#61afef",
-  css: "#7aa2f7",
-};
-
 export const KIND_LANGUAGE: Record<IdeFile["kind"], string> = {
   tsx: "TypeScript React",
   ts: "TypeScript",

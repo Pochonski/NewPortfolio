@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -14,24 +14,9 @@ import {
   Maximize,
   RotateCw,
 } from "lucide-react";
-import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { fileForRoute, siteForId } from "@/lib/files";
+import { siteForId } from "@/lib/files";
 import { focusedSiteGroup, useEditors } from "./editors-context";
-
-// ---------------------------------------------------------------------------
-// Integrated browser tab: toolbar (iframe history back/forward, reload,
-// editable address, open-out, expand) + live <iframe> of the project's
-// production URL.
-//
-// Live URL tracking: the framed site is cross-origin, so the parent cannot
-// read its location. Each site embeds a RouteReporter that posts
-//   { source: "porto-site-route", href }
-// on mount + every client-side navigation. Messages are only honored when
-// event.origin matches this site's origin. Typing an address posts
-//   { source: "porto-site-navigate", href }
-// back; the child validates the portfolio origin and its own origin.
-// ---------------------------------------------------------------------------
 
 interface PortoRouteMessage {
   source?: unknown;
@@ -48,27 +33,23 @@ function siteOriginOf(url: string): string | null {
 
 export function SiteBrowser({ siteId }: { siteId: string }) {
   const site = siteForId(siteId);
-  const pathname = usePathname();
   const ts = useTranslations("ide.split");
   const tt = useTranslations("ide.site");
-  const { state, lastActive, openFile, setRatio } = useEditors();
+  const { state, lastActive, showPreview, setRatio } = useEditors();
   const [reloadKey, setReloadKey] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [currentUrl, setCurrentUrl] = useState(site?.url ?? "");
   const [draftUrl, setDraftUrl] = useState(site?.url ?? "");
   const [iframeSrc, setIframeSrc] = useState(site?.url ?? "");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [failed, setFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const siteOrigin = useMemo(() => (site ? siteOriginOf(site.url) : null), [site]);
 
-  // NOTE: per-site state resets via key={siteId} at the call site, so no
-  // reset effect is needed here (and set-state-in-effect is a lint error).
-
-  // Live route reports from the framed site. Never touches iframe src —
-  // only the visual address — so reporting can never reload the page.
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as PortoRouteMessage | null;
@@ -84,7 +65,6 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       }
       if (!href.startsWith(siteOrigin)) return;
       setCurrentUrl(href);
-      // Don't clobber what the user is typing.
       if (document.activeElement !== inputRef.current) {
         setDraftUrl(href);
       }
@@ -93,6 +73,19 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     return () => window.removeEventListener("message", onMessage);
   }, [siteOrigin]);
 
+  useEffect(() => {
+    if (loadTimer.current) clearTimeout(loadTimer.current);
+    loadTimer.current = setTimeout(() => {
+      setLoaded((done) => {
+        if (!done) setFailed(true);
+        return done;
+      });
+    }, 12000);
+    return () => {
+      if (loadTimer.current) clearTimeout(loadTimer.current);
+    };
+  }, [reloadKey, siteId]);
+
   const reload = useCallback(() => {
     setCurrentUrl((cur) => {
       setIframeSrc(cur);
@@ -100,6 +93,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     });
     setReloadKey((k) => k + 1);
     setLoaded(false);
+    setFailed(false);
     setSpinning(true);
     setTimeout(() => setSpinning(false), 700);
   }, []);
@@ -158,10 +152,10 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const expanded = state.ratio <= 28;
   const toggleExpand = () => setRatio(expanded ? 50 : 25);
 
-  // In focus, the toggle becomes "Show code" → reopens the current route file
-  // in the same group (which also exits focus). No-op if already a code tab.
+  // In focus, the toggle becomes "Show code" â†’ back to the portfolio
+  // preview in the single browser slot (which also exits focus).
   const showCode = () => {
-    openFile(fileForRoute(pathname).id);
+    showPreview();
   };
 
   const copyUrl = async () => {
@@ -284,28 +278,74 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
 
       {/* Live page */}
       <div className="relative min-h-0 flex-1 bg-white">
-        {!loaded && (
+        {failed ? (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center"
             style={{ background: "var(--ide-editor)" }}
-            aria-label={ts("loadingSource")}
+            role="alert"
           >
-            <Globe size={28} className="animate-pulse" style={{ color: "var(--ide-accent)" }} />
-            <p className="font-mono text-xs" style={{ color: "var(--ide-fg-dim)" }}>
+<Globe size={28} className="animate-pulse" style={{ color: "var(--ide-accent)" }} />
+            <p className="font-mono text-xs" style={{ color: "var(--ide-fg)" }}>
+              {ts("failedLoad")}
+            </p>
+            <p className="max-w-sm font-mono text-[11px]" style={{ color: "var(--ide-fg-dim)" }}>
               {currentUrl}
             </p>
+            <div className="flex gap-2">
+              <button
+                onClick={reload}
+                className="rounded-md border px-3 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5"
+                style={{
+                  borderColor: "var(--ide-accent)",
+                  color: "var(--ide-accent)",
+                  background: "rgba(var(--ide-accent-rgb), 0.07)",
+                }}
+              >
+                {ts("reload")}
+              </button>
+              <button
+                onClick={() => window.open(site.url, "_blank", "noopener")}
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "var(--ide-button)",
+                  color: "var(--ide-button-fg)",
+                }}
+              >
+                <ExternalLink size={12} /> {ts("openBrowser")}
+              </button>
+            </div>
           </div>
+        ) : (
+          <>
+            {!loaded && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+                style={{ background: "var(--ide-editor)" }}
+                aria-label={ts("loadingSource")}
+              >
+                <Globe size={28} className="animate-pulse" style={{ color: "var(--ide-accent)" }} />
+                <p className="font-mono text-xs" style={{ color: "var(--ide-fg-dim)" }}>
+                  {site.url}
+                </p>
+              </div>
+            )}
+            <iframe
+              ref={iframeRef}
+              key={`${siteId}-${reloadKey}`}
+              src={iframeSrc}
+              title={site.label}
+              onLoad={() => {
+                setLoaded(true);
+                setFailed(false);
+                if (loadTimer.current) clearTimeout(loadTimer.current);
+              }}
+              onError={() => setFailed(true)}
+              allowFullScreen
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+              className="absolute inset-0 h-full w-full border-0"
+            />
+          </>
         )}
-        <iframe
-          ref={iframeRef}
-          key={`${siteId}-${reloadKey}`}
-          src={iframeSrc}
-          title={site.label}
-          onLoad={() => setLoaded(true)}
-          allowFullScreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-          className="absolute inset-0 h-full w-full border-0"
-        />
       </div>
     </div>
   );

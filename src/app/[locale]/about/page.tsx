@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { Markdown } from "@/components/ide/Markdown";
+import { PreviewCard } from "@/components/preview";
 import { aboutMd } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
 
@@ -25,11 +26,12 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
   return (
     <EditorPage
-      route="/about"
       title={t("about.title")}
       initialSource={{ fileId: "about", code: src.code, codeHtml: await highlightCode(src.code, src.shikiLang) }}
     >
-      <Markdown code={src.code} />
+      <PreviewCard hover={false} className="p-6 sm:p-8">
+        <Markdown code={src.code} />
+      </PreviewCard>
     </EditorPage>
   );
 }

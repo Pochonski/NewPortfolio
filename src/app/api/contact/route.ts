@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema } from "@/lib/validations";
-import { rateLimit } from "@/lib/security";
+import { rateLimit, verifyCaptcha } from "@/lib/security";
+
+const RATE_WINDOW_MS = 60_000;
 
 export async function POST(req: Request) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    if (!rateLimit(`contact:${ip}`, 5, 60_000)) {
-      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    if (!rateLimit(`contact:${ip}`, 5, RATE_WINDOW_MS)) {
+      return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "60" } });
     }
 
     const body = await req.json();
@@ -16,11 +18,14 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid" }, { status: 400 });
     }
-    const { name, email, message, website, startedAt } = parsed.data;
+    const { name, email, message, website, startedAt, captchaToken } = parsed.data;
 
     if (website) return NextResponse.json({ ok: true });
     if (startedAt && Date.now() - startedAt < 2500) {
       return NextResponse.json({ error: "too_fast" }, { status: 400 });
+    }
+    if (!(await verifyCaptcha(captchaToken))) {
+      return NextResponse.json({ error: "captcha" }, { status: 403 });
     }
 
     const apiKey = process.env.RESEND_API_KEY;

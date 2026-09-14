@@ -7,6 +7,7 @@ import { Markdown } from "@/components/ide/Markdown";
 import { githubMd } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
 import { getGithubData } from "@/lib/github";
+import { PreviewCard } from "@/components/preview";
 
 export const revalidate = 3600;
 
@@ -16,13 +17,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  return {
-    title: "github.md",
-    description:
-      locale === "en"
-        ? "Profile and repositories of @Pochonski on GitHub."
-        : "Perfil y repositorios de @Pochonski en GitHub.",
-  };
+  setRequestLocale(locale as Locale);
+  const t = await getTranslations();
+  return { title: "github.md", description: t("github.pageDesc") };
 }
 
 export default async function GithubPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -34,20 +31,23 @@ export default async function GithubPage({ params }: { params: Promise<{ locale:
 
   return (
     <EditorPage
-      route="/github"
       title="GitHub — @Pochonski"
       initialSource={{ fileId: "github", code: src.code, codeHtml: await highlightCode(src.code, src.shikiLang) }}
     >
       {!data ? (
-        <div className="rounded-lg border p-6 text-sm" style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg)" }}>
-          {t("github.apiDown")}{" "}
-          <a href="https://github.com/Pochonski" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "var(--ide-accent)" }}>
-            {t("github.openProfile")}
-          </a>
-          .
-        </div>
+        <PreviewCard hover={false} className="p-6 text-sm">
+          <span style={{ color: "var(--ide-fg)" }}>
+            {t("github.apiDown")}{" "}
+            <a href="https://github.com/Pochonski" target="_blank" rel="noopener noreferrer" className="font-medium underline underline-offset-4" style={{ color: "var(--ide-accent)" }}>
+              {t("github.openProfile")}
+            </a>
+            .
+          </span>
+        </PreviewCard>
       ) : (
-        <Markdown code={src.code} />
+        <PreviewCard hover={false} className="p-6 sm:p-8">
+          <Markdown code={src.code} />
+        </PreviewCard>
       )}
     </EditorPage>
   );

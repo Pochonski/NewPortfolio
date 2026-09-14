@@ -13,7 +13,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { TerminalPanel } from "./TerminalPanel";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   clearOutput,
   getOutputEntries,
@@ -32,8 +32,6 @@ const MAX_VH = 62;
 
 function ProblemsView() {
   const t = useTranslations("ide.panel");
-  const [, bump] = useReducer((x: number) => x + 1, 0);
-  useEffect(() => subscribeTerminal(bump), []);
   const errors = getTermLines().filter((l) => l.type === "err");
   const ref = useRef<HTMLDivElement>(null);
 
@@ -63,6 +61,7 @@ function ProblemsView() {
 
 function OutputView() {
   const t = useTranslations("ide.panel");
+  const locale = useLocale();
   const [, bump] = useReducer((x: number) => x + 1, 0);
   useEffect(() => subscribeOutput(bump), []);
   const entries = getOutputEntries();
@@ -85,7 +84,7 @@ function OutputView() {
       {entries.map((e, i) => (
         <div key={i} className="py-px font-mono text-[13px] leading-[1.7]">
           <span style={{ color: "var(--ide-fg-dim)" }}>
-            [{new Date(e.time).toLocaleTimeString()}]{" "}
+            [{new Date(e.time).toLocaleTimeString(locale)}]{" "}
           </span>
           <span style={{ color: "var(--ide-fg)" }}>{e.message}</span>
         </div>

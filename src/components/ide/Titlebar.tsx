@@ -102,27 +102,12 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
       label: t("file"),
       items: [
         { label: t("downloadCv"), action: () => window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener") },
-        { label: "", separator: true },
-        { label: t("newWindow"), disabled: true },
-        { label: t("openFile"), disabled: true },
-        { label: t("save"), hint: "Ctrl+S", disabled: true },
-        { label: "", separator: true },
-        { label: t("exit"), disabled: true },
       ],
     },
     {
       id: "Edit",
       label: t("edit"),
-      items: [
-        { label: t("undo"), hint: "Ctrl+Z", disabled: true },
-        { label: t("redo"), hint: "Ctrl+Y", disabled: true },
-        { label: "", separator: true },
-        { label: t("cut"), hint: "Ctrl+X", disabled: true },
-        { label: t("copy"), hint: "Ctrl+C", disabled: true },
-        { label: t("paste"), hint: "Ctrl+V", disabled: true },
-        { label: "", separator: true },
-        { label: t("findInFiles"), hint: "Ctrl+K", action: onPalette },
-      ],
+      items: [{ label: t("findInFiles"), hint: "Ctrl+K", action: onPalette }],
     },
     {
       id: "Selection",
@@ -133,8 +118,6 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
           hint: "Ctrl+A",
           action: () => document.getSelection()?.selectAllChildren(document.body),
         },
-        { label: t("expandSelection"), disabled: true },
-        { label: t("shrinkSelection"), disabled: true },
       ],
     },
     {
@@ -166,12 +149,7 @@ export function Titlebar({ onPalette, onTerminal }: { onPalette: () => void; onT
     {
       id: "Run",
       label: t("run"),
-      items: [
-        { label: t("reloadWindow"), action: () => window.location.reload() },
-        { label: "", separator: true },
-        { label: t("startDebugging"), hint: "F5", disabled: true },
-        { label: t("runWithoutDebugging"), hint: "Ctrl+F5", disabled: true },
-      ],
+      items: [{ label: t("reloadWindow"), action: () => window.location.reload() }],
     },
     {
       id: "Terminal",

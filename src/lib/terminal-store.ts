@@ -1,13 +1,24 @@
 // Persistent terminal session: lines + history survive unmounts and reloads.
 // Components subscribe and re-render on change (same pattern as source-cache).
 
+export type TermTone = "accent" | "bright" | "dim";
+
+export interface TermSpan {
+  text: string;
+  tone: TermTone;
+}
+
 export interface TermLine {
   type: "in" | "out" | "err";
   text: string;
+  /** Rich segments rendered instead of plain text (optional, persisted). */
+  spans?: TermSpan[];
 }
 
-const LINES_KEY = "porto-terminal-lines";
-const HIST_KEY = "porto-terminal-history";
+import { STORE_TERM_HISTORY, STORE_TERM_LINES } from "./storage-keys";
+
+const LINES_KEY = STORE_TERM_LINES;
+const HIST_KEY = STORE_TERM_HISTORY;
 const MAX_LINES = 300;
 const MAX_HIST = 200;
 

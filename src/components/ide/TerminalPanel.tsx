@@ -2,10 +2,10 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 import { IDE_FILES } from "@/lib/files";
-import { THEME_IDS } from "@/lib/themes";
+import { THEME_IDS, setTheme } from "@/lib/themes";
 import { trackEvent } from "@/lib/analytics";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import {
   clearTermLines,
@@ -15,19 +15,69 @@ import {
   pushTermLines,
   subscribeTerminal,
   type TermLine,
+  type TermSpan,
+  type TermTone,
 } from "@/lib/terminal-store";
 
-const HELP = (t: (key: string) => string) => [
-  t("available"),
-  "  help / ayuda",
-  "  ls · pwd · whoami · date",
-  `  ${t("openHelp")}`,
-  `  ${t("goHelp")}`,
-  "  about · skills · projects · contact · socials",
-  "  neofetch · sudo · vim",
-  `  ${t("splitHelp")}`,
-  "  themes · theme <id> · lang <es|en> · cv · clear",
-];
+const TONE_COLOR: Record<TermTone, string> = {
+  accent: "var(--ide-accent)",
+  bright: "var(--ide-fg-bright)",
+  dim: "var(--ide-fg-dim)",
+};
+
+// Grouped, column-aligned help: group titles + commands in accent,
+// descriptions dim. Built from i18n so it stays bilingual.
+function helpLines(t: (key: string) => string): TermLine[] {
+  const groups: { title: string; rows: [string, string][] }[] = [
+    {
+      title: t("helpNav"),
+      rows: [
+        ["open <archivo>", t("helpOpenDesc")],
+        ["go <ruta>", t("helpGoDesc")],
+        ["about · skills · projects · contact · socials", t("helpShortcutsDesc")],
+        ["cv", t("helpCvDesc")],
+      ],
+    },
+    {
+      title: t("helpSys"),
+      rows: [
+        ["ls · pwd · whoami · date", t("helpUtilsDesc")],
+        ["split", t("helpSplitDesc")],
+        ["themes · theme <id>", t("helpThemesDesc")],
+        ["lang <es|en> · echo · clear", t("helpMiscDesc")],
+        ["stats", t("helpStatsDesc")],
+      ],
+    },
+    {
+      title: t("helpFun"),
+      rows: [["neofetch · sudo · vim", t("helpFunDesc")]],
+    },
+  ];
+  const width = Math.max(...groups.flatMap((g) => g.rows.map(([cmd]) => cmd.length)));
+  const line = (text: string, spans?: TermSpan[]): TermLine =>
+    spans ? { type: "out", text, spans } : { type: "out", text };
+  const out: TermLine[] = [
+    line(t("available"), [{ text: t("available"), tone: "bright" }]),
+    line(""),
+  ];
+  for (const g of groups) {
+    out.push(line(`  ${g.title}`, [{ text: `  ${g.title}`, tone: "accent" }]));
+    for (const [cmd, desc] of g.rows) {
+      const padded = cmd.padEnd(width);
+      out.push({
+        type: "out",
+        text: `    ${padded}  ${desc}`,
+        spans: [
+          { text: `    ${padded}`, tone: "accent" },
+          { text: `  ${desc}`, tone: "dim" },
+        ],
+      });
+    }
+    out.push(line(""));
+  }
+  out.push(line(t("helpTip"), [{ text: t("helpTip"), tone: "dim" }]));
+  return out;
+}
 
 const COMMANDS = [
   "help",
@@ -48,6 +98,7 @@ const COMMANDS = [
   "open",
   "go",
   "echo",
+  "stats",
   "clear",
   "neofetch",
   "sudo",
@@ -55,9 +106,19 @@ const COMMANDS = [
   ":q!",
 ];
 
+const LOGO = [
+  "      ██╗███████╗",
+  "      ██║██╔════╝",
+  "      ██║█████╗  ",
+  " ██   ██║██╔══╝  ",
+  " ╚█████╔╝██║     ",
+  "  ╚════╝ ╚═╝     ",
+];
+
 export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
+  const locale = useLocale();
   const tt = useTranslations("terminal");
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
   const prompt = `pochonski@portfolio:~${clean === "/" ? "" : clean}$`;
@@ -114,11 +175,39 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
       out.push({ type: "out", text: `→ ${route}` });
     };
 
-    if (c === "help" || c === "ayuda") out.push(...HELP(tt).map((text) => ({ type: "out" as const, text })));
-    else if (c === "ls") out.push({ type: "out", text: IDE_FILES.map((f) => f.filename).join("  ") });
+    // `label: value` line with dim label + accent value.
+    const stat = (label: string, value: string): TermLine => ({
+      type: "out",
+      text: `${label}: ${value}`,
+      spans: [
+        { text: `${label}: `, tone: "dim" },
+        { text: value, tone: "accent" },
+      ],
+    });
+
+    if (c === "help" || c === "ayuda") out.push(...helpLines(tt));
+    else if (c === "ls")
+      out.push({
+        type: "out",
+        text: IDE_FILES.map((f) => f.filename).join("  "),
+        spans: IDE_FILES.flatMap((f, i): TermSpan[] =>
+          i === 0
+            ? [{ text: f.filename, tone: "bright" }]
+            : [
+                { text: "  ", tone: "dim" },
+                { text: f.filename, tone: "bright" },
+              ]
+        ),
+      });
     else if (c === "pwd") out.push({ type: "out", text: "/home/pochonski/portfolio" });
     else if (c === "whoami") out.push({ type: "out", text: tt("whoami") });
-    else if (c === "date") out.push({ type: "out", text: new Date().toString() });
+    else if (c === "date")
+      out.push({
+        type: "out",
+        text: new Intl.DateTimeFormat(locale, { dateStyle: "full", timeStyle: "medium" }).format(
+          new Date()
+        ),
+      });
     else if (c === "about" || c === "socials" || c === "contact")
       out.push(
         { type: "out", text: tt("aboutLine") },
@@ -135,16 +224,40 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     } else if (c === "cv") {
       window.open("/cv/Joseph-Fonseca-CV.pdf", "_blank", "noopener");
       out.push({ type: "out", text: "CV → /cv/Joseph-Fonseca-CV.pdf" });
-    } else if (c === "themes") out.push({ type: "out", text: THEME_IDS.join("  ") });
+    } else if (c === "themes") {
+      const current =
+        typeof document !== "undefined"
+          ? document.documentElement.getAttribute("data-theme") ?? ""
+          : "";
+      out.push({
+        type: "out",
+        text: THEME_IDS.join("  "),
+        spans: THEME_IDS.flatMap((id, i): TermSpan[] => {
+          const seg: TermSpan[] =
+            id === current
+              ? [{ text: `● ${id}`, tone: "accent" }]
+              : [{ text: `○ ${id}`, tone: "dim" }];
+          return i === 0 ? seg : [{ text: "  ", tone: "dim" }, ...seg];
+        }),
+      });
+    } else if (c === "stats") {
+      out.push(
+        {
+          type: "out",
+          text: tt("statsTitle"),
+          spans: [{ text: tt("statsTitle"), tone: "bright" }],
+        },
+        stat(tt("statsFiles"), String(IDE_FILES.length)),
+        stat(tt("statsThemes"), String(THEME_IDS.length)),
+        stat(tt("statsCommands"), String(COMMANDS.length)),
+        stat(tt("statsLocale"), locale)
+      );
+    }
     else if (c === "theme") {
       const id = args[0];
       if (id && THEME_IDS.includes(id)) {
-        document.documentElement.setAttribute("data-theme", id);
-        try {
-          localStorage.setItem("porto-ide-theme", id);
-        } catch {}
-        window.dispatchEvent(new CustomEvent("porto-theme", { detail: id }));
-        out.push({ type: "out", text: `Theme → ${id}` });
+        setTheme(id);
+        out.push({ type: "out", text: tt("themeSet", { id }) });
       } else out.push({ type: "err", text: tt("usageTheme") });
     } else if (c === "lang") {
       const l = args[0];
@@ -154,17 +267,39 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
         router.replace(cleanPath as "/", { locale: l as Locale });
       } else out.push({ type: "err", text: tt("usageLang") });
     } else if (c === "open") {
-      const toSide = args.includes("--side");
-      const target = args.find((a) => a !== "--side");
-      const f = IDE_FILES.find((x) => x.filename === target || x.id === target);
-      if (f) {
-        if (toSide) {
-          window.dispatchEvent(
-            new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
+      const target = (args[0] ?? "").toLowerCase();
+      let f = IDE_FILES.find((x) => x.filename.toLowerCase() === target || x.id === target);
+      if (!f && target) {
+        const cands = IDE_FILES.filter(
+          (x) =>
+            x.filename.toLowerCase().includes(target) ||
+            x.id.includes(target) ||
+            x.route.includes(target)
+        );
+        if (cands.length === 1) f = cands[0];
+        else if (cands.length > 1) {
+          out.push(
+            { type: "err", text: tt("openAmbiguous") },
+            {
+              type: "out",
+              text: cands.map((x) => x.filename).join("  "),
+              spans: cands.flatMap((x, i): TermSpan[] =>
+                i === 0
+                  ? [{ text: x.filename, tone: "bright" }]
+                  : [
+                      { text: "  ", tone: "dim" },
+                      { text: x.filename, tone: "bright" },
+                    ]
+              ),
+            }
           );
-          out.push({ type: "out", text: `→ ${f.filename} ${tt("openSideSuffix")}` });
-        } else go(f.route);
-      } else out.push({ type: "err", text: tt("unknownFile", { target: target || "" }) });
+        }
+      }
+      if (f) {
+        go(f.route);
+      } else if (!out.some((l) => l.type === "err")) {
+        out.push({ type: "err", text: tt("unknownFile", { target: target || "" }) });
+      }
     } else if (c === "go") {
       const f = IDE_FILES.find((x) => x.route === args[0] || x.id === args[0]);
       if (f) go(f.route);
@@ -172,7 +307,14 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     } else if (c === "echo") out.push({ type: "out", text: args.join(" ") });
     else if (c === "neofetch")
       out.push(
-        { type: "out", text: "pochonski@portfolio" },
+        ...LOGO.map(
+          (g): TermLine => ({ type: "out", text: g, spans: [{ text: g, tone: "accent" }] })
+        ),
+        {
+          type: "out",
+          text: "pochonski@portfolio",
+          spans: [{ text: "pochonski@portfolio", tone: "bright" }],
+        },
         { type: "out", text: "-------------------" },
         { type: "out", text: "OS: Arch Linux x86_64" },
         { type: "out", text: "Host: vscode-portfolio" },
@@ -242,7 +384,13 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
             whiteSpace: "pre-wrap",
           }}
         >
-          {l.text}
+          {l.spans
+            ? l.spans.map((s, j) => (
+                <span key={j} style={{ color: TONE_COLOR[s.tone] }}>
+                  {s.text}
+                </span>
+              ))
+            : l.text}
         </div>
       ))}
       <form

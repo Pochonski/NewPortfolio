@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 import { EditorPage } from "@/components/ide/EditorPage";
 import { Markdown } from "@/components/ide/Markdown";
+import { PreviewCard } from "@/components/preview";
 import { studiesMd } from "@/lib/file-sources";
 import { highlightCode } from "@/lib/shiki";
 
@@ -21,13 +22,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  return {
-    title: "studies.md",
-    description:
-      locale === "en"
-        ? "Studies of Joseph Fonseca: Computer Engineering (TEC) and Azure Cloud Support."
-        : "Estudios de Joseph Fonseca: Ingeniería en Computadores (TEC) y Azure Cloud Support.",
-  };
+  setRequestLocale(locale as Locale);
+  const t = await getTranslations();
+  return { title: "studies.md", description: t("studies.pageDesc") };
 }
 
 export default async function StudiesPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -39,11 +36,12 @@ export default async function StudiesPage({ params }: { params: Promise<{ locale
 
   return (
     <EditorPage
-      route="/studies"
       title={t("studies.title")}
       initialSource={{ fileId: "studies", code: src.code, codeHtml: await highlightCode(src.code, src.shikiLang) }}
     >
-      <Markdown code={src.code} />
+      <PreviewCard hover={false} className="p-6 sm:p-8">
+        <Markdown code={src.code} />
+      </PreviewCard>
     </EditorPage>
   );
 }

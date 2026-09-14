@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { cookies, headers } from "next/headers";
 import { JetBrains_Mono } from "next/font/google";
 import { THEME_SCRIPT } from "@/lib/themes";
 import "./globals.css";
@@ -10,11 +11,21 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://joseph-fonseca-dev.vercel.app"),
 };
 
-// Next 16 requires <html>/<body> here. The per-locale `lang` is synced
-// client-side by <LocaleLang> (layouts below cannot render <html>).
-export default function RootLayout({ children }: { children: ReactNode }) {
+// Next 16 requires <html>/<body> here. `lang` resolves server-side from the
+// NEXT_LOCALE cookie (set by next-intl) with Accept-Language fallback;
+// <LocaleLang> keeps it synced client-side on navigations.
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const store = await cookies();
+  const cookieLocale = store.get("NEXT_LOCALE")?.value;
+  const accept = (await headers()).get("accept-language") ?? "";
+  const lang =
+    cookieLocale === "en" || cookieLocale === "es"
+      ? cookieLocale
+      : accept.toLowerCase().startsWith("en")
+        ? "en"
+        : "es";
   return (
-    <html lang="es" suppressHydrationWarning className={mono.variable}>
+    <html lang={lang} suppressHydrationWarning className={mono.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

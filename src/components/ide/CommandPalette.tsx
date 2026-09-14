@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IDE_FILES } from "@/lib/files";
-import { IDE_THEMES } from "@/lib/themes";
+import { IDE_FILES, IDE_SITES, siteHost } from "@/lib/files";
+import { IDE_THEMES, setTheme } from "@/lib/themes";
 import { fuzzyScore } from "@/lib/fuzzy";
 import { readRecents } from "@/lib/recents";
 import { useRouter } from "@/i18n/navigation";
@@ -35,7 +35,6 @@ export function CommandPalette({
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
   const [themeMode, setThemeMode] = useState(false);
-  const [sidePicker, setSidePicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   useFocusTrap(boxRef, open);
@@ -65,11 +64,37 @@ export function CommandPalette({
         label: tp("showShortcuts"),
         run: () => window.dispatchEvent(new CustomEvent("porto-shortcuts")),
       },
+      ...IDE_SITES.map((s) => ({
+        key: `site-${s.id}`,
+        group: tp("liveSite"),
+        label: `${tp("openLiveSite")} ${siteHost(s)}`,
+        hint: "B",
+        run: () => {
+          window.dispatchEvent(
+            new CustomEvent("porto-open-site", { detail: { siteId: s.id } })
+          );
+        },
+      })),
       {
-        key: "side",
+        key: "reload-preview",
         group: tp("view"),
-        label: tp("openSideFile"),
-        run: () => { setSidePicker(true); setIdx(0); setQ(""); },
+        label: tp("reloadPreview"),
+        hint: "R",
+        run: () => {
+          window.dispatchEvent(new CustomEvent("porto-reload-preview"));
+        },
+      },
+      {
+        key: "copy-url",
+        group: tp("view"),
+        label: tp("copyPageUrl"),
+        run: async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+          } catch {
+            /* clipboard unavailable */
+          }
+        },
       },
       {
         key: "lang",
@@ -89,28 +114,12 @@ export function CommandPalette({
       group: tp("colorTheme"),
       label: `${t.name} — ${t.publisher}`,
       run: () => {
-        document.documentElement.setAttribute("data-theme", t.id);
-        try {
-          localStorage.setItem("porto-ide-theme", t.id);
-        } catch {}
-        window.dispatchEvent(new CustomEvent("porto-theme", { detail: t.id }));
+        setTheme(t.id);
         onClose();
       },
     }));
-    const sideFiles: Item[] = IDE_FILES.map((f) => ({
-      key: `side-${f.id}`,
-      group: tp("openToSide"),
-      label: f.filename,
-      file: f,
-      run: () => {
-        window.dispatchEvent(
-          new CustomEvent("porto-open-file", { detail: { fileId: f.id, toSide: true } })
-        );
-        onClose();
-      },
-    }));
-    return themeMode ? themes : sidePicker ? sideFiles : [...nav, ...acts];
-  }, [router, locale, tp, onTerminal, onClose, themeMode, sidePicker]);
+    return themeMode ? themes : [...nav, ...acts];
+  }, [router, locale, tp, onTerminal, onClose, themeMode]);
 
   const filtered = useMemo(() => {
     const s = q.trim();
@@ -118,7 +127,7 @@ export function CommandPalette({
       // Empty query: recent files first, then everything else.
       const recent = readRecents().slice().reverse();
       const rank = (it: Item) => {
-        const m = it.key.match(/^(?:go|side)-(.+)$/);
+        const m = it.key.match(/^go-(.+)$/);
         if (!m) return 999;
         const at = recent.indexOf(m[1]);
         return at < 0 ? 999 : at;
@@ -146,10 +155,6 @@ export function CommandPalette({
           setThemeMode(false);
           setQ("");
           setIdx(0);
-        } else if (sidePicker) {
-          setSidePicker(false);
-          setQ("");
-          setIdx(0);
         } else onClose();
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -162,13 +167,13 @@ export function CommandPalette({
         const it = filtered[idx];
         if (it) {
           it.run();
-          if (it.key !== "theme" && it.key !== "side") onClose();
+          if (it.key !== "theme") onClose();
         }
       }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [open, filtered, idx, onClose, themeMode, sidePicker]);
+  }, [open, filtered, idx, onClose, themeMode]);
 
   if (!open) return null;
 
@@ -186,7 +191,7 @@ export function CommandPalette({
             ref={inputRef}
             value={q}
             onChange={(e) => { setQ(e.target.value); setIdx(0); }}
-            placeholder={themeMode ? tp("selectTheme") : sidePicker ? tp("openSideSearch") : tp("typeSearch")}
+            placeholder={themeMode ? tp("selectTheme") : tp("typeSearch")}
             className="w-full bg-transparent py-3 text-sm outline-none"
             style={{ color: "var(--ide-fg-bright)" }}
             spellCheck={false}
@@ -213,7 +218,7 @@ export function CommandPalette({
               onMouseEnter={() => setIdx(i)}
               onClick={() => {
                 it.run();
-                if (it.key !== "theme" && it.key !== "side") onClose();
+                if (it.key !== "theme") onClose();
               }}
               className="flex w-full items-center gap-3 px-4 py-2 text-left text-[13px]"
               style={{

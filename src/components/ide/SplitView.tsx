@@ -4,24 +4,21 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 import {
   Check,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   ChevronUp,
   Code2,
   Columns2,
   Copy,
-  ExternalLink,
   Eye,
   Globe,
-  Lock,
-  RotateCw,
   X,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { IDE_FILES, fileForRoute, siteForId, siteHost } from "@/lib/files";
+import { IDE_FILES, IDE_FOLDERS, KIND_LANGUAGE, fileForRoute, siteForId, siteHost } from "@/lib/files";
 import { FileIcon } from "./FileIcon";
+import { BrowserToolbar } from "./BrowserToolbar";
 import { SiteBrowser } from "./SiteBrowser";
 import { focusedSiteGroup } from "./editors-context";
 import {
@@ -73,117 +70,125 @@ function CodeTabContent({ fileId }: { fileId: string }) {
     };
   }, [key, fileId, locale, liveTheme, entry?.codeHtml, failed]);
 
-  if (entry?.codeHtml) {
-    return (
-      <div
-        data-codepane={fileId}
-        className="codepane ide-scroll min-h-0 flex-1 overflow-auto p-4 font-mono text-[13px] leading-[1.7] max-lg:overflow-visible"
-        dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
-      />
-    );
-  }
-  if (entry?.code) {
-    return (
-      <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible">
-        <pre className="font-mono text-[13px] leading-[1.7]" style={{ color: "var(--ide-fg)" }}>
-          {entry.code}
-        </pre>
-      </div>
-    );
-  }
-  if (failed) {
-    return (
-      <p className="p-4 font-mono text-xs" style={{ color: "var(--ide-error)" }}>
-        {ts("failedLoad")}
-      </p>
-    );
-  }
   return (
-    <div className="flex flex-1 flex-col gap-2 p-4" aria-label={ts("loadingSource")}>
-      {[90, 70, 80, 55, 75].map((w, i) => (
+    <>
+      {entry?.codeHtml ? (
         <div
-          key={i}
-          className="h-3 animate-pulse rounded"
-          style={{ width: `${w}%`, background: "var(--ide-border)" }}
+          data-codepane={fileId}
+          className="codepane ide-scroll min-h-0 flex-1 overflow-auto px-4 py-3 font-mono text-[13px] leading-[1.7] max-lg:overflow-visible"
+          dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
         />
-      ))}
-    </div>
+      ) : entry?.code ? (
+        <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto px-4 py-3 max-lg:overflow-visible">
+          <pre className="font-mono text-[13px] leading-[1.7]" style={{ color: "var(--ide-fg)" }}>
+            {entry.code}
+          </pre>
+        </div>
+      ) : failed ? (
+        <p className="p-4 font-mono text-xs" style={{ color: "var(--ide-error)" }}>
+          {ts("failedLoad")}
+        </p>
+      ) : (
+        <div className="flex flex-1 flex-col gap-2 p-4" aria-label={ts("loadingSource")}>
+          {[90, 70, 80, 55, 75].map((w, i) => (
+            <div
+              key={i}
+              className="h-3 animate-pulse rounded"
+              style={{ width: `${w}%`, background: "var(--ide-border)" }}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Simple Browser toolbar: real back/forward/reload, address bar, open out.
+// Breadcrumb actions for code tabs: live line count + copy, subscribed to the
+// source cache so they appear as soon as the file loads.
+// ---------------------------------------------------------------------------
+function CodeMeta({ fileId }: { fileId: string }) {
+  const locale = useLocale();
+  const liveTheme = useLiveTheme();
+  const ts = useTranslations("ide.split");
+  const tag = fileId === "settings" ? liveTheme : "";
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+  useEffect(() => subscribeSource(bump), []);
+  const entry = readSource(sourceKey(locale, fileId, tag));
+  const lines = entry?.code ? entry.code.split("\n").length : 0;
+  return (
+    <span className="ml-auto flex shrink-0 items-center gap-1 pl-3">
+      {lines > 0 && (
+        <span className="font-mono text-[10px]" style={{ color: "var(--ide-fg-dim)" }}>
+          {ts("codeLines", { n: lines })}
+        </span>
+      )}
+      <PaneCopyButton fileId={fileId} tag={tag} />
+    </span>
+  );
+}
+
+function PaneCopyButton({ fileId, tag }: { fileId: string; tag: string }) {
+  const locale = useLocale();
+  const ts = useTranslations("ide.split");
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        const entry = readSource(sourceKey(locale, fileId, tag));
+        if (!entry?.code) return;
+        try {
+          await navigator.clipboard.writeText(entry.code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1200);
+        } catch {
+          /* clipboard unavailable */
+        }
+      }}
+      title={ts("copyCode")}
+      aria-label={ts("copyCode")}
+      className="rounded p-1.5 transition-opacity hover:opacity-100"
+      style={{ color: "var(--ide-fg-dim)" }}
+    >
+      {copied ? <Check size={13} style={{ color: "var(--ide-success)" }} /> : <Copy size={13} />}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Portfolio preview toolbar: shared browser chrome + load progress.
 // ---------------------------------------------------------------------------
 function BrowserBar() {
   const pathname = usePathname();
   const router = useRouter();
   const ts = useTranslations("ide.split");
   const [spinning, setSpinning] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [spinId, setSpinId] = useState(0);
   const url = `${SITE_URL}${pathname}`;
 
   const reload = useCallback(() => {
     router.refresh();
     setSpinning(true);
+    setSpinId((i) => i + 1);
     setTimeout(() => setSpinning(false), 700);
   }, [router]);
 
-  const copyUrl = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      /* clipboard unavailable */
-    }
-  }, [url]);
+  useEffect(() => {
+    const h = () => reload();
+    window.addEventListener("porto-reload-preview", h);
+    return () => window.removeEventListener("porto-reload-preview", h);
+  }, [reload]);
 
-  const btn =
-    "rounded p-1.5 transition-opacity hover:opacity-100 disabled:opacity-30";
   return (
-    <div
-      className="flex shrink-0 items-center gap-1 border-b px-2 py-1.5"
-      style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
-    >
-      <button onClick={() => router.back()} title={ts("back")} aria-label={ts("goBack")} className={btn}>
-        <ChevronLeft size={15} />
-      </button>
-      <button onClick={() => router.forward()} title={ts("forward")} aria-label={ts("goForward")} className={btn}>
-        <ChevronRight size={15} />
-      </button>
-      <button
-        onClick={reload}
-        title={ts("reload")}
-        aria-label={ts("reloadPreview")}
-        className={btn}
-        style={{ color: spinning ? "var(--ide-accent)" : undefined }}
-      >
-        <RotateCw size={13} className={spinning ? "animate-spin" : ""} />
-      </button>
-      <button
-        onClick={copyUrl}
-        title={copied ? ts("copied") : ts("copyUrl")}
-        aria-label={ts("copyPageUrl")}
-        className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px]"
-        style={{ borderColor: "var(--ide-border)", background: "var(--ide-bg)" }}
-      >
-        {copied ? (
-          <Check size={11} style={{ color: "var(--ide-success)" }} />
-        ) : (
-          <Lock size={11} style={{ color: "var(--ide-success)" }} />
-        )}
-        <span className="truncate" style={{ color: "var(--ide-fg)" }}>
-          {url}
-        </span>
-      </button>
-      <button
-        onClick={() => window.open(url, "_blank", "noopener")}
-        title={ts("openBrowser")}
-        aria-label={ts("openBrowser")}
-        className={btn}
-      >
-        <ExternalLink size={13} />
-      </button>
+    <div className="relative shrink-0">
+      <BrowserToolbar
+        url={url}
+        badge="200"
+        onReload={reload}
+        spinning={spinning}
+        reloadLabel={ts("reloadPreview")}
+      />
+      {spinning && <span key={spinId} className="browser-progress" aria-hidden />}
     </div>
   );
 }
@@ -241,7 +246,7 @@ function Sash({ ratio, onRatio }: { ratio: number; onRatio: (n: number) => void 
         else if (e.key === "Home") onRatio(50);
       }}
       className="z-10 flex w-[9px] shrink-0 cursor-col-resize items-stretch justify-center outline-none max-lg:hidden"
-      title="Drag to resize (double-click resets)"
+      title={ts("resizeHint")}
     >
       <div
         className="w-px transition-colors"
@@ -325,6 +330,32 @@ function GroupView({
   const activeIdx = group === "left" ? state.activeLeft : state.activeRight;
   const active = tabs[Math.min(activeIdx, tabs.length - 1)];
 
+  // Right is a fixed single browser slot: no VS Code tab bar, just the browser.
+  if (group === "right") {
+    return (
+      <section
+        aria-label={ts("editorGroup") + " 2"}
+        className={`min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-lg:w-full ${
+          mobileVisible ? "flex" : "hidden"
+        } lg:flex`}
+        style={{ background: "var(--ide-editor)" }}
+      >
+        {active?.kind === "site" ? (
+          <SiteBrowser siteId={active.siteId} />
+        ) : active?.kind === "code" ? (
+          <CodeTabContent fileId={active.fileId} />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <BrowserBar />
+            <div className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible lg:p-6">
+              <div className="mx-auto w-full max-w-3xl">{preview}</div>
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  }
+
   return (
     <section
       aria-label={`${ts("editorGroup")} ${group === "left" ? 1 : 2}`}
@@ -355,8 +386,19 @@ function GroupView({
               key={tab.kind === "code" ? `code-${tab.fileId}` : tab.kind === "site" ? `site-${tab.siteId}` : "preview"}
               role="tab"
               aria-selected={isActive}
+              tabIndex={0}
               onClick={() => setActive(group, i)}
               onDoubleClick={() => moveTabToOtherSide(group, i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setActive(group, i);
+                } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  const n = (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
+                  setActive(group, n);
+                }
+              }}
               title={ts("moveSide", { name: tabName })}
               className="flex shrink-0 cursor-pointer items-center gap-2 border-r px-3 py-2 font-mono text-xs whitespace-nowrap"
               style={{
@@ -377,13 +419,7 @@ function GroupView({
                   e.stopPropagation();
                   closeTab(group, i);
                 }}
-                title={
-                  group === "right" && tabs.length === 1
-                    ? ts("closeGroup")
-                    : group === "left" && tabs.length === 1
-                      ? ts("closeEmpty")
-                      : ts("closeTab")
-                }
+                title={tabs.length === 1 ? ts("closeEmpty") : ts("closeTab")}
                 aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : tab.kind === "site" ? `${ts("closeTab")} ${tabName}` : ts("closePreview")}
                 className="rounded p-0.5 opacity-60 hover:opacity-100"
               >
@@ -393,7 +429,6 @@ function GroupView({
           );
         })}
         <div className="flex flex-1 items-center justify-end gap-0.5 px-1.5">
-          <CopyButton group={group} />
           <button
             onClick={toggleSplit}
             title={ts("toggleSplitHint")}
@@ -410,7 +445,7 @@ function GroupView({
       <div
         className="flex shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-1.5 font-mono text-[11px] whitespace-nowrap ide-scroll"
         style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
-        aria-label="Breadcrumb"
+        aria-label={ts("crumb")}
       >
         <span>portfolio</span>
         <ChevronRight size={11} aria-hidden />
@@ -423,7 +458,19 @@ function GroupView({
             <span style={{ color: "var(--ide-fg)" }}>{siteForId(active.siteId)?.label ?? active.siteId}</span>
           </>
         ) : active.kind === "code" && fileOf(active) ? (
-          <span style={{ color: "var(--ide-fg)" }}>{fileOf(active)?.filename}</span>
+          <>
+            <span>{IDE_FOLDERS.find((g) => g.id === fileOf(active)?.folder)?.name ?? fileOf(active)?.folder}</span>
+            <ChevronRight size={11} aria-hidden />
+            <span className="flex items-center gap-1.5" style={{ color: "var(--ide-fg)" }}>
+              {fileOf(active)?.filename}
+              <span
+                className="rounded-full border px-1.5 py-px text-[9px] tracking-wide uppercase"
+                style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
+              >
+                {KIND_LANGUAGE[fileOf(active)!.kind]}
+              </span>
+            </span>
+          </>
         ) : (
           <>
             <span>{routeFile.filename}</span>
@@ -431,6 +478,7 @@ function GroupView({
             <span style={{ color: "var(--ide-fg)" }}>{ts("preview")}</span>
           </>
         )}
+        {active?.kind === "code" && <CodeMeta fileId={active.fileId} />}
       </div>
 
       {/* Content */}
@@ -449,37 +497,6 @@ function GroupView({
         <WelcomeView />
       )}
     </section>
-  );
-}
-
-function CopyButton({ group }: { group: GroupId }) {
-  const { state } = useEditors();
-  const locale = useLocale();
-  const ts = useTranslations("ide.split");
-  const [copied, setCopied] = useState(false);
-  const tabs = group === "left" ? state.left : (state.right ?? []);
-  const active = tabs[group === "left" ? state.activeLeft : state.activeRight];
-  if (!active || active.kind !== "code") return null;
-  return (
-    <button
-      onClick={async () => {
-        const entry = readSource(sourceKey(locale, active.fileId));
-        if (!entry?.code) return;
-        try {
-          await navigator.clipboard.writeText(entry.code);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1200);
-        } catch {
-          /* clipboard unavailable */
-        }
-      }}
-      title={ts("copyCode")}
-      aria-label={ts("copyCode")}
-      className="rounded p-1.5"
-      style={{ color: "var(--ide-fg-dim)" }}
-    >
-      {copied ? <Check size={13} style={{ color: "var(--ide-success)" }} /> : <Copy size={13} />}
-    </button>
   );
 }
 

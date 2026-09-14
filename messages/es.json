@@ -12,10 +12,12 @@
     "role": "Ingeniero de Software — Full-Stack React, Next.js & Supabase",
     "viewResume": "Ver CV",
     "getInTouch": "Contáctame",
-    "location": "Costa Rica · Remoto"
+    "location": "Costa Rica · Remoto",
+    "openToWork": "Disponible para trabajar"
   },
   "experience": {
     "title": "Experiencia",
+    "pageDesc": "Experiencia de Joseph Fonseca: ScoreHub, StickerHub, Perfumes El Pocho, SECSA.",
     "items": [
       {
         "title": "Desarrollador Full Stack",
@@ -72,6 +74,7 @@
   },
   "studies": {
     "title": "Estudios",
+    "pageDesc": "Estudios de Joseph Fonseca: Ingeniería en Computadores (TEC) y Azure Cloud Support.",
     "items": [
       {
         "degree": "Ingeniería en Computadores",
@@ -168,12 +171,16 @@
       "familiar": "familiar",
       "proficient": "competente",
       "expert": "experto"
-    }
+    },
+    "years": "{n}a",
+    "pageDesc": "Habilidades técnicas de Joseph Fonseca: React, Next.js, TypeScript, Supabase, Python, Azure."
   },
   "contact": {
     "title": "Contáctame",
     "connect": "Conectemos",
     "connectDesc": "¿Tienes un proyecto o una vacante? Escríbeme, respondo en <24h.",
+    "socialsAria": "Redes sociales",
+    "profileAria": "Perfil de {site} — se abre en una pestaña nueva",
     "form": {
       "name": "Nombre",
       "email": "Correo",
@@ -185,6 +192,7 @@
       "sending": "Enviando…",
       "success": "¡Mensaje enviado! Te respondo pronto.",
       "error": "No se pudo enviar. Inténtalo más tarde.",
+      "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
       "logSent": "Mensaje de contacto enviado desde {email}",
       "logFailed": "No se pudo enviar el mensaje de contacto"
     }
@@ -233,7 +241,8 @@
     "openProfile": "abre el perfil directamente",
     "repos": "repos",
     "followers": "seguidores",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "pageDesc": "Perfil y repositorios de @Pochonski en GitHub."
   },
   "settings": {
     "title": "Configuración",
@@ -250,9 +259,27 @@
   },
   "terminal": {
     "available": "Comandos disponibles:",
-    "openHelp": "open <archivo> [--side]  — ej: open projects.js --side",
-    "goHelp": "go <ruta>       — ej: go /skills",
-    "splitHelp": "split     - Alternar editor dividido código/vista previa",
+    "helpNav": "Navegación",
+    "helpSys": "Sistema",
+    "helpFun": "Diversión",
+    "helpOpenDesc": "abrir un archivo · ej: open projects.js",
+    "helpGoDesc": "ir a una ruta · ej: go /skills",
+    "helpShortcutsDesc": "accesos directos",
+    "helpCvDesc": "abrir el CV",
+    "helpUtilsDesc": "utilidades",
+    "helpSplitDesc": "alternar editor dividido",
+    "helpThemesDesc": "temas del IDE",
+    "helpMiscDesc": "idioma · eco · limpiar",
+    "helpFunDesc": "pruébalos",
+    "helpStatsDesc": "estadísticas",
+    "helpTip": "Tip: Tab autocompleta · ↑↓ historial · Ctrl+L limpia",
+    "statsTitle": "Estadísticas del portfolio",
+    "statsFiles": "archivos",
+    "statsThemes": "temas",
+    "statsCommands": "comandos",
+    "statsLocale": "idioma",
+    "openAmbiguous": "Múltiples coincidencias, sé más específico:",
+    "themeSet": "Tema → {id}",
     "welcome": "Terminal interactiva — escribe “help”.",
     "whoami": "visitante — explorando el portfolio de Joseph",
     "aboutLine": "Joseph Fonseca — Costa Rica · Remoto",
@@ -261,7 +288,6 @@
     "usageLang": "Uso: lang <es|en>",
     "unknownFile": "Archivo desconocido: {target}",
     "unknownRoute": "Ruta desconocida: {target}",
-    "openSideSuffix": "(al lado)",
     "sudo": "pochonski no está en el archivo sudoers. Este incidente será reportado a Joseph.",
     "vim1": "Vim. Ambicioso.",
     "vim2": "Escribe «:q!» para escapar.",
@@ -279,21 +305,10 @@
       "portfolioHome": "Portafolio — Inicio",
       "file": "Archivo",
       "downloadCv": "Descargar CV",
-      "newWindow": "Nueva ventana",
-      "openFile": "Abrir archivo…",
-      "save": "Guardar",
-      "exit": "Salir",
       "edit": "Editar",
-      "undo": "Deshacer",
-      "redo": "Rehacer",
-      "cut": "Cortar",
-      "copy": "Copiar",
-      "paste": "Pegar",
       "findInFiles": "Buscar en archivos…",
       "selection": "Selección",
       "selectAll": "Seleccionar todo",
-      "expandSelection": "Expandir selección",
-      "shrinkSelection": "Reducir selección",
       "view": "Ver",
       "commandPalette": "Paleta de comandos…",
       "terminal": "Terminal",
@@ -305,8 +320,6 @@
       "forward": "Adelante",
       "run": "Ejecutar",
       "reloadWindow": "Recargar ventana",
-      "startDebugging": "Iniciar depuración",
-      "runWithoutDebugging": "Ejecutar sin depurar",
       "newTerminal": "Nueva terminal",
       "clear": "Limpiar",
       "toggleTerminal": "Mostrar u ocultar terminal",
@@ -338,18 +351,19 @@
       "changeTheme": "Cambiar tema de color",
       "help": "Ayuda",
       "showShortcuts": "Mostrar atajos de teclado",
-      "openSideFile": "Abrir archivo al lado…",
       "colorTheme": "Tema de color",
-      "openToSide": "Abrir al lado",
       "selectTheme": "Selecciona el tema de color",
-      "openSideSearch": "Abrir archivo al lado…",
       "typeSearch": "Escribe un comando o busca archivos...",
       "noMatch": "Sin comandos coincidentes",
       "navigate": "navegar",
       "select": "seleccionar",
       "closeHint": "cerrar",
       "toEnglish": "Switch to English",
-      "toSpanish": "Cambiar a Español"
+      "toSpanish": "Cambiar a Español",
+      "liveSite": "Sitio en vivo",
+      "openLiveSite": "Abrir sitio en vivo",
+      "reloadPreview": "Recargar vista previa",
+      "copyPageUrl": "Copiar URL de la página"
     },
     "panel": {
       "panel": "Panel",
@@ -399,7 +413,10 @@
       "closePreview": "Cerrar vista previa",
       "moveSide": "{name} — doble clic mueve al otro lado",
       "noEditors": "Sin editores abiertos",
-      "recent": "Recientes"
+      "recent": "Recientes",
+      "crumb": "Ruta de navegación",
+      "codeLines": "{n} líneas",
+      "resizeHint": "Arrastra para redimensionar (doble clic restablece)"
     },
     "explorer": {
       "explorer": "Explorador",
@@ -429,11 +446,20 @@
       "problemsOpen": "{count} problemas — abrir Problemas",
       "noProblemsOpen": "Sin problemas — abrir Problemas",
       "openProblems": "Abrir Problemas",
-      "toggleTerminal": "Mostrar u ocultar terminal (Ctrl+`)"
+      "toggleTerminal": "Mostrar u ocultar terminal (Ctrl+`)",
+      "openFiles": "{count} archivos abiertos",
+      "cursor": "Línea {ln}, columna {col}",
+      "cursorFmt": "Lín {ln}, col {col}",
+      "clock": "Hora local",
+      "langMode": "Modo de lenguaje",
+      "charset": "Codificación",
+      "langName": "Idioma",
+      "themeName": "Tema"
     },
     "shell": {
       "chordGo": "pulsa h/a/e/s/p/g/c/t",
-      "chordTheme": "pulsa t para el tema"
+      "chordTheme": "pulsa t para el tema",
+      "skipToEditor": "Saltar al editor"
     },
     "search": {
       "placeholder": "Buscar en archivos…",
