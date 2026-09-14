@@ -88,6 +88,11 @@ export const IDE_SITES: IdeSite[] = [
     label: "ScoreHub",
     url: "https://scorehub-pocho.vercel.app",
   },
+  {
+    id: "site-stickerhub",
+    label: "StickerHub",
+    url: "https://stickerhubs.vercel.app/",
+  },
 ];
 
 export function siteForId(siteId: string): IdeSite | undefined {
