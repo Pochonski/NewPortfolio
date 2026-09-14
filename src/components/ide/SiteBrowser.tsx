@@ -160,7 +160,6 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const expanded = state.ratio <= 28;
   const toggleExpand = () => setRatio(expanded ? 50 : 25);
 
-  // In focus, the toggle becomes "Show code" (see showCode below).
   // In focus, the toggle becomes "Show code" → closes the site and
   // reveals the current route's file (sites never linger in the split).
   const showCode = () => {
