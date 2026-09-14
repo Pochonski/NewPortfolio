@@ -40,6 +40,7 @@ export interface EditorsState {
 const STORE_KEY = STORE_EDITORS;
 const DEFAULT_RATIO = 50;
 const MAX_LEFT_TABS = 9;
+const MAX_RIGHT_TABS = 4;
 
 function isValidTab(t: unknown): t is EditorTab {
   if (!t || typeof t !== "object") return false;
@@ -63,6 +64,31 @@ function pushLeft(left: EditorTab[], tab: EditorTab): { left: EditorTab[]; idx: 
   const next = [...left, tab];
   const kept = next.length > MAX_LEFT_TABS ? next.slice(next.length - MAX_LEFT_TABS) : next;
   return { left: kept, idx: kept.length - 1 };
+}
+
+/**
+ * Append a browser tab to the right group with LRU eviction (cap 4 sites).
+ * The preview tab is free: it never evicts, it just appends (deduped).
+ */
+function pushRight(right: EditorTab[], tab: EditorTab): { right: EditorTab[]; idx: number } {
+  if (tab.kind === "preview" || tab.kind === "site") {
+    const dup = right.findIndex(
+      (t) =>
+        (t.kind === "preview" && tab.kind === "preview") ||
+        (t.kind === "site" && tab.kind === "site" && t.siteId === tab.siteId)
+    );
+    if (dup >= 0) return { right, idx: dup };
+  }
+  const next = [...right, tab];
+  if (tab.kind === "site") {
+    const sites = next.filter((t) => t.kind === "site");
+    if (sites.length > MAX_RIGHT_TABS) {
+      const dropId = (sites[0] as { siteId: string }).siteId;
+      const dropAt = next.findIndex((t) => t.kind === "site" && (t as { siteId: string }).siteId === dropId);
+      next.splice(dropAt, 1);
+    }
+  }
+  return { right: next, idx: next.length - 1 };
 }
 
 /**
@@ -101,27 +127,31 @@ function sanitize(raw: unknown): EditorsState | null {
   const ratio = typeof o.ratio === "number" ? Math.min(75, Math.max(25, o.ratio)) : DEFAULT_RATIO;
   let left = o.left as EditorTab[];
   let right = o.right as EditorTab[] | null;
-  // Right is a single browser slot (preview | site): collapse legacy
-  // [preview, site] stacks to the last browser tab, drop code tabs from right.
+  // Right holds browser tabs (preview + up to 4 sites): drop code tabs
+  // from right (migrated back to left), keep the newest site tabs.
   if (right) {
     const browser = right.filter((t) => t.kind !== "code");
     const codeInRight = right.filter((t) => t.kind === "code");
-    if (browser.length > 0) {
-      right = [browser[browser.length - 1]];
-    } else if (codeInRight.length > 0) {
-      right = null;
+    const sites = browser.filter((t) => t.kind === "site");
+    const dropped = sites.length > MAX_RIGHT_TABS ? sites.slice(0, sites.length - MAX_RIGHT_TABS) : [];
+    const dropIds = new Set(dropped.map((t) => (t as { siteId: string }).siteId));
+    if (dropped.length > 0) {
+      right = browser.filter((t) => t.kind !== "site" || !dropIds.has((t as { siteId: string }).siteId));
+    } else {
+      right = browser;
     }
     if (codeInRight.length > 0) {
       const ids = new Set(left.filter((t) => t.kind === "code").map((t) => (t as { fileId: string }).fileId));
       const missing = codeInRight.filter((t) => !ids.has((t as { fileId: string }).fileId));
       if (missing.length > 0) left = [...left, ...missing];
     }
+    if (right.length === 0) right = null;
   }
   return {
     left,
     right,
     activeLeft: clampIdx(left, typeof o.activeLeft === "number" ? o.activeLeft : 0),
-    activeRight: 0,
+    activeRight: right ? clampIdx(right, typeof o.activeRight === "number" ? o.activeRight : 0) : 0,
     ratio,
     ready: true,
   };
@@ -237,20 +267,20 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
     });
   }, [pathname, routeFileId]);
 
-  // On route navigation the single browser slot follows the route: a site
-  // returns to preview (which also exits focus). No-op when already preview.
+  // On route navigation a focused site tab exits focus (back to the
+  // left group). Browser tabs are preserved — only the ratio resets.
+  // No-op when no site is focused.
   const prevPathname = useRef(pathname);
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
-      setState((s) => {
-        const active = s.right?.[Math.min(s.activeRight, s.right.length - 1)];
-        if (active?.kind !== "site") return s;
-        return { ...s, right: [{ kind: "preview" }], activeRight: 0, ratio: DEFAULT_RATIO };
-      });
-      setLastActive("left");
+      if (focusedSiteGroup(state, lastActive)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- exit focus on navigation
+        setState((s) => (s.ratio === DEFAULT_RATIO ? s : { ...s, ratio: DEFAULT_RATIO }));
+        setLastActive("left");
+      }
     }
-  }, [pathname]);
+  }, [pathname, state, lastActive]);
 
   // Persist workspace.
   useEffect(() => {
@@ -317,13 +347,18 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
             const pushed = pushLeft(s.left, tab);
             return { ...s, left: pushed.left, activeLeft: pushed.idx, ratio };
           }
-          // Single browser slot: replace preview/site instead of stacking tabs.
-          return { ...s, right: [tab], activeRight: 0, ratio };
+          // Browser tabs stack in the right group (cap 4 sites).
+          const pushed = pushRight(s.right ?? [], tab);
+          return { ...s, right: pushed.right, activeRight: pushed.idx, ratio };
         });
       },
       showPreview: () => {
         setLastActive("right");
-        setState((s) => ({ ...s, right: [{ kind: "preview" }], activeRight: 0 }));
+        // Never destroys open sites: activates preview, appending if missing.
+        setState((s) => {
+          const pushed = pushRight(s.right ?? [], { kind: "preview" });
+          return { ...s, right: pushed.right, activeRight: pushed.idx };
+        });
       },
       closeTab: (group: GroupId, idx: number) => {
         setState((s) => {
@@ -333,8 +368,13 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
             return { ...s, left, activeLeft: clampIdx(left, s.activeLeft) };
           }
           if (!s.right) return s;
+          const kept = s.right.filter((_, i) => i !== idx);
+          if (kept.length > 0) {
+            return { ...s, right: kept, activeRight: clampIdx(kept, s.activeRight) };
+          }
+          // Closing the last browser tab: a site returns to preview,
+          // closing preview hides the slot.
           const closing = s.right[Math.min(idx, s.right.length - 1)];
-          // Closing a site returns to preview; closing preview hides the slot.
           if (closing?.kind === "site") {
             return { ...s, right: [{ kind: "preview" }], activeRight: 0 };
           }
@@ -351,13 +391,15 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           // Right is browser-only: code tabs cannot move there.
           if (dest === "right" && tab.kind === "code") return s;
           const destTabs = dest === "left" ? s.left : (s.right ?? []);
-          const pushed = dest === "left" ? pushLeft(destTabs, tab) : null;
-          const next: EditorsState = {
-            ...s,
-            ...(pushed
-              ? { left: pushed.left, activeLeft: pushed.idx }
-              : { right: [tab], activeRight: 0 }),
-          };
+          // Right accepts browser tabs (preview/site) stacked with cap 4.
+          let next: EditorsState;
+          if (dest === "left") {
+            const pushed = pushLeft(destTabs, tab);
+            next = { ...s, left: pushed.left, activeLeft: pushed.idx };
+          } else {
+            const pushed = pushRight(destTabs, tab);
+            next = { ...s, right: pushed.right, activeRight: pushed.idx };
+          }
           if (from.length <= 1) {
             if (group === "right") {
               next.right = [{ kind: "preview" }];

@@ -42,3 +42,13 @@ test("explorer navigation shows contact preview", async ({ page }) => {
   await expect(page).toHaveURL(/\/contact/);
   await expect(page.getByText("Conectemos")).toBeVisible();
 });
+
+test("multiple live sites stay open as tabs", async ({ page }) => {
+  await page.goto("/");
+  const tree = page.getByRole("tree");
+  await tree.getByText("Perfumes-el-pocho").click();
+  await tree.getByText("Préstamos-mi-príncipe").click();
+  // Both browser tabs persist side by side (no replace).
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
+});

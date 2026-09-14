@@ -31,6 +31,10 @@ function siteOriginOf(url: string): string | null {
   }
 }
 
+// Last known URL per site: returning to a tab remounts the browser
+// (key={siteId}), so resume the subroute instead of the home page.
+const lastUrlBySite = new Map<string, string>();
+
 export function SiteBrowser({ siteId }: { siteId: string }) {
   const site = siteForId(siteId);
   const ts = useTranslations("ide.split");
@@ -39,9 +43,9 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const [reloadKey, setReloadKey] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState(site?.url ?? "");
-  const [draftUrl, setDraftUrl] = useState(site?.url ?? "");
-  const [iframeSrc, setIframeSrc] = useState(site?.url ?? "");
+  const [currentUrl, setCurrentUrl] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
+  const [draftUrl, setDraftUrl] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
+  const [iframeSrc, setIframeSrc] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [failed, setFailed] = useState(false);
@@ -64,6 +68,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
         return;
       }
       if (!href.startsWith(siteOrigin)) return;
+      lastUrlBySite.set(siteId, href);
       setCurrentUrl(href);
       if (document.activeElement !== inputRef.current) {
         setDraftUrl(href);
@@ -71,7 +76,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [siteOrigin]);
+  }, [siteOrigin, siteId]);
 
   useEffect(() => {
     if (loadTimer.current) clearTimeout(loadTimer.current);
@@ -133,6 +138,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       return;
     }
     const href = dest.href;
+    lastUrlBySite.set(siteId, href);
     setCurrentUrl(href);
     setDraftUrl(href);
     try {
@@ -144,7 +150,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       /* iframe not ready */
     }
     inputRef.current?.blur();
-  }, [draftUrl, currentUrl, siteOrigin]);
+  }, [draftUrl, currentUrl, siteOrigin, siteId]);
 
   if (!site) return null;
 

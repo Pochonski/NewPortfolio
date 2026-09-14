@@ -42,6 +42,99 @@ function fileOf(tab: EditorTab) {
 }
 
 // ---------------------------------------------------------------------------
+// Shared tab bar for both groups (code, site and preview tabs).
+// ---------------------------------------------------------------------------
+function TabBar({
+  group,
+  tabs,
+  activeIdx,
+}: {
+  group: GroupId;
+  tabs: EditorTab[];
+  activeIdx: number;
+}) {
+  const { setActive, closeTab, moveTabToOtherSide, toggleSplit } = useEditors();
+  const ts = useTranslations("ide.split");
+  return (
+    <div
+      role="tablist"
+      aria-label={group === "left" ? ts("group1") : ts("group2")}
+      className="flex shrink-0 items-stretch overflow-x-auto ide-scroll"
+      style={{ background: "var(--ide-tabs)" }}
+    >
+      {tabs.map((tab, i) => {
+        const file = fileOf(tab);
+        const isActive = i === Math.min(activeIdx, tabs.length - 1);
+        const site = tab.kind === "site" ? siteForId(tab.siteId) : undefined;
+        const tabName =
+          tab.kind === "code"
+            ? (file?.filename ?? ts("editor"))
+            : tab.kind === "site"
+              ? (site ? siteHost(site) : ts("editor"))
+              : ts("preview");
+        return (
+          <div
+            key={tab.kind === "code" ? `code-${tab.fileId}` : tab.kind === "site" ? `site-${tab.siteId}` : "preview"}
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={0}
+            onClick={() => setActive(group, i)}
+            onDoubleClick={() => moveTabToOtherSide(group, i)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActive(group, i);
+              } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                const n = (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
+                setActive(group, n);
+              }
+            }}
+            title={ts("moveSide", { name: tabName })}
+            className="flex shrink-0 cursor-pointer items-center gap-2 border-r px-3 py-2 font-mono text-xs whitespace-nowrap"
+            style={{
+              background: isActive ? "var(--ide-tab-active)" : "transparent",
+              borderColor: "var(--ide-border)",
+              borderTop: isActive ? "1px solid var(--ide-accent)" : "1px solid transparent",
+              color: isActive ? "var(--ide-fg-bright)" : "var(--ide-fg-dim)",
+            }}
+          >
+            {tab.kind === "code" && file ? (
+              <FileIcon file={file} size={14} />
+            ) : (
+              <Globe size={13} style={{ color: "var(--ide-accent)" }} />
+            )}
+            <span>{tabName}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                closeTab(group, i);
+              }}
+              title={tabs.length === 1 ? ts("closeEmpty") : ts("closeTab")}
+              aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : tab.kind === "site" ? `${ts("closeTab")} ${tabName}` : ts("closePreview")}
+              className="rounded p-0.5 opacity-60 hover:opacity-100"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        );
+      })}
+      <div className="flex flex-1 items-center justify-end gap-0.5 px-1.5">
+        <button
+          onClick={toggleSplit}
+          title={ts("toggleSplitHint")}
+          aria-label={ts("toggleSplitHint")}
+          className="rounded p-1.5 max-lg:hidden"
+          style={{ color: "var(--ide-fg-dim)" }}
+        >
+          <Columns2 size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Code tab content: cached highlighted HTML, fetched on demand (SWR-lite).
 // ---------------------------------------------------------------------------
 function CodeTabContent({ fileId }: { fileId: string }) {
@@ -322,7 +415,7 @@ function GroupView({
   preview: React.ReactNode;
   mobileVisible: boolean;
 }) {
-  const { state, setActive, closeTab, moveTabToOtherSide, toggleSplit } = useEditors();
+  const { state } = useEditors();
   const pathname = usePathname();
   const ts = useTranslations("ide.split");
   const routeFile = fileForRoute(pathname);
@@ -330,7 +423,8 @@ function GroupView({
   const activeIdx = group === "left" ? state.activeLeft : state.activeRight;
   const active = tabs[Math.min(activeIdx, tabs.length - 1)];
 
-  // Right is a fixed single browser slot: no VS Code tab bar, just the browser.
+  // Right is the browser group: tab bar appears once 2+ browser tabs
+  // are open, single tab keeps the clean slot look.
   if (group === "right") {
     return (
       <section
@@ -340,6 +434,7 @@ function GroupView({
         } lg:flex`}
         style={{ background: "var(--ide-editor)" }}
       >
+        {tabs.length > 1 && <TabBar group={group} tabs={tabs} activeIdx={activeIdx} />}
         {active?.kind === "site" ? (
           <SiteBrowser siteId={active.siteId} />
         ) : active?.kind === "code" ? (
@@ -365,81 +460,7 @@ function GroupView({
       style={{ background: "var(--ide-editor)" }}
     >
       {/* Tab bar */}
-      <div
-        role="tablist"
-        aria-label={group === "left" ? ts("group1") : ts("group2")}
-        className="flex shrink-0 items-stretch overflow-x-auto ide-scroll"
-        style={{ background: "var(--ide-tabs)" }}
-      >
-        {tabs.map((tab, i) => {
-          const file = fileOf(tab);
-          const isActive = i === Math.min(activeIdx, tabs.length - 1);
-          const site = tab.kind === "site" ? siteForId(tab.siteId) : undefined;
-          const tabName =
-            tab.kind === "code"
-              ? (file?.filename ?? ts("editor"))
-              : tab.kind === "site"
-                ? (site ? siteHost(site) : ts("editor"))
-                : ts("preview");
-          return (
-            <div
-              key={tab.kind === "code" ? `code-${tab.fileId}` : tab.kind === "site" ? `site-${tab.siteId}` : "preview"}
-              role="tab"
-              aria-selected={isActive}
-              tabIndex={0}
-              onClick={() => setActive(group, i)}
-              onDoubleClick={() => moveTabToOtherSide(group, i)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setActive(group, i);
-                } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  const n = (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
-                  setActive(group, n);
-                }
-              }}
-              title={ts("moveSide", { name: tabName })}
-              className="flex shrink-0 cursor-pointer items-center gap-2 border-r px-3 py-2 font-mono text-xs whitespace-nowrap"
-              style={{
-                background: isActive ? "var(--ide-tab-active)" : "transparent",
-                borderColor: "var(--ide-border)",
-                borderTop: isActive ? "1px solid var(--ide-accent)" : "1px solid transparent",
-                color: isActive ? "var(--ide-fg-bright)" : "var(--ide-fg-dim)",
-              }}
-            >
-              {tab.kind === "code" && file ? (
-                <FileIcon file={file} size={14} />
-              ) : (
-                <Globe size={13} style={{ color: "var(--ide-accent)" }} />
-              )}
-              <span>{tabName}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeTab(group, i);
-                }}
-                title={tabs.length === 1 ? ts("closeEmpty") : ts("closeTab")}
-                aria-label={tab.kind === "code" ? `${ts("closeTab")} ${file?.filename}` : tab.kind === "site" ? `${ts("closeTab")} ${tabName}` : ts("closePreview")}
-                className="rounded p-0.5 opacity-60 hover:opacity-100"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          );
-        })}
-        <div className="flex flex-1 items-center justify-end gap-0.5 px-1.5">
-          <button
-            onClick={toggleSplit}
-            title={ts("toggleSplitHint")}
-            aria-label={ts("toggleSplitHint")}
-            className="rounded p-1.5 max-lg:hidden"
-            style={{ color: "var(--ide-fg-dim)" }}
-          >
-            <Columns2 size={14} />
-          </button>
-        </div>
-      </div>
+      <TabBar group={group} tabs={tabs} activeIdx={activeIdx} />
 
       {/* Breadcrumb */}
       <div
