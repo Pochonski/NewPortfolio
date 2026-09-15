@@ -7,6 +7,7 @@ import {
   skillsTs,
   githubMd,
   contactCss,
+  readmeMd,
   settingsJson,
   type BuiltFileSource,
 } from "./file-sources";
@@ -43,13 +44,13 @@ export function buildFileSource(
 
   switch (fileId) {
     case "home":
-      return homeTsx({ role: dict.hero.role, location: dict.hero.location });
+      return homeTsx({ role: dict.hero.role, location: dict.hero.location, featured: dict.projects.featured.length });
     case "about":
-      return aboutMd(dict.about.title, dict.about.p1, dict.about.p2);
+      return aboutMd(dict.about.title, dict.about.p1, dict.about.p2, locale);
     case "experience":
       return experienceJson(dict.experience.items);
     case "studies":
-      return studiesMd(dict.studies.items);
+      return studiesMd(dict.studies.items, locale);
     case "projects":
       return projectsJs(dict.projects.featured, locale);
     case "skills":
@@ -65,6 +66,8 @@ export function buildFileSource(
       return githubMd(locale);
     case "contact":
       return contactCss(locale);
+    case "readme":
+      return readmeMd(locale);
     default:
       return settingsJson(safeTheme, locale);
   }

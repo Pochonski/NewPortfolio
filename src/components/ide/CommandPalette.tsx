@@ -47,9 +47,13 @@ export function CommandPalette({
       key: `go-${f.id}`,
       group: tp("goToFile"),
       label: `${tp("goTo")} ${f.filename}`,
-      hint: f.route === "/" ? "G H" : `G ${f.id[0].toUpperCase()}`,
+      hint: f.id === "readme" ? undefined : f.route === "/" ? "G H" : `G ${f.id[0].toUpperCase()}`,
       file: f,
-      run: () => router.push(f.route as "/"),
+      // README has no route-backed page: open it as a code tab instead.
+      run:
+        f.id === "readme"
+          ? () => window.dispatchEvent(new CustomEvent("porto-open-file", { detail: { fileId: "readme" } }))
+          : () => router.push(f.route as "/"),
     }));
     const acts: Item[] = [
       { key: "term", group: tp("terminal"), label: tp("toggleTerminal"), hint: "Ctrl+`", run: onTerminal },

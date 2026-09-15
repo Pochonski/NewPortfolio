@@ -296,14 +296,22 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
         }
       }
       if (f) {
-        go(f.route);
+        // README has no route-backed page: open it as a code tab instead.
+        if (f.id === "readme") {
+          window.dispatchEvent(new CustomEvent("porto-open-file", { detail: { fileId: "readme" } }));
+          out.push({ type: "out", text: `→ ${f.filename}` });
+        } else go(f.route);
       } else if (!out.some((l) => l.type === "err")) {
         out.push({ type: "err", text: tt("unknownFile", { target: target || "" }) });
       }
     } else if (c === "go") {
       const f = IDE_FILES.find((x) => x.route === args[0] || x.id === args[0]);
-      if (f) go(f.route);
-      else out.push({ type: "err", text: tt("unknownRoute", { target: args[0] || "" }) });
+      if (f) {
+        if (f.id === "readme") {
+          window.dispatchEvent(new CustomEvent("porto-open-file", { detail: { fileId: "readme" } }));
+          out.push({ type: "out", text: `→ ${f.filename}` });
+        } else go(f.route);
+      } else out.push({ type: "err", text: tt("unknownRoute", { target: args[0] || "" }) });
     } else if (c === "echo") out.push({ type: "out", text: args.join(" ") });
     else if (c === "neofetch")
       out.push(

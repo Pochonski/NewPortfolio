@@ -25,7 +25,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   const t = await getTranslations();
-  const src = homeTsx({ role: t("hero.role"), location: t("hero.location") });
+  const featuredCount = (t.raw("projects.featured") as unknown[]).length;
+  const src = homeTsx({ role: t("hero.role"), location: t("hero.location"), featured: featuredCount });
 
   return (
     <EditorPage

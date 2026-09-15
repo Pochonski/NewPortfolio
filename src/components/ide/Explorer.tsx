@@ -177,6 +177,34 @@ export function Explorer() {
     });
 
   const renderFile = (f: (typeof IDE_FILES)[number], depth: number) => {
+    // README has no route-backed page: it opens as a code tab, like search results.
+    if (f.id === "readme") {
+      const tab = state.left[state.activeLeft];
+      const isActive = tab?.kind === "code" && tab.fileId === "readme";
+      return (
+        <li key={f.id} role="treeitem" aria-selected={!!isActive} aria-level={depth + 1}>
+          <button
+            onClick={() => {
+              setDrawer(false);
+              window.dispatchEvent(
+                new CustomEvent("porto-open-file", { detail: { fileId: "readme" } })
+              );
+            }}
+            title={f.filename}
+            className="flex w-full items-center gap-2 py-[5px] pr-4 text-left text-[13px]"
+            style={{
+              paddingLeft: `${12 + depth * 14}px`,
+              background: isActive ? "var(--ide-explorer-hover)" : "transparent",
+              color: isActive ? "var(--ide-fg-bright)" : "var(--ide-fg)",
+              borderLeft: isActive ? "2px solid var(--ide-accent)" : "2px solid transparent",
+            }}
+          >
+            <FileIcon file={f} />
+            <span className="truncate font-mono">{f.filename}</span>
+          </button>
+        </li>
+      );
+    }
     const active = clean === f.route;
     return (
       <li key={f.id} role="treeitem" aria-selected={active} aria-level={depth + 1}>

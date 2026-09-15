@@ -22,7 +22,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const { locale } = await params;
   setRequestLocale(locale as Locale);
   const t = await getTranslations();
-  const src = aboutMd(t("about.title"), t("about.p1"), t("about.p2"));
+  const src = aboutMd(t("about.title"), t("about.p1"), t("about.p2"), locale);
 
   return (
     <EditorPage

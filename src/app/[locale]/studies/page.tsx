@@ -32,7 +32,7 @@ export default async function StudiesPage({ params }: { params: Promise<{ locale
   setRequestLocale(locale as Locale);
   const t = await getTranslations();
   const items = t.raw("studies.items") as StudyItem[];
-  const src = studiesMd(items);
+  const src = studiesMd(items, locale);
 
   return (
     <EditorPage

@@ -26,6 +26,9 @@ export const IDE_FOLDERS: IdeFolder[] = [
 
 export const IDE_FILES: IdeFile[] = [
   { id: "home", filename: "home.tsx", route: "/", kind: "tsx", folder: "src" },
+  // README has no route-backed page: it opens as a code tab via
+  // porto-open-file (see Explorer renderFile + CommandPalette nav).
+  { id: "readme", filename: "README.md", route: "/readme", kind: "md", folder: "docs" },
   { id: "about", filename: "about.md", route: "/about", kind: "md", folder: "docs" },
   { id: "experience", filename: "experience.json", route: "/experience", kind: "json", folder: "data" },
   { id: "studies", filename: "studies.md", route: "/studies", kind: "md", folder: "docs" },

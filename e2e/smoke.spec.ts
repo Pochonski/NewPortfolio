@@ -36,6 +36,16 @@ test("terminal help lists grouped commands", async ({ page }) => {
   await expect(log.getByText("Navegación")).toBeVisible();
 });
 
+test("explorer shows README.md and opens it as a code tab", async ({ page }) => {
+  await page.goto("/");
+  const tree = page.getByRole("tree");
+  await expect(tree.getByText("README.md")).toBeVisible();
+  await tree.getByText("README.md").click();
+  // README opens as a code tab without navigating away from home.
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("tab", { name: "README.md" })).toBeVisible();
+});
+
 test("explorer navigation shows contact preview", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("tree").getByText("contact.css").click();
