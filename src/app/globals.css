@@ -42,6 +42,27 @@
   --shiki-token-string-expression: #7ee787;
   --shiki-token-punctuation: rgba(174, 217, 224, 0.6);
   --shiki-token-link: #b8f2e6;
+  /* ----- Glass design system ----- */
+  /* Per-theme physical glass base. Themes below override this single value. */
+  --glass-base:      #161616;
+  /* Hairline top highlight + diagonal specular (kept extremely subtle). */
+  --glass-hi:        rgba(255, 255, 255, 0.08);
+  --glass-specular:  linear-gradient(125deg, rgba(255, 255, 255, 0.045) 0%, transparent 42%);
+  /* Ambient aurora: light source behind the glass. Per-theme tints. */
+  --aurora-a:        color-mix(in srgb, var(--ide-accent) 60%, transparent);
+  --aurora-b:        rgba(126, 231, 135, 0.5);
+  --aurora-blend:    screen;
+  /* Derived glass tiers (auto-adapt via --glass-base). */
+  --glass-bg-subtle: color-mix(in srgb, var(--glass-base) 82%, transparent);
+  --glass-bg:        color-mix(in srgb, var(--glass-base) 58%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--glass-base) 42%, transparent);
+  --glass-border:    color-mix(in srgb, var(--ide-border) 62%, transparent);
+  --glass-border-hi: color-mix(in srgb, var(--ide-accent) 40%, var(--glass-border));
+  --glass-blur-sm:   blur(6px)  saturate(140%);
+  --glass-blur-md:   blur(16px) saturate(150%);
+  --glass-blur-lg:   blur(26px) saturate(170%);
+  --glass-shadow:      0 4px 24px rgba(0, 0, 0, 0.18);
+  --glass-shadow-lift: 0 10px 32px rgba(0, 0, 0, 0.24);
 }
 
 /* Porto light */
@@ -77,6 +98,24 @@
   --shiki-token-string-expression: #0a7a42;
   --shiki-token-punctuation: #9aa3b2;
   --shiki-token-link: #0f6fde;
+  /* Glass overrides for porto-light: lower opacities so translucency is real,
+   * soft-light aurora so the ambient light actually interacts with the glass. */
+  --glass-base:       #eceff1;
+  --glass-hi:         rgba(255, 255, 255, 0.55);
+  --glass-specular:   linear-gradient(125deg, rgba(255, 255, 255, 0.35) 0%, transparent 42%);
+  --glass-bg-subtle:  color-mix(in srgb, var(--glass-base) 86%, transparent);
+  --glass-bg:         color-mix(in srgb, var(--glass-base) 68%, transparent);
+  --glass-bg-strong:  color-mix(in srgb, var(--glass-base) 52%, transparent);
+  --glass-shadow:     0 4px 20px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lift:0 10px 28px rgba(0, 0, 0, 0.12);
+  /* Aurora: soft-light is the only blend that shows subtle effect on near-white
+   * without darkening (multiply) or doing nothing (screen). */
+  --aurora-a:         rgba(94, 100, 114, 0.5);
+  --aurora-b:         rgba(10, 122, 66, 0.35);
+  --aurora-blend:     soft-light;
+  /* Status semantics: dark variants for legible text on light surfaces. */
+  --ide-success:      #0a7a42;
+  --ide-error:        #c92a2a;
 }
 
 /* Dracula (inspired, own values) */
@@ -112,6 +151,13 @@
   --shiki-token-string-expression: #f1fa8c;
   --shiki-token-punctuation: #8a8fa8;
   --shiki-token-link: #8be9fd;
+  /* Glass overrides for Dracula theme. */
+  --glass-base:      #21222c;
+  --glass-hi:        rgba(255, 255, 255, 0.08);
+  --glass-specular:  linear-gradient(125deg, rgba(255, 255, 255, 0.05) 0%, transparent 42%);
+  --aurora-a:        rgba(189, 147, 249, 0.55);
+  --aurora-b:        rgba(255, 121, 198, 0.4);
+  --aurora-blend:    screen;
 }
 
 /* Nord (inspired, own values) */
@@ -147,6 +193,13 @@
   --shiki-token-string-expression: #a3be8c;
   --shiki-token-punctuation: #6b7a99;
   --shiki-token-link: #88c0d0;
+  /* Glass overrides for Nord theme. */
+  --glass-base:      #242933;
+  --glass-hi:        rgba(255, 255, 255, 0.08);
+  --glass-specular:  linear-gradient(125deg, rgba(255, 255, 255, 0.045) 0%, transparent 42%);
+  --aurora-a:        rgba(136, 192, 208, 0.55);
+  --aurora-b:        rgba(163, 190, 140, 0.45);
+  --aurora-blend:    screen;
 }
 
 /* One Dark (inspired, own values) */
@@ -182,6 +235,13 @@
   --shiki-token-string-expression: #98c379;
   --shiki-token-punctuation: #7f848e;
   --shiki-token-link: #56b6c2;
+  /* Glass overrides for One Dark theme. */
+  --glass-base:      #21252b;
+  --glass-hi:        rgba(255, 255, 255, 0.08);
+  --glass-specular:  linear-gradient(125deg, rgba(255, 255, 255, 0.045) 0%, transparent 42%);
+  --aurora-a:        rgba(97, 175, 239, 0.55);
+  --aurora-b:        rgba(152, 195, 121, 0.45);
+  --aurora-blend:    screen;
 }
 
 html {
@@ -387,10 +447,141 @@ body {
   }
 }
 
-/* Premium preview cards: accent border + glow on hover */
+/* Premium preview cards: shared hover tokens (kept for legacy usages).
+ * New components prefer .glass + .hover-glass for the full system. */
+.card-premium {
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
 .card-premium:hover {
-  border-color: var(--ide-accent);
-  box-shadow: 0 12px 32px rgba(var(--ide-accent-rgb), 0.16);
+  border-color: var(--glass-border-hi);
+  box-shadow: var(--glass-shadow-lift);
+}
+
+/* ----- Glass tiers -----
+ * .glass-subtle  → small pills, chips, states
+ * .glass         → default cards (preview cards, project cards)
+ * .glass-strong  → settings panel, overlays, prominent surfaces
+ */
+.glass-subtle,
+.glass,
+.glass-strong {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+/* Children must sit above the hairline/specular pseudo layers. */
+.glass-subtle > *,
+.glass > *,
+.glass-strong > * {
+  position: relative;
+  z-index: 1;
+}
+/* Hairline top highlight (1px) — the only visible "edge light". */
+.glass-subtle::before,
+.glass::before,
+.glass-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 var(--glass-hi);
+  z-index: 0;
+}
+/* Imperceptible diagonal specular — perception of light, not a gradient. */
+.glass-subtle::after,
+.glass::after,
+.glass-strong::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--glass-specular);
+  opacity: 1;
+  z-index: 0;
+}
+.glass-subtle { background: var(--glass-bg-subtle); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm); }
+.glass        { background: var(--glass-bg); }
+.glass-strong { background: var(--glass-bg-strong); backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg); }
+
+/* Hover recipe: subtle lift, accent-tinged border, stronger shadow. No "floating". */
+.hover-glass:hover {
+  transform: translateY(-2px);
+  border-color: var(--glass-border-hi);
+  box-shadow: var(--glass-shadow-lift);
+}
+
+/* Aurora: ambient light source behind the glass.
+ * Renders two soft radial blobs derived from the theme accent. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  border-radius: inherit;
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: var(--aurora-blend, screen);
+  opacity: 0.085;
+}
+.aurora::before {
+  top: -20%;
+  right: -10%;
+  background: radial-gradient(circle, var(--aurora-a), transparent 70%);
+  animation: aurora-drift-a 28s ease-in-out infinite;
+}
+.aurora::after {
+  bottom: -25%;
+  left: -15%;
+  background: radial-gradient(circle, var(--aurora-b), transparent 70%);
+  animation: aurora-drift-b 32s ease-in-out infinite;
+}
+@keyframes aurora-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-3%, 4%) scale(1.05); }
+}
+@keyframes aurora-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(4%, -3%) scale(1.07); }
+}
+@media (max-width: 1023px) {
+  .aurora::before,
+  .aurora::after {
+    animation: none;
+    opacity: 0.06;
+  }
+}
+@media (max-width: 767px) {
+  .aurora { display: none; }
+}
+
+/* Responsive glass: tablet keeps a small blur, mobile drops it (perf + legibility). */
+@media (max-width: 1023px) {
+  :root {
+    --glass-blur-md: var(--glass-blur-sm);
+    --glass-blur-lg: var(--glass-blur-sm);
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --glass-blur-md: none;
+    --glass-blur-lg: none;
+    --glass-bg:      color-mix(in srgb, var(--glass-base) 88%, transparent);
+    --glass-bg-strong: color-mix(in srgb, var(--glass-base) 86%, transparent);
+  }
 }
 
 /* Find matches inside code panes */

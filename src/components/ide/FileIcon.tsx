@@ -10,6 +10,7 @@ import {
   JavaScriptIcon,
   JsonIcon,
   MarkdownIcon,
+  ProjectFileIcon,
   ReactIcon,
   TypeScriptIcon,
 } from "./icons";
@@ -25,6 +26,7 @@ function IconForFilename({ filename, size }: { filename: string; size: number })
   if (lower.endsWith(".json")) return <JsonIcon size={size} />;
   if (lower.endsWith(".md")) return <MarkdownIcon size={size} />;
   if (lower.endsWith(".css")) return <CssIcon size={size} />;
+  if (lower.endsWith(".project")) return <ProjectFileIcon size={size} />;
   return <ReactIcon size={size} />;
 }
 

@@ -34,12 +34,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     >
       <div className="flex flex-col gap-8">
         <span
-          className="rise inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
-          style={{
-            borderColor: "rgba(var(--ide-accent-rgb), 0.4)",
-            background: "rgba(var(--ide-accent-rgb), 0.1)",
-            color: "var(--ide-accent)",
-          }}
+          className="rise glass-subtle inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+          style={{ color: "var(--ide-accent)" }}
         >
           <i className="relative flex h-2 w-2">
             <i className="absolute h-full w-full animate-ping rounded-full" style={{ background: "var(--ide-success)" }} />
@@ -92,8 +88,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           {["React", "Next.js", "TypeScript", "Supabase"].map((s) => (
             <span
               key={s}
-              className="rounded-full border px-2.5 py-1 font-mono text-[11px]"
-              style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)", background: "var(--ide-terminal)" }}
+              className="glass-subtle rounded-full px-2.5 py-1 font-mono text-[11px]"
+              style={{ color: "var(--ide-fg-dim)" }}
             >
               {s}
             </span>
@@ -128,8 +124,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Link
               key={c.label}
               href={c.href as "/"}
-              className="card-premium group rounded-xl border p-4 transition-all hover:-translate-y-1"
-              style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
+              className="glass hover-glass group rounded-xl p-4"
             >
               <p className="flex items-center justify-between text-sm font-semibold" style={{ color: "var(--ide-fg-bright)" }}>
                 {c.label}

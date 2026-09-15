@@ -61,8 +61,7 @@ export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
       <div className="absolute inset-0 bg-black/55" onClick={onClose} />
       <div
         ref={dialogRef}
-        className="relative w-full max-w-md overflow-hidden rounded-lg border shadow-2xl"
-        style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
+        className="glass-strong relative w-full max-w-md overflow-hidden rounded-lg"
       >
         <div
           className="flex items-center gap-2 border-b px-4 py-3"

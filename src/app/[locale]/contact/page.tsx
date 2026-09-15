@@ -65,8 +65,8 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t("contact.profileAria", { site: s.name })}
-              className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5"
-              style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)", color: "var(--ide-fg)" }}
+              className="glass-subtle hover-glass flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ color: "var(--ide-fg)" }}
             >
               {s.name === "GitHub" ? <Github size={14} style={{ color: "var(--ide-accent)" }} /> : <Linkedin size={14} style={{ color: "var(--ide-accent)" }} />}
               {s.name}

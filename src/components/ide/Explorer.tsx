@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Globe } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { IDE_FILES, IDE_FOLDERS, IDE_SITES } from "@/lib/files";
+import { IDE_FILES, IDE_FOLDERS, IDE_SITES, siteDisplayFilename } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 import { useEditors } from "./editors-context";
 import { useFocusTrap } from "@/lib/use-focus-trap";
@@ -196,6 +196,7 @@ export function Explorer() {
 
   const renderSite = (s: (typeof IDE_SITES)[number], depth: number) => {
     const isActive = isSiteActive(s.id);
+    const filename = siteDisplayFilename(s);
     return (
       <li key={s.id} role="treeitem" aria-selected={!!isActive} aria-level={depth + 1}>
         <button
@@ -216,8 +217,8 @@ export function Explorer() {
             borderLeft: isActive ? "2px solid var(--ide-accent)" : "2px solid transparent",
           }}
         >
-          <Globe size={15} className="shrink-0" style={{ color: "var(--ide-accent)" }} />
-          <span className="truncate font-mono">{s.label}</span>
+          <FileIcon filename={filename} size={15} />
+          <span className="truncate font-mono">{filename}</span>
           <span
             className="ml-auto rounded-full border px-1.5 py-px font-mono text-[9px] tracking-wide uppercase"
             style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}

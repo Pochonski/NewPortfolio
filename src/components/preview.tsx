@@ -2,20 +2,30 @@ import type { ReactNode } from "react";
 
 // Shared premium preview system (server-safe): every portfolio preview card,
 // tag pill and section header speaks the same visual language.
+// Glass tiers come from globals.css (.glass, .glass-subtle, .glass-strong)
+// so the system stays theme-aware and the components stay simple.
+
+export function AmbientAurora() {
+  return <div aria-hidden className="aurora" />;
+}
 
 export function PreviewCard({
   children,
   className = "",
   hover = true,
+  tone = "default",
 }: {
   children: ReactNode;
   className?: string;
   hover?: boolean;
+  /** Glass tier: "default" (.glass), "strong" (.glass-strong), or "none" (legacy flat surface). */
+  tone?: "default" | "strong" | "none";
 }) {
+  const glassClass = tone === "strong" ? "glass-strong" : tone === "none" ? "" : "glass";
+  const hoverClass = hover && glassClass ? `${glassClass} hover-glass` : glassClass;
   return (
     <div
-      className={`${hover ? "card-premium transition-all hover:-translate-y-1 " : ""}rounded-xl border ${className}`}
-      style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
+      className={`${hoverClass} rounded-xl ${className}`}
     >
       {children}
     </div>
@@ -25,12 +35,8 @@ export function PreviewCard({
 export function TagPill({ children }: { children: ReactNode }) {
   return (
     <span
-      className="rounded-full border px-2 py-0.5 font-mono text-[11px]"
-      style={{
-        borderColor: "var(--ide-border)",
-        background: "rgba(var(--ide-accent-rgb), 0.07)",
-        color: "var(--ide-accent)",
-      }}
+      className="glass-subtle rounded-full px-2 py-0.5 font-mono text-[11px]"
+      style={{ color: "var(--ide-accent)" }}
     >
       {children}
     </span>
@@ -47,8 +53,8 @@ export function SectionHeader({ label, count }: { label: ReactNode; count?: numb
       {label}
       {count !== undefined && (
         <span
-          className="rounded-full border px-2 py-0.5 font-mono text-[10px] normal-case"
-          style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-dim)" }}
+          className="glass-subtle rounded-full px-2 py-0.5 font-mono text-[10px] normal-case"
+          style={{ color: "var(--ide-fg-dim)" }}
         >
           {count}
         </span>

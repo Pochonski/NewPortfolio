@@ -103,22 +103,6 @@
     "archiveTitle": "Archive",
     "featured": [
       {
-        "slug": "scorehub",
-        "title": "ScoreHub",
-        "description": "Multi-competition football assistant: Telegram bot with natural Spanish (Gemini 2.5 Flash), OCR ticket tracking (Tesseract.js) and React dashboard with live scores and brackets on Supabase.",
-        "tags": ["Next.js", "React", "Supabase", "Telegram API", "Gemini", "Tesseract.js"],
-        "link": "https://scorehub-pocho.vercel.app",
-        "github": "https://github.com/Pochonski/ScoreHub"
-      },
-      {
-        "slug": "stickerhub",
-        "title": "StickerHub",
-        "description": "Digital Panini album for World Cup 2026: interactive flipbook, animated pack opening, realtime marketplace and coin economy. 871 players, 48 teams.",
-        "tags": ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Tailwind"],
-        "link": "https://stickerhubs.vercel.app/",
-        "github": "https://github.com/Pochonski/stickerhub"
-      },
-      {
         "slug": "perfumes-el-pocho",
         "title": "Perfumes El Pocho",
         "description": "Real e-commerce I use to sell perfumes: 4,000+ fragrances, Python scraper, responsive design and WhatsApp ordering with nationwide delivery.",
@@ -133,6 +117,22 @@
         "tags": ["React", "Vite", "Supabase", "Tailwind", "TanStack Query"],
         "link": "https://prestamos-mi-principe.vercel.app",
         "github": "https://github.com/Pochonski/PrestamosMiPrincipe"
+      },
+      {
+        "slug": "scorehub",
+        "title": "ScoreHub",
+        "description": "Multi-competition football assistant: Telegram bot with natural Spanish (Gemini 2.5 Flash), OCR ticket tracking (Tesseract.js) and React dashboard with live scores and brackets on Supabase.",
+        "tags": ["Next.js", "React", "Supabase", "Telegram API", "Gemini", "Tesseract.js"],
+        "link": "https://scorehub-pocho.vercel.app",
+        "github": "https://github.com/Pochonski/ScoreHub"
+      },
+      {
+        "slug": "stickerhub",
+        "title": "StickerHub",
+        "description": "Digital Panini album for World Cup 2026: interactive flipbook, animated pack opening, realtime marketplace and coin economy. 871 players, 48 teams.",
+        "tags": ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Tailwind"],
+        "link": "https://stickerhubs.vercel.app/",
+        "github": "https://github.com/Pochonski/stickerhub"
       }
     ],
     "archive": [

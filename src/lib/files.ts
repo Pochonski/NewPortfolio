@@ -58,33 +58,46 @@ export function fileForRoute(pathname: string): IdeFile {
 
 export interface IdeSite {
   id: string;
-  /** Explorer row label (proper noun, not translated) */
+  /** Explorer row label (proper noun, not translated). Kept for semantic uses
+   *  (iframe title, SiteBrowser label, command palette display). */
   label: string;
+  /** Visual filename shown in the Explorer (e.g. "perfumes-el-pocho.project").
+   *  Falls back to `label + ".project"` when not provided. */
+  displayFilename?: string;
   url: string;
 }
 
 export const IDE_SITES: IdeSite[] = [
   {
     id: "site-perfumes",
-    label: "Perfumes-el-pocho",
+    label: "Perfumes El Pocho",
+    displayFilename: "perfumes-el-pocho.project",
     url: "https://perfumes-el-pocho.vercel.app/",
   },
   {
     id: "site-prestamos",
-    label: "Préstamos-mi-príncipe",
+    label: "Préstamos Mi Príncipe",
+    displayFilename: "prestamos-mi-principe.project",
     url: "https://prestamos-mi-principe.vercel.app",
   },
   {
     id: "site-scorehub",
     label: "ScoreHub",
+    displayFilename: "scorehub.project",
     url: "https://scorehub-pocho.vercel.app",
   },
   {
     id: "site-stickerhub",
     label: "StickerHub",
+    displayFilename: "stickerhub.project",
     url: "https://stickerhubs.vercel.app/",
   },
 ];
+
+/** Display filename for the Explorer (always ends with `.project`). */
+export function siteDisplayFilename(site: IdeSite): string {
+  return site.displayFilename ?? `${site.label}.project`;
+}
 
 export function siteForId(siteId: string): IdeSite | undefined {
   return IDE_SITES.find((s) => s.id === siteId);

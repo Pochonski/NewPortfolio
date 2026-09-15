@@ -181,13 +181,20 @@ export function githubMd(
       "Markdown",
       "markdown",
       head +
-        `\n- **Profile:** https://github.com/Pochonski\n- **Featured:** ScoreHub · StickerHub · Perfumes El Pocho · Préstamos Mi Príncipe\n- **Stack:** React · Next.js · Supabase\n`
+        `\n- **Profile:** https://github.com/Pochonski\n- **Featured:** Perfumes El Pocho · Préstamos Mi Príncipe · StickerHub · FetchCPU-Pocho · ScoreHub · NewPortfolio\n- **Stack:** React · Next.js · Supabase\n`
     );
   }
   const { user, repos } = data;
   const stars = repos.reduce((a, r) => a + r.stargazers_count, 0);
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const featuredOrder = ["scorehub", "stickerhub", "perfumeselpocho", "prestamosmiprincipe"];
+  const featuredOrder = [
+    "perfumeselpocho",
+    "prestamosmiprincipe",
+    "stickerhub",
+    "fetchcpupocho",
+    "scorehub",
+    "newportfolio",
+  ];
   const rank = (r: GithubRepo) => {
     const i = featuredOrder.indexOf(norm(r.name));
     return i === -1 ? featuredOrder.length : i;

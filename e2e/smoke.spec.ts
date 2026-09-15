@@ -46,8 +46,8 @@ test("explorer navigation shows contact preview", async ({ page }) => {
 test("multiple live sites stay open as tabs", async ({ page }) => {
   await page.goto("/");
   const tree = page.getByRole("tree");
-  await tree.getByText("Perfumes-el-pocho").click();
-  await tree.getByText("Préstamos-mi-príncipe").click();
+  await tree.getByText("perfumes-el-pocho.project").click();
+  await tree.getByText("prestamos-mi-principe.project").click();
   // Both browser tabs persist side by side (no replace).
   await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
@@ -62,8 +62,8 @@ test("multiple live sites stay open as tabs", async ({ page }) => {
 test("navigating to a route exits live sites", async ({ page }) => {
   await page.goto("/");
   const tree = page.getByRole("tree");
-  await tree.getByText("Perfumes-el-pocho").click();
-  await tree.getByText("Préstamos-mi-príncipe").click();
+  await tree.getByText("perfumes-el-pocho.project").click();
+  await tree.getByText("prestamos-mi-principe.project").click();
   await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
   // Leaving the project for a route closes every site tab.
   await tree.getByText("contact.css").click();

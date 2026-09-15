@@ -84,6 +84,41 @@ export function CssIcon(props: IconProps) {
 }
 
 // ---------------------------------------------------------------------------
+// .project file icon (IDE-specific): a document silhouette with a small
+// diamond/run-marker at the top-left to signal "executable project" —
+// reads as an *archivo* with project identity, not a literal letter.
+// Vendored style: matches Material Icon Theme body proportions + a subtle
+// accent-color tag so it sits among the other extension icons.
+// ---------------------------------------------------------------------------
+
+export function ProjectFileIcon(props: IconProps) {
+  return (
+    <Base viewBox="0 0 32 32" label="Project file" {...props}>
+      {/* Document body with folded top-right corner. */}
+      <path
+        fill="#4f46e5"
+        d="M22 4h-9a3 3 0 0 0-3 3v18a3 3 0 0 0 3 3h13a3 3 0 0 0 3-3V13Zm0 6.5V5l8 8h-5.5a2.5 2.5 0 0 1-2.5-2.5Z"
+      />
+      {/* Folded corner highlight. */}
+      <path
+        fill="#a5b4fc"
+        d="M22 4v6.5a2.5 2.5 0 0 0 2.5 2.5H30L22 4Z"
+      />
+      {/* Small project badge (diamond) at the bottom of the document. */}
+      <path
+        fill="#fbbf24"
+        d="m15.5 20 2-2 2 2-2 2Z"
+      />
+      {/* Subtle lines on the document body (project content hint). */}
+      <path
+        fill="#1e1b4b"
+        d="M13 18h7v1.5h-7Zm0 4h7v1.5h-7Zm0-8h4v1.5h-4Z"
+      />
+    </Base>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Folder icons (closed / open variants, same artwork as VS Code Material
 // Icon Theme; the open state uses the "flap" body path from *-open.svg).
 // ---------------------------------------------------------------------------

@@ -73,8 +73,7 @@ export function BrowserToolbar({
         onClick={copyUrl}
         title={copied ? ts("copied") : ts("copyUrl")}
         aria-label={ts("copyPageUrl")}
-        className="browser-pill flex min-w-0 flex-1 items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px]"
-        style={{ borderColor: "var(--ide-border)", background: "var(--ide-bg)" }}
+        className="glass browser-pill flex min-w-0 flex-1 items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px]"
       >
         {copied ? (
           <Check size={11} style={{ color: "var(--ide-success)" }} />

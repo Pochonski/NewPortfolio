@@ -182,8 +182,7 @@ export function CommandPalette({
       <div className="absolute inset-0 bg-black/55" onClick={onClose} />
       <div
         ref={boxRef}
-        className="relative w-full max-w-xl overflow-hidden rounded-lg border shadow-2xl"
-        style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)" }}
+        className="glass-strong relative w-full max-w-xl overflow-hidden rounded-lg"
       >
         <div className="flex items-center gap-2 border-b px-3" style={{ borderColor: "var(--ide-border)" }}>
           <span style={{ color: "var(--ide-fg-dim)" }}>›</span>

@@ -68,8 +68,8 @@ export default async function CaseStudyPage({
     >
       <Link
         href="/projects"
-        className="mb-6 inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all hover:-translate-y-0.5"
-        style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)", color: "var(--ide-fg-dim)" }}
+        className="glass-subtle hover-glass mb-6 inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium"
+        style={{ color: "var(--ide-fg-dim)" }}
       >
         <ArrowLeft size={14} /> {t("caseStudy.back")}
       </Link>

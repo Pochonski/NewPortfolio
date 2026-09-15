@@ -28,6 +28,7 @@ import {
   type GroupId,
 } from "./editors-context";
 import { readRecents } from "@/lib/recents";
+import { AmbientAurora } from "@/components/preview";
 import {
   fetchSource,
   readSource,
@@ -442,10 +443,11 @@ function GroupView({
         ) : active?.kind === "code" ? (
           <CodeTabContent fileId={active.fileId} />
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <AmbientAurora />
             <BrowserBar />
-            <div className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible lg:p-6">
-              <div className="mx-auto w-full max-w-3xl">{preview}</div>
+            <div className="ide-scroll relative z-[1] min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible lg:p-6">
+              <div className="relative mx-auto w-full max-w-3xl">{preview}</div>
             </div>
           </div>
         )}
@@ -506,9 +508,10 @@ function GroupView({
 
       {/* Content */}
       {active?.kind === "preview" ? (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+          <AmbientAurora />
           <BrowserBar />
-          <div className="ide-scroll min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible lg:p-6">
+          <div className="ide-scroll relative z-[1] min-h-0 flex-1 overflow-auto p-4 max-lg:overflow-visible lg:p-6">
             {preview}
           </div>
         </div>
