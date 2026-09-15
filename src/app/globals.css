@@ -30,6 +30,8 @@
   --ide-error: #f97583;
   --ide-warn: #e6b450;
   --ide-success: #7ee787;
+  /* Badge text on top of --ide-error (dark text for light-on-dark error bg). */
+  --ide-badge-fg: #1c1c1c;
   /* Shiki css-variables theme tokens (code follows the IDE theme) */
   --shiki-foreground: #aed9e0;
   --shiki-background: transparent;
@@ -116,6 +118,8 @@
   /* Status semantics: dark variants for legible text on light surfaces. */
   --ide-success:      #0a7a42;
   --ide-error:        #c92a2a;
+  /* Badge text on top of --ide-error (white keeps contrast on dark error bg). */
+  --ide-badge-fg:     #ffffff;
 }
 
 /* Dracula (inspired, own values) */

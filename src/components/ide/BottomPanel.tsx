@@ -196,7 +196,7 @@ export function BottomPanel({
                 {typeof badge === "number" && badge > 0 && (
                   <span
                     className="rounded-full px-1.5 py-px text-[10px]"
-                    style={{ background: "var(--ide-error)", color: "#fff" }}
+                    style={{ background: "var(--ide-error)", color: "var(--ide-badge-fg)" }}
                   >
                     {badge}
                   </span>

@@ -24,17 +24,20 @@ export function CommandPalette({
   open,
   onClose,
   onTerminal,
+  startTheme = false,
 }: {
   open: boolean;
   onClose: () => void;
   onTerminal: () => void;
+  /** Open directly in the color-theme picker (K T chord). Resets on remount. */
+  startTheme?: boolean;
 }) {
   const router = useRouter();
   const locale = useLocale();
   const tp = useTranslations("ide.palette");
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
-  const [themeMode, setThemeMode] = useState(false);
+  const [themeMode, setThemeMode] = useState(startTheme);
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   useFocusTrap(boxRef, open);

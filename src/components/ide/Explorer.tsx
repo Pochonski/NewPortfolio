@@ -6,6 +6,8 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { IDE_FILES, IDE_FOLDERS, IDE_SITES, siteDisplayFilename } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
+import { SearchPanel } from "./SearchPanel";
+import type { SidebarView } from "./ActivityBar";
 import { useEditors } from "./editors-context";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { STORE_SIDEBAR } from "@/lib/storage-keys";
@@ -105,9 +107,11 @@ function SideSash({
 export function Explorer() {
   const t = useTranslations("ide.explorer");
   const ts = useTranslations("ide.site");
+  const tSearch = useTranslations("ide.search");
   const { state } = useEditors();
   const [open, setOpen] = useState(true);
   const [drawer, setDrawer] = useState(false);
+  const [view, setView] = useState<SidebarView>("files");
   const [visible, setVisible] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [sideWidth, setSideWidth] = useState(SIDE_WIDTH_DEFAULT);
@@ -141,6 +145,15 @@ export function Explorer() {
     const h = () => setVisible((v) => !v);
     window.addEventListener("porto-toggle-explorer", h);
     return () => window.removeEventListener("porto-toggle-explorer", h);
+  }, []);
+
+  useEffect(() => {
+    const h = (e: Event) => {
+      const v = (e as CustomEvent).detail?.view;
+      if (v === "files" || v === "search") setView(v);
+    };
+    window.addEventListener("porto-sidebar", h as EventListener);
+    return () => window.removeEventListener("porto-sidebar", h as EventListener);
   }, []);
 
   // Drawer a11y: focus the close button on open, Esc closes.
@@ -300,7 +313,7 @@ export function Explorer() {
             ☰
           </button>
           <aside
-            aria-label={t("explorer")}
+            aria-label={view === "search" ? tSearch("label") : t("explorer")}
             className="shrink-0 overflow-y-auto border-r max-md:hidden ide-scroll"
             style={{ background: "var(--ide-explorer)", borderColor: "var(--ide-border)", width: sideWidth }}
           >
@@ -308,9 +321,9 @@ export function Explorer() {
               className="px-4 pt-3 pb-1 text-[11px] tracking-wider uppercase"
               style={{ color: "var(--ide-fg-dim)" }}
             >
-              {t("explorer")}
+              {view === "search" ? tSearch("label") : t("explorer")}
             </p>
-            {list}
+            {view === "search" ? <SearchPanel /> : list}
           </aside>
           <SideSash
             width={sideWidth}

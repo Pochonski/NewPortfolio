@@ -32,6 +32,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [palette, setPalette] = useState(false);
+  const [paletteTheme, setPaletteTheme] = useState(false);
   const [theme, setTheme] = useState<string>(DEFAULT_THEME);
   const [chord, setChord] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -165,6 +166,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
       }
       if (chord === "k" && k === "t") {
         e.preventDefault();
+        setPaletteTheme(true);
         setPalette(true);
         setChord(null);
         return;
@@ -231,7 +233,17 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
           themeName={themeName}
         />
       </EditorsProvider>
-      {palette && <CommandPalette open onClose={() => setPalette(false)} onTerminal={toggleTerminal} />}
+      {palette && (
+        <CommandPalette
+          open
+          startTheme={paletteTheme}
+          onClose={() => {
+            setPalette(false);
+            setPaletteTheme(false);
+          }}
+          onTerminal={toggleTerminal}
+        />
+      )}
       {chord && (
         <div
           className="fixed bottom-10 left-1/2 z-50 -translate-x-1/2 rounded border px-3 py-1 font-mono text-xs"

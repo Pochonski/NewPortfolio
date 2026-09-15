@@ -59,6 +59,20 @@ test("multiple live sites stay open as tabs", async ({ page }) => {
   await expect(address).toHaveValue(/perfumes-el-pocho\.vercel\.app/);
 });
 
+test("sidebar search finds and opens files", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTitle("Buscar (Ctrl+Shift+F)").click();
+  const input = page.getByRole("textbox", { name: "Buscar en archivos" });
+  await expect(input).toBeVisible();
+  await input.fill("skills");
+  const results = page.getByRole("list", { name: "Resultados de búsqueda" });
+  const fileButton = results.getByRole("button", { name: "skills.ts" });
+  await expect(fileButton).toBeVisible();
+  await fileButton.click();
+  // Opening a result returns the sidebar to the files view.
+  await expect(page.getByRole("tree")).toBeVisible();
+});
+
 test("navigating to a route exits live sites", async ({ page }) => {
   await page.goto("/");
   const tree = page.getByRole("tree");

@@ -7,6 +7,21 @@ const RATE_WINDOW_MS = 60_000;
 
 export async function POST(req: Request) {
   try {
+    // Same-origin POSTs only: browsers always send Origin on POST. Requests
+    // without Origin (curl, server-to-server) are allowed; mismatched hosts
+    // are rejected to block naive cross-site form abuse.
+    const origin = req.headers.get("origin");
+    if (origin) {
+      try {
+        const host = req.headers.get("host") ?? "";
+        if (new URL(origin).host !== host) {
+          return NextResponse.json({ error: "forbidden" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "forbidden" }, { status: 403 });
+      }
+    }
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (!rateLimit(`contact:${ip}`, 5, RATE_WINDOW_MS)) {
       return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "60" } });
@@ -36,13 +51,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "misconfigured" }, { status: 500 });
     }
 
+    // Strip CR/LF: `name` is interpolated into the mail subject header.
+    const safeName = name.replace(/[\r\n]+/g, " ");
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
       from,
       to,
       replyTo: email,
-      subject: bodyLocale === "en" ? `Portfolio — message from ${name}` : `Portfolio — mensaje de ${name}`,
-      text: `De: ${name} <${email}>\n\n${message}`,
+      subject: bodyLocale === "en" ? `Portfolio — message from ${safeName}` : `Portfolio — mensaje de ${safeName}`,
+      text: `De: ${safeName} <${email}>\n\n${message}`,
     });
     if (error) {
       console.error("Resend error", error);

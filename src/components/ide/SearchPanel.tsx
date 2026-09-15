@@ -9,6 +9,7 @@ import { IDE_FILES } from "@/lib/files";
 
 function openFile(fileId: string) {
   window.dispatchEvent(new CustomEvent("porto-open-file", { detail: { fileId } }));
+  window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view: "files" } }));
 }
 
 // Sidebar search view (Ctrl+Shift+F): searches every file's display source.
