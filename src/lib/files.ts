@@ -95,6 +95,12 @@ export const IDE_SITES: IdeSite[] = [
     displayFilename: "stickerhub.project",
     url: "https://stickerhubs.vercel.app/",
   },
+  {
+    id: "site-fetchcpu",
+    label: "FetchCPU",
+    displayFilename: "fetchcpu.project",
+    url: "https://fetchcpu-pocho.vercel.app/",
+  },
 ];
 
 /** Display filename for the Explorer (always ends with `.project`). */

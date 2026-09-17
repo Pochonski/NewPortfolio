@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
               "connect-src 'self' https://api.resend.com https://vitals.vercel-insights.com",
               // Integrated browser (SiteBrowser iframe): only the portfolio's
               // own live projects may be framed.
-              "frame-src https://perfumes-el-pocho.vercel.app https://prestamos-mi-principe.vercel.app https://scorehub-pocho.vercel.app https://stickerhubs.vercel.app",
+              "frame-src https://perfumes-el-pocho.vercel.app https://prestamos-mi-principe.vercel.app https://scorehub-pocho.vercel.app https://stickerhubs.vercel.app https://fetchcpu-pocho.vercel.app",
             ].join("; "),
           },
         ],
