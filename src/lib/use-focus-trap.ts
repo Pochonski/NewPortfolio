@@ -4,12 +4,14 @@ const FOCUSABLE =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 // Traps Tab/Shift+Tab inside a modal container (palette, dialogs).
+// Restores focus to the previously focused element on close.
 export function useFocusTrap<T extends HTMLElement>(
   ref: RefObject<T | null>,
   active = true
 ): void {
   useEffect(() => {
     if (!active) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
       const root = ref.current;
@@ -23,6 +25,10 @@ export function useFocusTrap<T extends HTMLElement>(
       }
       const first = items[0];
       const last = items[items.length - 1];
+      if (!first || !last) {
+        e.preventDefault();
+        return;
+      }
       const at = document.activeElement;
       if (e.shiftKey && (at === first || !root.contains(at))) {
         e.preventDefault();
@@ -33,6 +39,9 @@ export function useFocusTrap<T extends HTMLElement>(
       }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus?.();
+    };
   }, [ref, active]);
 }

@@ -20,10 +20,10 @@ export function fuzzyScore(query: string, text: string): number | null {
     }
     if (found < 0) return null;
     const gap = found - ti;
-    const prev = found > 0 ? t[found - 1] : "";
+    const prev = found > 0 ? (t[found - 1] ?? "") : "";
     const boundary =
       found === 0 || prev === "/" || prev === "-" || prev === "_" || prev === "." || prev === " ";
-    const camel = found > 0 && /[a-z]/.test(prev) && /[A-Z]/.test(text[found]);
+    const camel = found > 0 && /[a-z]/.test(prev) && /[A-Z]/.test(text[found] ?? "");
     if (gap === 0) {
       run += 1;
       score += 10 + run * 5 + (boundary ? 8 : 0) + (camel ? 6 : 0);

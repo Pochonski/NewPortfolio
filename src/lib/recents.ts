@@ -1,5 +1,6 @@
 import { IDE_FILES, siteForId } from "./files";
 import { STORE_RECENTS } from "./storage-keys";
+import { safeGetJSON, safeSetJSON } from "./safe-storage";
 
 // Recently opened files and sites (most recent last). Read on
 // mount/render — no subscription needed since every push coincides with a
@@ -13,14 +14,9 @@ function isKnown(id: string): boolean {
 }
 
 function load(): string[] {
-  try {
-    const raw = window.localStorage.getItem(STORE_RECENTS);
-    const arr = JSON.parse(raw ?? "[]") as unknown;
-    if (!Array.isArray(arr)) return [];
-    return arr.filter((id): id is string => typeof id === "string" && isKnown(id));
-  } catch {
-    return [];
-  }
+  const arr = safeGetJSON<unknown>(STORE_RECENTS, []);
+  if (!Array.isArray(arr)) return [];
+  return arr.filter((id): id is string => typeof id === "string" && isKnown(id));
 }
 
 export function readRecents(): string[] {
@@ -31,10 +27,6 @@ export function readRecents(): string[] {
 export function pushRecent(id: string): void {
   if (typeof window === "undefined") return;
   if (!isKnown(id)) return;
-  try {
-    const next = [...load().filter((x) => x !== id), id].slice(-MAX);
-    window.localStorage.setItem(STORE_RECENTS, JSON.stringify(next));
-  } catch {
-    /* storage blocked */
-  }
+  const next = [...load().filter((x) => x !== id), id].slice(-MAX);
+  safeSetJSON(STORE_RECENTS, next);
 }

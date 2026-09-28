@@ -20,7 +20,7 @@
   --ide-statusbar: #161616;
   --ide-fg: #aed9e0;
   --ide-fg-bright: #b8f2e6;
-  --ide-fg-dim: rgba(174, 217, 224, 0.62);
+  --ide-fg-dim: rgba(174, 217, 224, 0.8);
   --ide-accent: #b8f2e6;
   --ide-accent-rgb: 184, 242, 230;
   --ide-border: #2d2d2d;
@@ -37,12 +37,12 @@
   --shiki-background: transparent;
   --shiki-token-constant: #e6b450;
   --shiki-token-string: #7ee787;
-  --shiki-token-comment: rgba(174, 217, 224, 0.45);
+  --shiki-token-comment: rgba(174, 217, 224, 0.68);
   --shiki-token-keyword: #b8f2e6;
   --shiki-token-parameter: #aed9e0;
   --shiki-token-function: #7aa2f7;
   --shiki-token-string-expression: #7ee787;
-  --shiki-token-punctuation: rgba(174, 217, 224, 0.6);
+  --shiki-token-punctuation: rgba(174, 217, 224, 0.78);
   --shiki-token-link: #b8f2e6;
   /* ----- Glass design system ----- */
   /* Per-theme physical glass base. Themes below override this single value. */
@@ -137,7 +137,7 @@
   --ide-statusbar: #191a21;
   --ide-fg: #f8f8f2;
   --ide-fg-bright: #ffffff;
-  --ide-fg-dim: rgba(248, 248, 242, 0.55);
+  --ide-fg-dim: rgba(248, 248, 242, 0.78);
   --ide-accent: #bd93f9;
   --ide-accent-rgb: 189, 147, 249;
   --ide-border: #44475a;
@@ -179,7 +179,7 @@
   --ide-statusbar: #3b4252;
   --ide-fg: #d8dee9;
   --ide-fg-bright: #eceff4;
-  --ide-fg-dim: rgba(216, 222, 233, 0.7);
+  --ide-fg-dim: rgba(216, 222, 233, 0.85);
   --ide-accent: #88c0d0;
   --ide-accent-rgb: 136, 192, 208;
   --ide-border: #434c5e;
@@ -190,7 +190,7 @@
   --shiki-background: transparent;
   --shiki-token-constant: #b48ead;
   --shiki-token-string: #a3be8c;
-  --shiki-token-comment: #616e88;
+  --shiki-token-comment: #7b8aa5;
   --shiki-token-keyword: #81a1c1;
   --shiki-token-parameter: #d8dee9;
   --shiki-token-function: #88c0d0;
@@ -221,7 +221,7 @@
   --ide-statusbar: #21252b;
   --ide-fg: #abb2bf;
   --ide-fg-bright: #ffffff;
-  --ide-fg-dim: rgba(171, 178, 191, 0.78);
+  --ide-fg-dim: rgba(171, 178, 191, 0.9);
   --ide-accent: #61afef;
   --ide-accent-rgb: 97, 175, 239;
   --ide-border: #3e4451;
@@ -232,7 +232,7 @@
   --shiki-background: transparent;
   --shiki-token-constant: #d19a66;
   --shiki-token-string: #98c379;
-  --shiki-token-comment: #5c6370;
+  --shiki-token-comment: #8a93a8;
   --shiki-token-keyword: #c678dd;
   --shiki-token-parameter: #abb2bf;
   --shiki-token-function: #61afef;

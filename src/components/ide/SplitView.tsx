@@ -77,8 +77,11 @@ function TabBar({
           <div
             key={tab.kind === "code" ? `code-${tab.fileId}` : tab.kind === "site" ? `site-${tab.siteId}` : "preview"}
             role="tab"
+            id={`ide-tab-${group}-${i}`}
             aria-selected={isActive}
-            tabIndex={0}
+            aria-controls={`ide-panel-${group}`}
+            aria-label={tabName}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => setActive(group, i)}
             onDoubleClick={() => moveTabToOtherSide(group, i)}
             onKeyDown={(e) => {
@@ -89,6 +92,18 @@ function TabBar({
                 e.preventDefault();
                 const n = (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
                 setActive(group, n);
+                document.getElementById(`ide-tab-${group}-${n}`)?.focus();
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                setActive(group, 0);
+                document.getElementById(`ide-tab-${group}-0`)?.focus();
+              } else if (e.key === "End") {
+                e.preventDefault();
+                setActive(group, tabs.length - 1);
+                document.getElementById(`ide-tab-${group}-${tabs.length - 1}`)?.focus();
+              } else if (e.key === "Delete" || e.key === "Backspace") {
+                e.preventDefault();
+                closeTab(group, i);
               }
             }}
             title={ts("moveSide", { name: tabName })}
@@ -183,7 +198,7 @@ function CodeTabContent({ fileId }: { fileId: string }) {
           {ts("failedLoad")}
         </p>
       ) : (
-        <div className="flex flex-1 flex-col gap-2 p-4" aria-label={ts("loadingSource")}>
+        <div className="flex flex-1 flex-col gap-2 p-4" role="status" aria-label={ts("loadingSource")}>
           {[90, 70, 80, 55, 75].map((w, i) => (
             <div
               key={i}
@@ -430,6 +445,9 @@ function GroupView({
     return (
       <section
         aria-label={ts("editorGroup") + " 2"}
+        role="tabpanel"
+        id={`ide-panel-${group}`}
+        aria-labelledby={`ide-tab-${group}-${Math.min(activeIdx, Math.max(tabs.length - 1, 0))}`}
         className={`min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-lg:w-full ${
           mobileVisible ? "flex" : "hidden"
         } lg:flex`}
@@ -458,6 +476,9 @@ function GroupView({
   return (
     <section
       aria-label={`${ts("editorGroup")} ${group === "left" ? 1 : 2}`}
+      role="tabpanel"
+      id={`ide-panel-${group}`}
+      aria-labelledby={`ide-tab-${group}-${Math.min(activeIdx, Math.max(tabs.length - 1, 0))}`}
       className={`min-h-0 min-w-0 flex-1 flex-col overflow-hidden max-lg:w-full ${
         mobileVisible ? "flex" : "hidden"
       } lg:flex`}
@@ -720,7 +741,7 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
         <>
           {state.right && (
             <div
-              role="tablist"
+              role="group"
               aria-label={ts("editorGroup")}
               className="mb-3 flex shrink-0 gap-1 self-start rounded-lg border p-1 lg:hidden"
               style={{ borderColor: "var(--ide-border)", background: "var(--ide-terminal)" }}
@@ -733,8 +754,7 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
               ).map(({ id, label, Icon }) => (
                 <button
                   key={id}
-                  role="tab"
-                  aria-selected={mobileGroup === id}
+                  aria-pressed={mobileGroup === id}
                   onClick={() => setMobileGroup(id)}
                   className="flex max-w-36 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium"
                   style={{

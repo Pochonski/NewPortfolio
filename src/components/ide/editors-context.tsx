@@ -412,6 +412,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           const from = group === "left" ? s.left : s.right;
           if (!from || from.length === 0 || idx < 0 || idx >= from.length) return s;
           const tab = from[idx];
+          if (!tab) return s;
           const dest: GroupId = group === "left" ? "right" : "left";
           // Right is browser-only: code tabs cannot move there.
           if (dest === "right" && tab.kind === "code") return s;

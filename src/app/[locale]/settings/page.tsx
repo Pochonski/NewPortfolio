@@ -47,6 +47,7 @@ export default function SettingsPage() {
   if (!loaded) return null;
 
   const activeTheme = IDE_THEMES.find((t) => t.id === theme) ?? IDE_THEMES[0];
+  if (!activeTheme) return null;
 
   return (
     <div className="flex h-full w-full flex-col">

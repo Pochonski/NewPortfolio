@@ -50,7 +50,13 @@ export const KIND_LANGUAGE: Record<IdeFile["kind"], string> = {
 
 export function fileForRoute(pathname: string): IdeFile {
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-  return IDE_FILES.find((f) => f.route === clean) ?? IDE_FILES[0];
+  const found = IDE_FILES.find((f) => f.route === clean);
+  if (found) return found;
+  // Unknown routes fall back to home for the IDE chrome; the global
+  // not-found page still handles the actual 404.
+  const home = IDE_FILES[0];
+  if (!home) throw new Error("IDE_FILES must not be empty");
+  return home;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,6 +117,18 @@ export function siteDisplayFilename(site: IdeSite): string {
 export function siteForId(siteId: string): IdeSite | undefined {
   return IDE_SITES.find((s) => s.id === siteId);
 }
+
+/**
+ * Single source for the frame-src allowlist (next.config.ts CSP).
+ * Keep in sync: SiteBrowser may only frame these origins.
+ */
+export const IDE_FRAME_ORIGINS: string[] = [
+  "https://perfumes-el-pocho.vercel.app",
+  "https://prestamos-mi-principe.vercel.app",
+  "https://scorehub-pocho.vercel.app",
+  "https://stickerhubs.vercel.app",
+  "https://fetchcpu-pocho.vercel.app",
+];
 
 /** Host shown as the browser tab label, e.g. "perfumes-el-pocho.vercel.app". */
 export function siteHost(site: IdeSite): string {

@@ -189,6 +189,7 @@
       "success": "Message sent! I'll reply soon.",
       "error": "Could not send. Try again later.",
       "rateLimited": "Too many attempts. Wait a minute and try again.",
+      "captchaFailed": "Spam verification failed. Reload and try again.",
       "logSent": "Contact message sent from {email}",
       "logFailed": "Contact message failed to send"
     }

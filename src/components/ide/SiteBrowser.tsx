@@ -330,6 +330,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
               <div
                 className="absolute inset-0 flex flex-col items-center justify-center gap-3"
                 style={{ background: "var(--ide-editor)" }}
+                role="status"
                 aria-label={ts("loadingSource")}
               >
                 <Globe size={28} className="animate-pulse" style={{ color: "var(--ide-accent)" }} />
@@ -343,6 +344,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
               key={`${siteId}-${reloadKey}`}
               src={iframeSrc}
               title={site.label}
+              loading="lazy"
               onLoad={() => {
                 setLoaded(true);
                 setFailed(false);

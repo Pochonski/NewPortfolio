@@ -23,6 +23,13 @@ export async function highlightCode(code: string, lang: string): Promise<string>
   return hl.codeToHtml(code, { lang, theme: "css-variables", transformers: [indentGuides()] });
 }
 
+// Minimal HAST node shape used to walk Shiki line trees.
+interface HastNode {
+  type?: string;
+  value?: string;
+  children?: unknown[];
+}
+
 // Adds --n (indent levels, 2 spaces each) to every line so CSS can paint
 // VS Code-style indent guides. Structure untouched: find indexing safe.
 function indentGuides(): ShikiTransformer {
@@ -30,7 +37,7 @@ function indentGuides(): ShikiTransformer {
     name: "porto-indent-guides",
     line(node) {
       let spaces = "";
-      const walk = (n: { type?: string; value?: string; children?: unknown[] }): boolean => {
+      const walk = (n: HastNode): boolean => {
         if (n.type === "text" && typeof n.value === "string") {
           const m = /^[\t ]*/.exec(n.value);
           const w = m ? m[0] : "";
@@ -39,14 +46,14 @@ function indentGuides(): ShikiTransformer {
         }
         if (n.type === "element" && Array.isArray(n.children)) {
           for (const c of n.children) {
-            if (!walk(c as { type?: string; value?: string; children?: unknown[] })) return false;
+            if (!walk(c as HastNode)) return false;
           }
           return true;
         }
         return false;
       };
       for (const child of node.children ?? []) {
-        if (!walk(child as { type?: string; value?: string; children?: unknown[] })) break;
+        if (!walk(child as HastNode)) break;
       }
       const levels = Math.floor(spaces.replace(/\t/g, "  ").length / 2);
       if (levels > 0) {

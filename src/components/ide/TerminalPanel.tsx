@@ -166,7 +166,7 @@ export function TerminalPanel({ onClose, bare }: { onClose: () => void; bare?: b
     }
     const out: TermLine[] = [{ type: "in", text: `${prompt} ${cmd}` }];
     const [name, ...args] = cmd.split(/\s+/);
-    const c = name.toLowerCase();
+    const c = (name ?? "").toLowerCase();
     trackEvent("terminal_command", { cmd: c });
 
     const go = (route: string) => {

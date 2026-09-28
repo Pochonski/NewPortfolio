@@ -11,6 +11,7 @@ import {
   settingsJson,
   type BuiltFileSource,
 } from "./file-sources";
+import type { GithubUser, GithubRepo } from "./github";
 import { skills } from "@/content/skills";
 import { IDE_FILES } from "./files";
 import { THEME_IDS, DEFAULT_THEME } from "./themes";
@@ -33,10 +34,13 @@ interface MessagesDict {
 
 // Single place that turns a file id + locale into its display source.
 // Used by /api/source (highlighted) and /api/search (plain text).
+// `githubData` is live when the caller already fetched it (page + API),
+// otherwise the static fallback is used so code never crashes offline.
 export function buildFileSource(
   fileId: string,
   locale: SearchLocale,
-  theme: string = DEFAULT_THEME
+  theme: string = DEFAULT_THEME,
+  githubData?: { user: GithubUser; repos: GithubRepo[] } | null
 ): BuiltFileSource | null {
   if (!IDE_FILES.some((f) => f.id === fileId)) return null;
   const safeTheme = (THEME_IDS as string[]).includes(theme) ? theme : DEFAULT_THEME;
@@ -60,10 +64,7 @@ export function buildFileSource(
         { key: "tools", items: skills.tools },
       ], locale);
     case "github":
-      // Known limit: live GitHub data only exists in the page render
-      // (revalidated hourly). /api/source and /api/search get the static
-      // fallback here, so they may lag the preview — by design, no fetch.
-      return githubMd(locale);
+      return githubMd(locale, githubData ?? null);
     case "contact":
       return contactCss(locale);
     case "readme":

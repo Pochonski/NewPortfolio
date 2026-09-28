@@ -85,7 +85,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
         </div>
 
-        <div className="rise rise-2 flex flex-wrap gap-2" aria-label="Stack">
+        <div className="rise rise-2 flex flex-wrap gap-2" role="group" aria-label="Stack">
           {["React", "Next.js", "TypeScript", "Supabase"].map((s) => (
             <span
               key={s}

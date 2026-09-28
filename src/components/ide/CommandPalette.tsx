@@ -47,7 +47,7 @@ export function CommandPalette({
       key: `go-${f.id}`,
       group: tp("goToFile"),
       label: `${tp("goTo")} ${f.filename}`,
-      hint: f.id === "readme" ? undefined : f.route === "/" ? "G H" : `G ${f.id[0].toUpperCase()}`,
+      hint: f.id === "readme" ? undefined : f.route === "/" ? "G H" : `G ${(f.id[0] ?? "").toUpperCase()}`,
       file: f,
       // README has no route-backed page: open it as a code tab instead.
       run:
@@ -136,7 +136,7 @@ export function CommandPalette({
       const rank = (it: Item) => {
         const m = it.key.match(/^go-(.+)$/);
         if (!m) return 999;
-        const at = recent.indexOf(m[1]);
+        const at = recent.indexOf(m[1] ?? "");
         return at < 0 ? 999 : at;
       };
       return [...items].sort((a, b) => rank(a) - rank(b));

@@ -115,6 +115,7 @@ const components: Components = {
   ),
   th: ({ children }) => (
     <th
+      scope="col"
       className="border px-3 py-2 text-left font-mono text-xs"
       style={{ borderColor: "var(--ide-border)", color: "var(--ide-fg-bright)" }}
     >
@@ -126,19 +127,24 @@ const components: Components = {
       {children}
     </td>
   ),
-  img: ({ src, alt }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt ?? ""}
-      loading="lazy"
-      className="h-16 w-16 rounded-full object-cover"
-      style={{
-        border: "2px solid rgba(var(--ide-accent-rgb), 0.55)",
-        boxShadow: "0 8px 24px rgba(var(--ide-accent-rgb), 0.25)",
-      }}
-    />
-  ),
+  img: ({ src, alt }) => {
+    const url = typeof src === "string" ? src : "";
+    // GitHub avatars are square → avatar style; other markdown images stay responsive.
+    const isAvatar = url.includes("avatars.githubusercontent.com") || url.includes("githubusercontent.com");
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- intentional: remote avatar/external markdown images with fixed layout
+      <img
+        src={url}
+        alt={alt ?? ""}
+        loading="lazy"
+        className={isAvatar ? "h-16 w-16 rounded-full object-cover" : "h-auto w-full max-w-xl rounded-lg object-contain"}
+        style={{
+          border: "2px solid rgba(var(--ide-accent-rgb), 0.55)",
+          boxShadow: "0 8px 24px rgba(var(--ide-accent-rgb), 0.25)",
+        }}
+      />
+    );
+  },
 };
 
 // Renders a markdown source string exactly as the code pane shows it —

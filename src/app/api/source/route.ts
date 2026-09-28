@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { highlightCode } from "@/lib/shiki";
 import { buildFileSource } from "@/lib/build-source";
+import { getGithubData } from "@/lib/github";
 import { IDE_FILES } from "@/lib/files";
+import { getClientIp, rateLimit } from "@/lib/security";
 import { THEME_IDS, DEFAULT_THEME } from "@/lib/themes";
 
 // On-demand file sources for editor groups showing files other than the
@@ -10,6 +12,9 @@ import { THEME_IDS, DEFAULT_THEME } from "@/lib/themes";
 const mem = new Map<string, { codeHtml: string } & Record<string, unknown>>();
 
 export async function GET(req: Request) {
+  if (!rateLimit(`source:${getClientIp(req)}`, 60, 60_000)) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "60" } });
+  }
   const { searchParams } = new URL(req.url);
   const fileId = searchParams.get("file") ?? "";
   const rawLocale = searchParams.get("locale");
@@ -29,7 +34,9 @@ export async function GET(req: Request) {
     });
   }
 
-  const src = buildFileSource(fileId, locale, theme);
+  // Live GitHub data so /api/source matches the /github preview (hourly cache upstream).
+  const githubData = fileId === "github" ? await getGithubData().catch(() => null) : null;
+  const src = buildFileSource(fileId, locale, theme, githubData);
   if (!src) {
     return NextResponse.json({ error: "unknown file" }, { status: 400 });
   }

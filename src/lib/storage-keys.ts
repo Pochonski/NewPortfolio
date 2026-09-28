@@ -5,3 +5,4 @@ export const STORE_TERM_LINES = "porto-terminal-lines";
 export const STORE_TERM_HISTORY = "porto-terminal-history";
 export const STORE_PANEL = "porto-panel";
 export const STORE_SIDEBAR = "porto-sidebar-width";
+export const THEME_KEY = "porto-ide-theme";

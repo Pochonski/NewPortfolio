@@ -16,6 +16,7 @@ export interface TermLine {
 }
 
 import { STORE_TERM_HISTORY, STORE_TERM_LINES } from "./storage-keys";
+import { safeGetJSON, safeSetJSON } from "./safe-storage";
 
 const LINES_KEY = STORE_TERM_LINES;
 const HIST_KEY = STORE_TERM_HISTORY;
@@ -30,41 +31,36 @@ function notify() {
   listeners.forEach((fn) => fn());
 }
 
+const VALID_TONES: TermTone[] = ["accent", "bright", "dim"];
+
+function validSpan(s: unknown): s is TermSpan {
+  if (!s || typeof s !== "object") return false;
+  const o = s as Record<string, unknown>;
+  return typeof o.text === "string" && (o.tone === undefined || (typeof o.tone === "string" && (VALID_TONES as string[]).includes(o.tone)));
+}
+
 function validLine(l: unknown): l is TermLine {
   if (!l || typeof l !== "object") return false;
   const o = l as Record<string, unknown>;
-  return (
-    (o.type === "in" || o.type === "out" || o.type === "err") &&
-    typeof o.text === "string"
-  );
+  if (!(o.type === "in" || o.type === "out" || o.type === "err") || typeof o.text !== "string") return false;
+  if (o.spans !== undefined) {
+    if (!Array.isArray(o.spans) || !o.spans.every(validSpan)) return false;
+  }
+  return true;
 }
 
 function load() {
-  try {
-    const l = window.localStorage.getItem(LINES_KEY);
-    if (l) {
-      const arr = JSON.parse(l) as unknown;
-      if (Array.isArray(arr)) lines = arr.filter(validLine).slice(-MAX_LINES);
-    }
-    const h = window.localStorage.getItem(HIST_KEY);
-    if (h) {
-      const arr = JSON.parse(h) as unknown;
-      if (Array.isArray(arr)) {
-        history = arr.filter((s): s is string => typeof s === "string").slice(-MAX_HIST);
-      }
-    }
-  } catch {
-    /* storage unavailable/corrupt → start fresh */
+  const l = safeGetJSON<unknown>(LINES_KEY, []);
+  if (Array.isArray(l)) lines = l.filter(validLine).slice(-MAX_LINES);
+  const h = safeGetJSON<unknown>(HIST_KEY, []);
+  if (Array.isArray(h)) {
+    history = h.filter((s): s is string => typeof s === "string").slice(-MAX_HIST);
   }
 }
 
 function save() {
-  try {
-    window.localStorage.setItem(LINES_KEY, JSON.stringify(lines));
-    window.localStorage.setItem(HIST_KEY, JSON.stringify(history));
-  } catch {
-    /* storage blocked */
-  }
+  safeSetJSON(LINES_KEY, lines);
+  safeSetJSON(HIST_KEY, history);
 }
 
 if (typeof window !== "undefined") load();

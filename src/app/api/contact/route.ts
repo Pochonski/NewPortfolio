@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema } from "@/lib/validations";
-import { rateLimit, verifyCaptcha } from "@/lib/security";
+import { getClientIp, rateLimit, verifyCaptcha } from "@/lib/security";
 
 const RATE_WINDOW_MS = 60_000;
+
+function sanitizeName(name: string): string {
+  return name.replace(/[\r\n]+/g, " ").slice(0, 100);
+}
 
 export async function POST(req: Request) {
   try {
@@ -22,18 +26,19 @@ export async function POST(req: Request) {
       }
     }
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ip = getClientIp(req);
     if (!rateLimit(`contact:${ip}`, 5, RATE_WINDOW_MS)) {
       return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "60" } });
     }
 
     const body = await req.json();
-    const bodyLocale = body?.locale === "en" ? "en" : "es";
     const parsed = contactSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid" }, { status: 400 });
     }
-    const { name, email, message, website, startedAt, captchaToken } = parsed.data;
+    const { name, email, message, website, startedAt, captchaToken, locale } = parsed.data;
+    const bodyLocale = locale ?? "es";
+    const safeName = sanitizeName(name);
 
     if (website) return NextResponse.json({ ok: true });
     if (startedAt && Date.now() - startedAt < 2500) {
@@ -44,15 +49,19 @@ export async function POST(req: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
-    const to = process.env.CONTACT_TO ?? "joseph19102005@gmail.com";
-    const from = process.env.CONTACT_FROM ?? "Portfolio <onboarding@resend.dev>";
+    const to = process.env.CONTACT_TO ?? (process.env.NODE_ENV !== "production" ? "joseph19102005@gmail.com" : undefined);
+    const from = process.env.CONTACT_FROM ?? (process.env.NODE_ENV !== "production" ? "Portfolio <onboarding@resend.dev>" : undefined);
     if (!apiKey) {
-      console.warn("RESEND_API_KEY missing — contact message dropped", { name, email });
+      console.warn("RESEND_API_KEY missing — contact message dropped", { emailDomain: email.split("@")[1] });
+      return NextResponse.json({ error: "misconfigured" }, { status: 500 });
+    }
+    if (!to || !from) {
+      console.warn("CONTACT_TO/FROM missing in production — contact message dropped");
       return NextResponse.json({ error: "misconfigured" }, { status: 500 });
     }
 
-    // Strip CR/LF: `name` is interpolated into the mail subject header.
-    const safeName = name.replace(/[\r\n]+/g, " ");
+    // `safeName` (sanitizeName above) strips CR/LF: `name` is interpolated
+    // into the mail subject header.
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
       from,

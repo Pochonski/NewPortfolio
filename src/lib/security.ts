@@ -1,7 +1,7 @@
-const hits = new Map<string, { count: number; resetAt: number }>();
-
 /** Cap para el mapa en memoria: purga oportunista de ventanas vencidas. */
 const MAX_KEYS = 2000;
+
+const hits = new Map<string, { count: number; resetAt: number }>();
 
 function sweep(now: number) {
   if (hits.size < MAX_KEYS) return;
@@ -22,6 +22,12 @@ export function rateLimit(key: string, limit = 5, windowMs = 60_000): boolean {
   }
   entry.count += 1;
   return entry.count <= limit;
+}
+
+/** Extrae la IP real priorizando headers de proxy/CDN sobre x-forwarded-for crudo. */
+export function getClientIp(req: Request): string {
+  const h = (n: string) => req.headers.get(n)?.split(",")[0]?.trim();
+  return h("cf-connecting-ip") || h("x-real-ip") || h("x-forwarded-for") || "unknown";
 }
 
 /**

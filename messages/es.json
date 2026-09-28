@@ -193,6 +193,7 @@
       "success": "¡Mensaje enviado! Te respondo pronto.",
       "error": "No se pudo enviar. Inténtalo más tarde.",
       "rateLimited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+      "captchaFailed": "Verificación anti-spam fallida. Recarga y vuelve a intentarlo.",
       "logSent": "Mensaje de contacto enviado desde {email}",
       "logFailed": "No se pudo enviar el mensaje de contacto"
     }

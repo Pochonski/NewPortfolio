@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { THEME_KEY } from "../src/lib/storage-keys";
 
 // Spanish content is served prefix-less at "/" based on Accept-Language.
 test.use({ locale: "es-CR" });
@@ -17,7 +18,7 @@ test("theme switch persists across reload", async ({ page }) => {
   await page.goto("/settings");
   await page.getByRole("button", { name: /dracula/i }).click();
   await expect.poll(async () =>
-    page.evaluate(() => window.localStorage.getItem("porto-ide-theme"))
+    page.evaluate((key) => window.localStorage.getItem(key), THEME_KEY)
   ).toBe("dracula");
 
   await page.reload();

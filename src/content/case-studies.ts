@@ -75,4 +75,27 @@ export const caseStudies: Record<string, CaseStudy> = {
       ],
     },
   },
+  stickerhub: {
+    slug: "stickerhub",
+    challenge: {
+      es: "Recrear la emoción del álbum Panini del Mundial 2026 en web: 871 jugadores y 48 equipos con apertura de sobres, intercambio en tiempo real y economía que no se rompa con uso concurrente.",
+      en: "Recreate the Panini World Cup 2026 album thrill on the web: 871 players and 48 teams with pack opening, realtime trading and an economy that survives concurrent use.",
+    },
+    solution: {
+      es: "Next.js 16 + TypeScript + Supabase con flipbook interactivo, ceremonia de apertura de sobres, marketplace en tiempo real, economía de monedas y auth por magic-link, con CI/CD en GitHub + Vercel.",
+      en: "Next.js 16 + TypeScript + Supabase with interactive flipbook, pack-opening ceremony, realtime marketplace, coin economy and magic-link auth, with GitHub + Vercel CI/CD.",
+    },
+    results: {
+      es: [
+        "Álbum completo jugable con 871 jugadores y 48 equipos",
+        "Intercambios en tiempo real sin duplicar cartas por condiciones de carrera",
+        "Economía de monedas y sobres mantenible por una persona",
+      ],
+      en: [
+        "Fully playable album with 871 players and 48 teams",
+        "Realtime trades with no duplicated cards from race conditions",
+        "Coin and pack economy maintainable by one person",
+      ],
+    },
+  },
 };
