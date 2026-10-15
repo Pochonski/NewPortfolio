@@ -17,7 +17,7 @@ import {
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { IDE_FILES, IDE_FOLDERS, KIND_LANGUAGE, fileForRoute, siteForId, siteHost } from "@/lib/files";
+import { IDE_FILES, IDE_FOLDERS, KIND_LANGUAGE, fileForRoute, siteForId, siteFromVirtualPath, siteHost } from "@/lib/files";
 import { FileIcon } from "./FileIcon";
 import { BrowserToolbar } from "./BrowserToolbar";
 import { SiteBrowser } from "./SiteBrowser";
@@ -711,6 +711,8 @@ function FindWidget({ rootRef }: { rootRef: React.RefObject<HTMLDivElement | nul
 // ---------------------------------------------------------------------------
 export function SplitView({ preview }: { preview: React.ReactNode }) {
   const { state, lastActive, setRatio } = useEditors();
+  const pathname = usePathname();
+  const router = useRouter();
   const ts = useTranslations("ide.split");
   const [mobileGroup, setMobileGroup] = useState<GroupId>("right");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -732,6 +734,36 @@ export function SplitView({ preview }: { preview: React.ReactNode }) {
   const leftName = tabLabel(leftTab);
   const rightTab = state.right?.[state.activeRight];
   const rightName = !state.right ? null : tabLabel(rightTab);
+  const virtualSite = siteFromVirtualPath(pathname);
+
+  if (virtualSite) {
+    const host = siteHost(virtualSite.site);
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div role="tablist" aria-label={ts("group2")} className="flex shrink-0" style={{ background: "var(--ide-tabs)" }}>
+          <div
+            role="tab"
+            aria-selected="true"
+            aria-label={host}
+            tabIndex={0}
+            className="flex items-center gap-2 border-r px-3 py-2 font-mono text-xs"
+            style={{ borderColor: "var(--ide-border)", borderTop: "1px solid var(--ide-accent)", color: "var(--ide-fg-bright)" }}
+          >
+            <Globe size={13} style={{ color: "var(--ide-accent)" }} />
+            <span>{host}</span>
+            <button
+              onClick={() => router.push("/projects")}
+              aria-label={`${ts("closeTab")} ${host}`}
+              className="rounded p-0.5 opacity-60 hover:opacity-100"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+        <SiteBrowser key={virtualSite.site.id} siteId={virtualSite.site.id} />
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className="relative flex min-h-0 flex-1 flex-col">

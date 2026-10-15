@@ -19,7 +19,7 @@ test("contact form shows a successful submission", async ({ page }) => {
   await page.getByLabel("Mensaje").fill("Me gustaría conversar sobre un proyecto de software.");
   await page.getByRole("button", { name: /enviar mensaje/i }).click();
 
-  await expect(page.getByRole("status")).toContainText("Mensaje enviado");
+  await expect(page.getByRole("status").filter({ hasText: "Mensaje enviado" })).toBeVisible();
   await expect(page.getByLabel("Nombre")).toHaveValue("");
 });
 

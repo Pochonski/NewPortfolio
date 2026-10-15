@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IDE_FILES, IDE_SITES, siteHost } from "@/lib/files";
+import { IDE_FILES, IDE_SITES, siteHost, virtualPathForSiteUrl } from "@/lib/files";
 import { IDE_THEMES, setTheme } from "@/lib/themes";
 import { fuzzyScore } from "@/lib/fuzzy";
-import { readRecents } from "@/lib/recents";
+import { pushRecent, readRecents } from "@/lib/recents";
+import { trackEvent } from "@/lib/analytics";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/routing";
@@ -77,9 +78,11 @@ export function CommandPalette({
         label: `${tp("openLiveSite")} ${siteHost(s)}`,
         hint: "B",
         run: () => {
-          window.dispatchEvent(
-            new CustomEvent("porto-open-site", { detail: { siteId: s.id } })
-          );
+          const path = virtualPathForSiteUrl(s.url);
+          if (!path) return;
+          pushRecent(s.id);
+          trackEvent("site_open", { site: s.id });
+          router.push(path as "/");
         },
       })),
       {

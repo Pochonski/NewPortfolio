@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { IDE_FILES, IDE_FOLDERS, IDE_SITES, siteDisplayFilename } from "@/lib/files";
 import { FileIcon, FolderIcon } from "./FileIcon";
 import { SearchPanel } from "./SearchPanel";
-import type { SidebarView } from "./ActivityBar";
+import { useSidebarView } from "./ActivityBar";
 import { useEditors } from "./editors-context";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { STORE_SIDEBAR } from "@/lib/storage-keys";
@@ -108,10 +108,10 @@ export function Explorer() {
   const t = useTranslations("ide.explorer");
   const ts = useTranslations("ide.site");
   const tSearch = useTranslations("ide.search");
-  const { state } = useEditors();
+  const { state, openFile, openSite } = useEditors();
   const [open, setOpen] = useState(true);
   const [drawer, setDrawer] = useState(false);
-  const [view, setView] = useState<SidebarView>("files");
+  const view = useSidebarView();
   const [visible, setVisible] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [sideWidth, setSideWidth] = useState(SIDE_WIDTH_DEFAULT);
@@ -147,15 +147,6 @@ export function Explorer() {
     return () => window.removeEventListener("porto-toggle-explorer", h);
   }, []);
 
-  useEffect(() => {
-    const h = (e: Event) => {
-      const v = (e as CustomEvent).detail?.view;
-      if (v === "files" || v === "search") setView(v);
-    };
-    window.addEventListener("porto-sidebar", h as EventListener);
-    return () => window.removeEventListener("porto-sidebar", h as EventListener);
-  }, []);
-
   // Drawer a11y: focus the close button on open, Esc closes.
   useEffect(() => {
     if (!drawer) return;
@@ -186,9 +177,7 @@ export function Explorer() {
           <button
             onClick={() => {
               setDrawer(false);
-              window.dispatchEvent(
-                new CustomEvent("porto-open-file", { detail: { fileId: "readme" } })
-              );
+              openFile("readme");
             }}
             title={f.filename}
             className="flex w-full items-center gap-2 py-[5px] pr-4 text-left text-[13px]"
@@ -241,13 +230,9 @@ export function Explorer() {
     return (
       <li key={s.id} role="treeitem" aria-selected={!!isActive} aria-level={depth + 1}>
         <button
-          onClick={(e) => {
+          onClick={() => {
             setDrawer(false);
-            window.dispatchEvent(
-              new CustomEvent("porto-open-site", {
-                detail: { siteId: s.id, toSide: e.altKey },
-              })
-            );
+            openSite(s.id);
           }}
           title={ts("openSiteHint", { site: s.label })}
           className="flex w-full items-center gap-2 py-[5px] pr-4 text-left text-[13px]"

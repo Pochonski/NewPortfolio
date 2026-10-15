@@ -54,20 +54,74 @@ test("explorer navigation shows contact preview", async ({ page }) => {
   await expect(page.getByText("Conectemos")).toBeVisible();
 });
 
-test("multiple live sites stay open as tabs", async ({ page }) => {
-  await page.goto("/");
+test("opening a project from Contact switches to its virtual route", async ({ page }) => {
+  await page.goto("/contact");
   const tree = page.getByRole("tree");
   await tree.getByText("perfumes-el-pocho.project").click();
-  await tree.getByText("prestamos-mi-principe.project").click();
-  // Both browser tabs persist side by side (no replace).
+  await expect(page).toHaveURL(/\/perfumes-el-pocho\.vercel\.app$/);
+  await expect(page.getByRole("tab", { name: "contact.css" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
+  await expect(page.locator("#ide-editor iframe:visible")).toHaveAttribute("src", "https://perfumes-el-pocho.vercel.app/");
+
+  await tree.getByText("prestamos-mi-principe.project").click();
+  await expect(page).toHaveURL(/\/prestamos-mi-principe\.vercel\.app(?:\/login)?$/);
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
-  // Each tab drives its own browser: the address follows the active tab.
+});
+
+test("direct project URL loads the embedded route and survives reload", async ({ page }) => {
+  const virtualPath = "/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer";
+  await page.goto(virtualPath);
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
+  await expect(page.locator("#ide-editor iframe:visible")).toHaveAttribute(
+    "src", "https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer"
+  );
+  await expect(page.getByLabel("Dirección del sitio")).toHaveValue(
+    "https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer"
+  );
+  await page.reload();
+  await expect(page).toHaveURL(virtualPath);
+  await expect(page.locator("#ide-editor iframe:visible")).toHaveAttribute(
+    "src", "https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer"
+  );
+});
+
+test("clicking inside Perfumes updates the portfolio URL", async ({ page }) => {
+  await page.goto("/perfumes-el-pocho.vercel.app");
+  await page.frameLocator("#ide-editor iframe:visible")
+    .locator('a[href="/categoria/perfumes-de-mujer"]')
+    .click();
+  await expect(page).toHaveURL("/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+  await expect(page.getByLabel("Dirección del sitio")).toHaveValue(
+    "https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer"
+  );
+});
+
+test("project navigation updates browser history and follows Back and Forward", async ({ page }) => {
+  await page.goto("/perfumes-el-pocho.vercel.app");
   const address = page.getByLabel("Dirección del sitio");
-  await page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" }).click();
-  await expect(address).toHaveValue(/prestamos-mi-principe\.vercel\.app/);
-  await page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" }).click();
-  await expect(address).toHaveValue(/perfumes-el-pocho\.vercel\.app/);
+  await address.fill("/categoria/perfumes-de-mujer");
+  await address.press("Enter");
+  await expect(page).toHaveURL("/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+  await page.goBack();
+  await expect(page).toHaveURL("/perfumes-el-pocho.vercel.app");
+  await expect(address).toHaveValue("https://perfumes-el-pocho.vercel.app/");
+  await page.goForward();
+  await expect(page).toHaveURL("/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+  await expect(address).toHaveValue("https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+});
+
+test("English project URL keeps the locale", async ({ page }) => {
+  await page.goto("/en/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+  await expect(page).toHaveURL("/en/perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer");
+  await expect(page.getByLabel("Site address")).toHaveValue(
+    "https://perfumes-el-pocho.vercel.app/categoria/perfumes-de-mujer"
+  );
+});
+
+test("unknown virtual project host returns 404", async ({ page }) => {
+  const response = await page.goto("/unknown.vercel.app/route");
+  expect(response?.status()).toBe(404);
 });
 
 test("integrated browser shows the redirected Prestamos login path", async ({ page }) => {
@@ -78,11 +132,13 @@ test("integrated browser shows the redirected Prestamos login path", async ({ pa
     "https://prestamos-mi-principe.vercel.app/login",
     { timeout: 15_000 }
   );
+  await expect(page).toHaveURL("/prestamos-mi-principe.vercel.app/login");
 });
 
 test("integrated browser keeps the active ScoreHub route", async ({ page }) => {
   await page.goto("/projects");
   await page.getByRole("tree").getByText("scorehub.project").click();
+  await expect(page).toHaveURL("/scorehub-pocho.vercel.app");
 
   const address = page.getByLabel("Dirección del sitio");
   const scoreHubMatches = "https://scorehub-pocho.vercel.app/competicion/11/matches";
@@ -90,7 +146,8 @@ test("integrated browser keeps the active ScoreHub route", async ({ page }) => {
   await address.press("Enter");
 
   await expect(address).toHaveValue(scoreHubMatches);
-  await expect(page.locator("iframe")).toHaveAttribute("src", scoreHubMatches);
+  await expect(page).toHaveURL("/scorehub-pocho.vercel.app/competicion/11/matches");
+  await expect(page.locator("#ide-editor iframe:visible")).toHaveAttribute("src", scoreHubMatches);
   await expect.poll(
     () => page.frames().some((frame) => frame.url() === scoreHubMatches),
     { timeout: 15_000 }
@@ -116,13 +173,10 @@ test("navigating to a route exits live sites", async ({ page }) => {
   await page.goto("/");
   const tree = page.getByRole("tree");
   await tree.getByText("perfumes-el-pocho.project").click();
-  await tree.getByText("prestamos-mi-principe.project").click();
-  await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toBeVisible();
-  // Leaving the project for a route closes every site tab.
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
   await tree.getByText("contact.css").click();
   await expect(page).toHaveURL(/\/contact/);
   await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toHaveCount(0);
-  await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toHaveCount(0);
   await expect(page.getByText("Conectemos")).toBeVisible();
 });
 

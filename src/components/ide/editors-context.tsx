@@ -9,9 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { usePathname } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-import { IDE_FILES, fileForRoute, siteForId } from "@/lib/files";
+import { IDE_FILES, fileForRoute, siteForId, siteFromVirtualPath, virtualPathForSiteUrl } from "@/lib/files";
 import { DEFAULT_THEME, getSavedTheme } from "@/lib/themes";
 import { pushRecent } from "@/lib/recents";
 import { trackEvent } from "@/lib/analytics";
@@ -136,6 +136,17 @@ function defaultState(fileId: string): EditorsState {
   };
 }
 
+function virtualSiteState(siteId: string, ready: boolean): EditorsState {
+  return {
+    left: [],
+    right: [{ kind: "site", siteId }],
+    activeLeft: 0,
+    activeRight: 0,
+    ratio: DEFAULT_RATIO,
+    ready,
+  };
+}
+
 function sanitize(raw: unknown): EditorsState | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -219,7 +230,7 @@ interface EditorsApi {
   setActive: (group: GroupId, idx: number) => void;
   openFile: (fileId: string) => void;
   /** Open a live site in the integrated browser (right group, expanded). */
-  openSite: (siteId: string, toSide?: boolean) => void;
+  openSite: (siteId: string) => void;
   /** Reset the right browser slot back to the portfolio preview. */
   showPreview: () => void;
   /** Close every open site tab (both groups), back to code + preview. */
@@ -240,42 +251,43 @@ export function useEditors(): EditorsApi {
 
 export function EditorsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const virtualSiteId = siteFromVirtualPath(pathname)?.site.id;
   const routeFileId = fileForRoute(pathname).id;
-  const [state, setState] = useState<EditorsState>(() => defaultState(routeFileId));
-  const [lastActive, setLastActive] = useState<GroupId>("left");
+  const [state, setState] = useState<EditorsState>(() =>
+    virtualSiteId ? virtualSiteState(virtualSiteId, false) : defaultState(routeFileId)
+  );
+  const [lastActive, setLastActive] = useState<GroupId>(virtualSiteId ? "right" : "left");
 
   // Restore persisted workspace once, then reconcile current file on nav.
   useEffect(() => {
+    if (virtualSiteId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- route restore
+      setState(virtualSiteState(virtualSiteId, true));
+      return;
+    }
     let next: EditorsState | null = null;
     try {
       const raw = window.localStorage.getItem(STORE_KEY);
       const persisted = raw ? JSON.parse(raw) : null;
       const restored = sanitize(persisted);
-      const savedPathname =
-        persisted && typeof persisted === "object" && typeof persisted.pathname === "string"
-          ? persisted.pathname
-          : null;
       if (restored) {
+        const workspace = withoutSites(restored);
         const base =
-          restored.left.length > MAX_LEFT_TABS
-            ? restored.left.slice(restored.left.length - MAX_LEFT_TABS)
-            : restored.left;
+          workspace.left.length > MAX_LEFT_TABS
+            ? workspace.left.slice(workspace.left.length - MAX_LEFT_TABS)
+            : workspace.left;
         const idx = base.findIndex((t) => t.kind === "code" && t.fileId === routeFileId);
         if (idx >= 0) {
-          next = { ...restored, left: base, activeLeft: idx };
+          next = { ...workspace, left: base, activeLeft: idx };
         } else {
           const pushed = pushLeft(base, { kind: "code", fileId: routeFileId });
-          next = { ...restored, left: pushed.left, activeLeft: pushed.idx };
+          next = { ...workspace, left: pushed.left, activeLeft: pushed.idx };
         }
-        // A live project belongs to the page where it was opened. Old saved
-        // workspaces did not store a pathname, so they are treated as a
-        // different page to prevent stale iframes beside routes such as /contact.
-        if (savedPathname !== pathname) next = withoutSites(next);
       }
     } catch {
       /* corrupted storage → fresh defaults */
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe restore
     setState(next ?? { ...defaultState(routeFileId), ready: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -283,6 +295,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
   // Reveal current file when navigating. Fills an empty left group;
   // activates the tab when already open, otherwise appends it.
   useEffect(() => {
+    if (virtualSiteId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- route reconcile
     setState((s) => {
       if (!s.ready) return s;
@@ -298,7 +311,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       const pushed = pushLeft(s.left, { kind: "code", fileId: routeFileId });
       return { ...s, left: pushed.left, activeLeft: pushed.idx };
     });
-  }, [pathname, routeFileId]);
+  }, [pathname, routeFileId, virtualSiteId]);
 
   // On route navigation every open site closes (projects never linger
   // in the split): the route file reconcile above reveals the route's
@@ -307,10 +320,21 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
-      setState((s) => withoutSites(s));
-      setLastActive("left");
+      if (virtualSiteId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- route reconcile
+        setState((s) =>
+          s.left.length === 0 && s.right?.length === 1 &&
+          s.right[0]?.kind === "site" && s.right[0].siteId === virtualSiteId
+            ? s
+            : virtualSiteState(virtualSiteId, s.ready)
+        );
+        setLastActive("right");
+      } else {
+        setState((s) => withoutSites(s));
+        setLastActive("left");
+      }
     }
-  }, [pathname]);
+  }, [pathname, virtualSiteId]);
 
   // Persist workspace.
   useEffect(() => {
@@ -361,29 +385,16 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           return { ...s, left: pushed.left, activeLeft: pushed.idx };
         });
       },
-      openSite: (siteId: string, toSide = false) => {
-        if (!siteForId(siteId)) return;
+      openSite: (siteId: string) => {
+        const site = siteForId(siteId);
+        if (!site) return;
         pushRecent(siteId);
         trackEvent("site_open", { site: siteId });
-        // Browser lives in the right slot by default (Alt+click → left).
-        const target: GroupId = toSide ? "left" : "right";
-        setLastActive(target);
-        setState((s) => {
-          const tab: EditorTab = { kind: "site", siteId };
-          // Auto-expand the browser group on open (clamped 25–75 by setRatio).
-          const ratio = 28;
-          if (target === "left") {
-            const existing = s.left.findIndex((t) => t.kind === "site" && t.siteId === siteId);
-            if (existing >= 0) return { ...s, activeLeft: existing };
-            const pushed = pushLeft(s.left, tab);
-            return { ...s, left: pushed.left, activeLeft: pushed.idx, ratio };
-          }
-          // Browser tabs stack in the right group (cap 4 sites).
-          const pushed = pushRight(s.right ?? [], tab);
-          return { ...s, right: pushed.right, activeRight: pushed.idx, ratio };
-        });
+        const path = virtualPathForSiteUrl(site.url);
+        if (path) router.push(path as "/");
       },
       showPreview: () => {
+        if (virtualSiteId) return;
         setLastActive("right");
         // Never destroys open sites: activates preview, appending if missing.
         setState((s) => {
@@ -392,10 +403,18 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
         });
       },
       closeSites: () => {
+        if (virtualSiteId) {
+          router.push("/projects");
+          return;
+        }
         setLastActive("left");
         setState((s) => withoutSites(s));
       },
       closeTab: (group: GroupId, idx: number) => {
+        if (virtualSiteId && group === "right") {
+          router.push("/projects");
+          return;
+        }
         setState((s) => {
           if (group === "left") {
             // Closing the last tab leaves an empty group with a welcome view.
@@ -418,6 +437,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
         if (group === "right") setLastActive("left");
       },
       moveTabToOtherSide: (group: GroupId, idx: number) => {
+        if (virtualSiteId) return;
         setState((s) => {
           const from = group === "left" ? s.left : s.right;
           if (!from || from.length === 0 || idx < 0 || idx >= from.length) return s;
@@ -459,6 +479,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
         setLastActive(group === "left" ? "right" : "left");
       },
       toggleSplit: () => {
+        if (virtualSiteId) return;
         setState((s) =>
           s.right
             ? { ...s, right: null, activeRight: 0 }
@@ -471,7 +492,7 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
         setState((s) => (s.ratio === ratio ? s : { ...s, ratio }));
       },
     };
-  }, [state, lastActive, setActive]);
+  }, [state, lastActive, setActive, router, virtualSiteId]);
 
   // Global events: porto-split (toggle) + porto-open-file (palette/terminal/explorer).
   useEffect(() => {
@@ -481,8 +502,8 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
       if (d?.fileId) api.openFile(d.fileId);
     };
     const onOpenSite = (e: Event) => {
-      const d = (e as CustomEvent).detail as { siteId?: string; toSide?: boolean } | undefined;
-      if (d?.siteId) api.openSite(d.siteId, d.toSide);
+      const d = (e as CustomEvent).detail as { siteId?: string } | undefined;
+      if (d?.siteId) api.openSite(d.siteId);
     };
     window.addEventListener("porto-split", onSplit);
     window.addEventListener("porto-open-file", onOpen as EventListener);

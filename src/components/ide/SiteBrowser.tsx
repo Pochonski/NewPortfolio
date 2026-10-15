@@ -15,8 +15,8 @@ import {
   RotateCw,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname } from "@/i18n/navigation";
-import { fileForRoute, siteForId } from "@/lib/files";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { siteForId, siteFromVirtualPath, virtualPathForSiteUrl } from "@/lib/files";
 import { focusedSiteGroup, useEditors } from "./editors-context";
 
 interface PortoRouteMessage {
@@ -42,23 +42,25 @@ function publicRouteOf(href: string, expectedOrigin: string): string | null {
   }
 }
 
-// Last known URL per site: returning to a tab remounts the browser
-// (key={siteId}), so resume the subroute instead of the home page.
+// Keep the last reported URL for legacy non-virtual mounts.
 const lastUrlBySite = new Map<string, string>();
 const routeRequestDelays = [0, 250, 1000];
 
 export function SiteBrowser({ siteId }: { siteId: string }) {
   const site = siteForId(siteId);
   const pathname = usePathname();
+  const router = useRouter();
+  const virtualSite = siteFromVirtualPath(pathname);
   const ts = useTranslations("ide.split");
   const tt = useTranslations("ide.site");
-  const { state, lastActive, closeSites, openFile, setRatio } = useEditors();
+  const { state, lastActive, setRatio } = useEditors();
   const [reloadKey, setReloadKey] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [currentUrl, setCurrentUrl] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
-  const [draftUrl, setDraftUrl] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
-  const [iframeSrc, setIframeSrc] = useState(() => lastUrlBySite.get(siteId) ?? site?.url ?? "");
+  const initialUrl = virtualSite?.site.id === siteId ? virtualSite.href : lastUrlBySite.get(siteId) ?? site?.url ?? "";
+  const [currentUrl, setCurrentUrl] = useState(initialUrl);
+  const [draftUrl, setDraftUrl] = useState(initialUrl);
+  const [iframeSrc, setIframeSrc] = useState(initialUrl);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [failed, setFailed] = useState(false);
@@ -66,8 +68,17 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const routeRequestTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const pendingRoute = useRef<string | null>(null);
+  const handledPathname = useRef(pathname);
+  const requestedPathname = useRef(pathname);
 
   const siteOrigin = useMemo(() => (site ? siteOriginOf(site.url) : null), [site]);
+
+  const navigatePortfolio = useCallback((route: string) => {
+    const virtualPath = virtualPathForSiteUrl(route);
+    if (!virtualPath || virtualPath === pathname || virtualPath === requestedPathname.current) return;
+    requestedPathname.current = virtualPath;
+    router.push(virtualPath as "/");
+  }, [pathname, router]);
 
   const clearRouteRequests = useCallback(() => {
     routeRequestTimers.current.forEach(clearTimeout);
@@ -107,10 +118,27 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       if (document.activeElement !== inputRef.current) {
         setDraftUrl(route);
       }
+      navigatePortfolio(route);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [siteOrigin, siteId]);
+  }, [siteOrigin, siteId, navigatePortfolio]);
+
+  useEffect(() => {
+    if (handledPathname.current === pathname) return;
+    handledPathname.current = pathname;
+    requestedPathname.current = pathname;
+    const target = siteFromVirtualPath(pathname);
+    if (!target || target.site.id !== siteId || target.href === currentUrl) return;
+    pendingRoute.current = target.href;
+    lastUrlBySite.set(siteId, target.href);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser history navigation
+    setCurrentUrl(target.href);
+    setDraftUrl(target.href);
+    setIframeSrc(target.href);
+    setLoaded(false);
+    setFailed(false);
+  }, [pathname, siteId, currentUrl]);
 
   useEffect(() => {
     if (loadTimer.current) clearTimeout(loadTimer.current);
@@ -139,15 +167,9 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   }, [clearRouteRequests]);
 
   const goHistory = useCallback((delta: -1 | 1) => {
-    try {
-      const hist = iframeRef.current?.contentWindow?.history;
-      if (!hist) return;
-      if (delta === -1) hist.back();
-      else hist.forward();
-    } catch {
-      /* cross-origin history traversal is best-effort */
-    }
-  }, []);
+    if (delta === -1) router.back();
+    else router.forward();
+  }, [router]);
 
   const commitAddress = useCallback(() => {
     if (!siteOrigin) return;
@@ -173,36 +195,35 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       return;
     }
     const route = dest.origin + dest.pathname;
-    const href = dest.href;
     pendingRoute.current = route;
     lastUrlBySite.set(siteId, route);
     setCurrentUrl(route);
     setDraftUrl(route);
-    setIframeSrc(href);
+    setIframeSrc(route);
+    navigatePortfolio(route);
     setLoaded(false);
     setFailed(false);
     try {
       iframeRef.current?.contentWindow?.postMessage(
-        { source: "porto-site-navigate", href },
+        { source: "porto-site-navigate", href: route },
         siteOrigin
       );
     } catch {
       /* iframe not ready */
     }
     setTimeout(() => inputRef.current?.blur(), 0);
-  }, [draftUrl, currentUrl, siteOrigin, siteId]);
+  }, [draftUrl, currentUrl, siteOrigin, siteId, navigatePortfolio]);
 
   if (!site) return null;
 
-  const focused = focusedSiteGroup(state, lastActive);
+  const focused = !!virtualSite || focusedSiteGroup(state, lastActive);
   const expanded = state.ratio <= 28;
   const toggleExpand = () => setRatio(expanded ? 50 : 25);
 
   // In focus, the toggle becomes "Show code" → closes the site and
   // reveals the current route's file (sites never linger in the split).
   const showCode = () => {
-    closeSites();
-    openFile(fileForRoute(pathname).id);
+    router.push("/projects");
   };
 
   const copyUrl = async () => {

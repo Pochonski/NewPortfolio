@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Titlebar } from "./Titlebar";
-import { ActivityBar } from "./ActivityBar";
+import { ActivityBar, setSidebarView } from "./ActivityBar";
 import { Explorer } from "./Explorer";
 import { StatusBar } from "./StatusBar";
 import { BottomPanel, type PanelTab } from "./BottomPanel";
@@ -146,7 +146,7 @@ export function IdeShell({ children }: { children: React.ReactNode }) {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f") {
         if (!palette) {
           e.preventDefault();
-          window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view: "search" } }));
+          setSidebarView("search");
           return;
         }
       }

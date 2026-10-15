@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   Files,
   Search,
@@ -18,8 +18,24 @@ import { useTranslations } from "next-intl";
 
 export type SidebarView = "files" | "search";
 
+let sidebarView: SidebarView = "files";
+const sidebarListeners = new Set<() => void>();
+
 export function setSidebarView(view: SidebarView) {
-  window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view } }));
+  if (sidebarView === view) return;
+  sidebarView = view;
+  sidebarListeners.forEach((listener) => listener());
+}
+
+export function useSidebarView(): SidebarView {
+  return useSyncExternalStore(
+    (listener) => {
+      sidebarListeners.add(listener);
+      return () => sidebarListeners.delete(listener);
+    },
+    () => sidebarView,
+    () => "files"
+  );
 }
 
 const TOP = [
@@ -37,16 +53,7 @@ export function ActivityBar() {
   const t = useTranslations("ide.activity");
   const pathname = usePathname();
   const clean = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-  const [view, setView] = useState<SidebarView>("files");
-
-  useEffect(() => {
-    const h = (e: Event) => {
-      const v = (e as CustomEvent).detail?.view;
-      if (v === "files" || v === "search") setView(v);
-    };
-    window.addEventListener("porto-sidebar", h as EventListener);
-    return () => window.removeEventListener("porto-sidebar", h as EventListener);
-  }, []);
+  const view = useSidebarView();
 
   return (
     <aside

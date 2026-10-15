@@ -6,10 +6,11 @@ import { useLocale, useTranslations } from "next-intl";
 import type { SearchHit } from "@/app/api/search/route";
 import { FileIcon } from "./FileIcon";
 import { IDE_FILES } from "@/lib/files";
+import { setSidebarView } from "./ActivityBar";
 
 function openFile(fileId: string) {
   window.dispatchEvent(new CustomEvent("porto-open-file", { detail: { fileId } }));
-  window.dispatchEvent(new CustomEvent("porto-sidebar", { detail: { view: "files" } }));
+  setSidebarView("files");
 }
 
 // Sidebar search view (Ctrl+Shift+F): searches every file's display source.

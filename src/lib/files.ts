@@ -60,9 +60,9 @@ export function fileForRoute(pathname: string): IdeFile {
 }
 
 // ---------------------------------------------------------------------------
-// Live sites: external projects opened in the integrated browser (SiteBrowser
-// tab). Only the portfolio's own live projects may be framed. Not part of
-// IDE_FILES — sites have no route, code pane or search index.
+// Live sites: external projects opened in the integrated browser. Only the
+// portfolio's own projects may be framed. They use virtual routes, but are
+// not code files or part of the source search index.
 // ---------------------------------------------------------------------------
 
 export interface IdeSite {
@@ -136,5 +136,36 @@ export function siteHost(site: IdeSite): string {
     return new URL(site.url).host;
   } catch {
     return site.label;
+  }
+}
+
+/** Resolve a portfolio path to one of the configured embedded projects. */
+export function siteFromVirtualPath(pathname: string): { site: IdeSite; href: string } | null {
+  const clean = pathname.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  const [host, ...segments] = clean.slice(1).split("/");
+  const site = IDE_SITES.find((candidate) => siteHost(candidate) === host);
+  if (!site) return null;
+
+  const path = segments.length ? `/${segments.join("/")}` : "/";
+  try {
+    const origin = new URL(site.url).origin;
+    const url = new URL(path, origin);
+    if (url.origin !== origin || url.search || url.hash) return null;
+    return { site, href: url.origin + url.pathname };
+  } catch {
+    return null;
+  }
+}
+
+/** Map a trusted project's URL to its portfolio path, without search or hash. */
+export function virtualPathForSiteUrl(href: string, locale: "es" | "en" = "es"): string | null {
+  try {
+    const url = new URL(href);
+    const site = IDE_SITES.find((candidate) => new URL(candidate.url).origin === url.origin);
+    if (!site) return null;
+    const prefix = locale === "en" ? "/en" : "";
+    return `${prefix}/${siteHost(site)}${url.pathname === "/" ? "" : url.pathname}`;
+  } catch {
+    return null;
   }
 }
