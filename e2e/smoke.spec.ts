@@ -91,7 +91,10 @@ test("integrated browser keeps the active ScoreHub route", async ({ page }) => {
 
   await expect(address).toHaveValue(scoreHubMatches);
   await expect(page.locator("iframe")).toHaveAttribute("src", scoreHubMatches);
-  await page.waitForTimeout(1_200);
+  await expect.poll(
+    () => page.frames().some((frame) => frame.url() === scoreHubMatches),
+    { timeout: 15_000 }
+  ).toBe(true);
   await expect(address).toHaveValue(scoreHubMatches);
 });
 
