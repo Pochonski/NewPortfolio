@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import DOMPurify from "dompurify";
 import {
   Check,
   ChevronDown,
@@ -35,8 +36,7 @@ import {
   sourceKey,
   subscribeSource,
 } from "@/lib/source-cache";
-
-const SITE_URL = "https://joseph-fonseca-dev.vercel.app";
+import { SITE_URL } from "@/lib/site";
 
 function fileOf(tab: EditorTab) {
   return tab.kind === "code" ? IDE_FILES.find((f) => f.id === tab.fileId) : undefined;
@@ -165,6 +165,12 @@ function CodeTabContent({ fileId }: { fileId: string }) {
   useEffect(() => subscribeSource(bump), []);
 
   const entry = readSource(key);
+  const safeCodeHtml = entry?.codeHtml
+    ? DOMPurify.sanitize(entry.codeHtml, {
+        ALLOWED_TAGS: ["pre", "code", "span"],
+        ALLOWED_ATTR: ["class", "style"],
+      })
+    : undefined;
 
   useEffect(() => {
     if (entry?.codeHtml || failed) return;
@@ -181,11 +187,11 @@ function CodeTabContent({ fileId }: { fileId: string }) {
 
   return (
     <>
-      {entry?.codeHtml ? (
+      {safeCodeHtml ? (
         <div
           data-codepane={fileId}
           className="codepane ide-scroll min-h-0 flex-1 overflow-auto px-4 py-3 font-mono text-[13px] leading-[1.7] max-lg:overflow-visible"
-          dangerouslySetInnerHTML={{ __html: entry.codeHtml }}
+          dangerouslySetInnerHTML={{ __html: safeCodeHtml }}
         />
       ) : entry?.code ? (
         <div data-codepane={fileId} className="ide-scroll min-h-0 flex-1 overflow-auto px-4 py-3 max-lg:overflow-visible">

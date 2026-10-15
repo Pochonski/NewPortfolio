@@ -11,6 +11,7 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run start -- --port 3000",
+    env: { ...process.env, GITHUB_API_BASE_URL: "http://127.0.0.1:9" },
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

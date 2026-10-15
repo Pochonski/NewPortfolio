@@ -29,36 +29,3 @@ export function getClientIp(req: Request): string {
   const h = (n: string) => req.headers.get(n)?.split(",")[0]?.trim();
   return h("cf-connecting-ip") || h("x-real-ip") || h("x-forwarded-for") || "unknown";
 }
-
-/**
- * Verificación de captcha lista para Turnstile.
- * Contrato explícito: si TURNSTILE_SECRET_KEY está configurado, el token es
- * obligatorio (fail-closed); si no hay secreto, el captcha se omite a
- * propósito — honeypot + time-trap + rate-limit son las capas activas.
- * Sin widget en el cliente no existe token que enviar: no configurar el
- * secreto hasta añadir el widget de Turnstile al formulario.
- */
-export async function verifyCaptcha(token?: string): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      console.warn("TURNSTILE_SECRET_KEY missing — contact captcha disabled by deploy choice");
-    }
-    return true;
-  }
-  if (!token) return false;
-  try {
-    const res = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ secret, response: token }),
-      }
-    );
-    const data = (await res.json()) as { success?: boolean };
-    return data.success === true;
-  } catch {
-    return false;
-  }
-}

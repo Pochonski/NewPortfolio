@@ -7,11 +7,11 @@ test.use({ locale: "es-CR" });
 test("home loads with hero in both locales", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Joseph Fonseca").first()).toBeVisible();
-  await expect(page.getByText("Disponible para trabajar")).toBeVisible();
+  await expect(page.getByText("Disponible para trabajar").first()).toBeVisible();
 
   await page.goto("/en");
   await expect(page.getByText("Joseph Fonseca").first()).toBeVisible();
-  await expect(page.getByText("Open to work")).toBeVisible();
+  await expect(page.getByText("Open to work").first()).toBeVisible();
 });
 
 test("theme switch persists across reload", async ({ page }) => {

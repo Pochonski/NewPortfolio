@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { THEME_SCRIPT } from "@/lib/themes";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono", display: "swap" });
+const mono = localFont({
+  src: [
+    { path: "./fonts/JetBrainsMono-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/JetBrainsMono-Medium.ttf", weight: "500", style: "normal" },
+  ],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://joseph-fonseca-dev.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   verification: {
     google: "HlPNzvMhfJG88OXx5mtmY3jMBOkaZhYfs_DcDQhxi3A",
   },

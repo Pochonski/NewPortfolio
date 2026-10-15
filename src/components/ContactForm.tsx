@@ -3,18 +3,15 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { trackEvent } from "@/lib/analytics";
-import { Turnstile } from "@/components/Turnstile";
 
-type FormState = "idle" | "sending" | "ok" | "error" | "rate" | "captcha";
+type FormState = "idle" | "sending" | "ok" | "error" | "rate";
 
 export function ContactForm() {
   const t = useTranslations("contact.form");
   const locale = useLocale();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [captchaToken, setCaptchaToken] = useState<string | undefined>(undefined);
   const [state, setState] = useState<FormState>("idle");
   const [startedAt] = useState(() => Date.now());
-  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +20,7 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, website: "", startedAt, locale, captchaToken }),
+        body: JSON.stringify({ ...form, website: "", startedAt, locale }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -38,7 +35,6 @@ export function ContactForm() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "error";
       if (msg === "rate_limited" || msg === "too_fast") setState("rate");
-      else if (msg === "captcha") setState("captcha");
       else setState("error");
       window.dispatchEvent(
         new CustomEvent("porto-log", { detail: { message: t("logFailed") } })
@@ -96,7 +92,7 @@ export function ContactForm() {
       </label>
       <button
         type="submit"
-        disabled={state === "sending" || (turnstileEnabled && !captchaToken)}
+        disabled={state === "sending"}
         className="rounded-md px-5 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
         style={{
           background: "var(--ide-button)",
@@ -106,9 +102,6 @@ export function ContactForm() {
       >
         {state === "sending" ? t("sending") : t("send")}
       </button>
-      {turnstileEnabled && (
-        <Turnstile onToken={setCaptchaToken} />
-      )}
       {state === "ok" && (
         <p
           role="status"
@@ -146,19 +139,6 @@ export function ContactForm() {
           }}
         >
           {t("rateLimited")}
-        </p>
-      )}
-      {state === "captcha" && (
-        <p
-          role="alert"
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{
-            borderColor: "var(--ide-border)",
-            background: "rgba(var(--ide-accent-rgb), 0.05)",
-            color: "var(--ide-error)",
-          }}
-        >
-          {t("captchaFailed")}
         </p>
       )}
     </form>

@@ -11,7 +11,6 @@ export const contactSchema = z.object({
   message: z.string().trim().min(10).max(1000),
   website: z.string().max(100).optional(), // honeypot: must stay empty, checked silently in route
   startedAt: z.coerce.number().optional(), // time-trap
-  captchaToken: z.string().max(2048).optional(), // Turnstile (opcional)
   locale: z.enum(["es", "en"]).optional(),
 });
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema } from "@/lib/validations";
-import { getClientIp, rateLimit, verifyCaptcha } from "@/lib/security";
+import { getClientIp, rateLimit } from "@/lib/security";
 
 const RATE_WINDOW_MS = 60_000;
 
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid" }, { status: 400 });
     }
-    const { name, email, message, website, startedAt, captchaToken, locale } = parsed.data;
+    const { name, email, message, website, startedAt, locale } = parsed.data;
     const bodyLocale = locale ?? "es";
     const safeName = sanitizeName(name);
 
@@ -44,10 +44,6 @@ export async function POST(req: Request) {
     if (startedAt && Date.now() - startedAt < 2500) {
       return NextResponse.json({ error: "too_fast" }, { status: 400 });
     }
-    if (!(await verifyCaptcha(captchaToken))) {
-      return NextResponse.json({ error: "captcha" }, { status: 403 });
-    }
-
     const apiKey = process.env.RESEND_API_KEY;
     const to = process.env.CONTACT_TO ?? (process.env.NODE_ENV !== "production" ? "joseph19102005@gmail.com" : undefined);
     const from = process.env.CONTACT_FROM ?? (process.env.NODE_ENV !== "production" ? "Portfolio <onboarding@resend.dev>" : undefined);

@@ -6,8 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { routing, type Locale } from "@/i18n/routing";
 import { IdeShell } from "@/components/ide/IdeShell";
 import { LocaleLang } from "@/components/LocaleLang";
-
-const SITE = "https://joseph-fonseca-dev.vercel.app";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -22,7 +21,7 @@ export async function generateMetadata({
   const es = locale !== "en";
   const og = es ? "/opengraph-image" : "/en/opengraph-image";
   return {
-    metadataBase: new URL(SITE),
+    metadataBase: new URL(SITE_URL),
     title: {
       default: "Joseph Fonseca — Software Engineer",
       template: "%s · Joseph Fonseca",
@@ -78,7 +77,7 @@ export default async function LocaleLayout({
             "@type": "Person",
             name: "Joseph Fonseca",
             jobTitle: "Software Engineer",
-            url: SITE,
+            url: SITE_URL,
             sameAs: [
               "https://github.com/Pochonski",
               "https://www.linkedin.com/in/joseph-fonseca-n",

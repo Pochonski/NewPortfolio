@@ -18,6 +18,7 @@ export interface GithubRepo {
 }
 
 const USER = "Pochonski";
+const GITHUB_API = process.env.GITHUB_API_BASE_URL ?? "https://api.github.com";
 
 function headers() {
   const h: Record<string, string> = { Accept: "application/vnd.github+json" };
@@ -28,11 +29,11 @@ function headers() {
 export async function getGithubData(): Promise<{ user: GithubUser; repos: GithubRepo[] } | null> {
   try {
     const [userRes, repoRes] = await Promise.all([
-      fetch(`https://api.github.com/users/${USER}`, {
+      fetch(`${GITHUB_API}/users/${USER}`, {
         headers: headers(),
         next: { revalidate: 3600 },
       }),
-      fetch(`https://api.github.com/users/${USER}/repos?sort=pushed&per_page=6`, {
+      fetch(`${GITHUB_API}/users/${USER}/repos?sort=pushed&per_page=6`, {
         headers: headers(),
         next: { revalidate: 3600 },
       }),
