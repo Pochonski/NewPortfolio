@@ -70,6 +70,31 @@ test("multiple live sites stay open as tabs", async ({ page }) => {
   await expect(address).toHaveValue(/perfumes-el-pocho\.vercel\.app/);
 });
 
+test("integrated browser shows the redirected Prestamos login path", async ({ page }) => {
+  await page.goto("/projects");
+  await page.getByRole("tree").getByText("prestamos-mi-principe.project").click();
+
+  await expect(page.getByLabel("Dirección del sitio")).toHaveValue(
+    "https://prestamos-mi-principe.vercel.app/login",
+    { timeout: 15_000 }
+  );
+});
+
+test("integrated browser keeps the active ScoreHub route", async ({ page }) => {
+  await page.goto("/projects");
+  await page.getByRole("tree").getByText("scorehub.project").click();
+
+  const address = page.getByLabel("Dirección del sitio");
+  const scoreHubMatches = "https://scorehub-pocho.vercel.app/competicion/11/matches";
+  await address.fill("/competicion/11/matches");
+  await address.press("Enter");
+
+  await expect(address).toHaveValue(scoreHubMatches);
+  await expect(page.locator("iframe")).toHaveAttribute("src", scoreHubMatches);
+  await page.waitForTimeout(1_200);
+  await expect(address).toHaveValue(scoreHubMatches);
+});
+
 test("sidebar search finds and opens files", async ({ page }) => {
   await page.goto("/");
   await page.getByTitle("Buscar (Ctrl+Shift+F)").click();

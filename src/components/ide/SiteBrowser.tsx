@@ -32,9 +32,20 @@ function siteOriginOf(url: string): string | null {
   }
 }
 
+function publicRouteOf(href: string, expectedOrigin: string): string | null {
+  try {
+    const url = new URL(href);
+    if (url.origin !== expectedOrigin) return null;
+    return url.origin + url.pathname;
+  } catch {
+    return null;
+  }
+}
+
 // Last known URL per site: returning to a tab remounts the browser
 // (key={siteId}), so resume the subroute instead of the home page.
 const lastUrlBySite = new Map<string, string>();
+const routeRequestDelays = [0, 250, 1000];
 
 export function SiteBrowser({ siteId }: { siteId: string }) {
   const site = siteForId(siteId);
@@ -53,8 +64,30 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
   const [failed, setFailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const routeRequestTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pendingRoute = useRef<string | null>(null);
 
   const siteOrigin = useMemo(() => (site ? siteOriginOf(site.url) : null), [site]);
+
+  const clearRouteRequests = useCallback(() => {
+    routeRequestTimers.current.forEach(clearTimeout);
+    routeRequestTimers.current = [];
+  }, []);
+
+  const requestActiveRoute = useCallback(() => {
+    clearRouteRequests();
+    const frame = iframeRef.current?.contentWindow;
+    if (!frame || !siteOrigin) return;
+
+    routeRequestTimers.current = routeRequestDelays.map((delay) =>
+      setTimeout(() => {
+        if (iframeRef.current?.contentWindow !== frame) return;
+        frame.postMessage({ source: "porto-site-route-request" }, siteOrigin);
+      }, delay)
+    );
+  }, [clearRouteRequests, siteOrigin]);
+
+  useEffect(() => clearRouteRequests, [clearRouteRequests]);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -62,18 +95,17 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       if (!data || data.source !== "porto-site-route" || typeof data.href !== "string") {
         return;
       }
-      if (!siteOrigin || event.origin !== siteOrigin) return;
-      let href: string;
-      try {
-        href = new URL(data.href).href;
-      } catch {
+      if (!siteOrigin || event.origin !== siteOrigin || event.source !== iframeRef.current?.contentWindow) {
         return;
       }
-      if (!href.startsWith(siteOrigin)) return;
-      lastUrlBySite.set(siteId, href);
-      setCurrentUrl(href);
+      const route = publicRouteOf(data.href, siteOrigin);
+      if (!route) return;
+      if (pendingRoute.current && pendingRoute.current !== route) return;
+      pendingRoute.current = null;
+      lastUrlBySite.set(siteId, route);
+      setCurrentUrl(route);
       if (document.activeElement !== inputRef.current) {
-        setDraftUrl(href);
+        setDraftUrl(route);
       }
     };
     window.addEventListener("message", onMessage);
@@ -91,9 +123,10 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     return () => {
       if (loadTimer.current) clearTimeout(loadTimer.current);
     };
-  }, [reloadKey, siteId]);
+  }, [iframeSrc, reloadKey, siteId]);
 
   const reload = useCallback(() => {
+    clearRouteRequests();
     setCurrentUrl((cur) => {
       setIframeSrc(cur);
       return cur;
@@ -103,7 +136,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     setFailed(false);
     setSpinning(true);
     setTimeout(() => setSpinning(false), 700);
-  }, []);
+  }, [clearRouteRequests]);
 
   const goHistory = useCallback((delta: -1 | 1) => {
     try {
@@ -139,10 +172,15 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
       inputRef.current?.blur();
       return;
     }
+    const route = dest.origin + dest.pathname;
     const href = dest.href;
-    lastUrlBySite.set(siteId, href);
-    setCurrentUrl(href);
-    setDraftUrl(href);
+    pendingRoute.current = route;
+    lastUrlBySite.set(siteId, route);
+    setCurrentUrl(route);
+    setDraftUrl(route);
+    setIframeSrc(href);
+    setLoaded(false);
+    setFailed(false);
     try {
       iframeRef.current?.contentWindow?.postMessage(
         { source: "porto-site-navigate", href },
@@ -151,7 +189,7 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
     } catch {
       /* iframe not ready */
     }
-    inputRef.current?.blur();
+    setTimeout(() => inputRef.current?.blur(), 0);
   }, [draftUrl, currentUrl, siteOrigin, siteId]);
 
   if (!site) return null;
@@ -346,9 +384,11 @@ export function SiteBrowser({ siteId }: { siteId: string }) {
               title={site.label}
               loading="lazy"
               onLoad={() => {
+                pendingRoute.current = null;
                 setLoaded(true);
                 setFailed(false);
                 if (loadTimer.current) clearTimeout(loadTimer.current);
+                requestActiveRoute();
               }}
               onError={() => setFailed(true)}
               allowFullScreen
