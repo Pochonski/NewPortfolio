@@ -125,3 +125,15 @@ test("navigating to a route exits live sites", async ({ page }) => {
   await expect(page.getByRole("tab", { name: "prestamos-mi-principe.vercel.app" })).toHaveCount(0);
   await expect(page.getByText("Conectemos")).toBeVisible();
 });
+
+test("restored live sites do not leak into another route", async ({ page }) => {
+  await page.goto("/projects");
+  await page.getByRole("tree").getByText("perfumes-el-pocho.project").click();
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toBeVisible();
+
+  // A direct load creates a new IDE instance, which must not restore the
+  // project iframe saved while the user was on /projects.
+  await page.goto("/contact");
+  await expect(page.getByRole("tab", { name: "perfumes-el-pocho.vercel.app" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "contact.css" })).toBeVisible();
+});

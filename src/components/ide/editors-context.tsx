@@ -249,7 +249,12 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
     let next: EditorsState | null = null;
     try {
       const raw = window.localStorage.getItem(STORE_KEY);
-      const restored = raw ? sanitize(JSON.parse(raw)) : null;
+      const persisted = raw ? JSON.parse(raw) : null;
+      const restored = sanitize(persisted);
+      const savedPathname =
+        persisted && typeof persisted === "object" && typeof persisted.pathname === "string"
+          ? persisted.pathname
+          : null;
       if (restored) {
         const base =
           restored.left.length > MAX_LEFT_TABS
@@ -262,6 +267,10 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           const pushed = pushLeft(base, { kind: "code", fileId: routeFileId });
           next = { ...restored, left: pushed.left, activeLeft: pushed.idx };
         }
+        // A live project belongs to the page where it was opened. Old saved
+        // workspaces did not store a pathname, so they are treated as a
+        // different page to prevent stale iframes beside routes such as /contact.
+        if (savedPathname !== pathname) next = withoutSites(next);
       }
     } catch {
       /* corrupted storage → fresh defaults */
@@ -315,12 +324,13 @@ export function EditorsProvider({ children }: { children: React.ReactNode }) {
           activeLeft: state.activeLeft,
           activeRight: state.activeRight,
           ratio: state.ratio,
+          pathname,
         })
       );
     } catch {
       /* storage full/blocked */
     }
-  }, [state]);
+  }, [pathname, state]);
 
   const setActive = useCallback((group: GroupId, idx: number) => {
     setLastActive(group);
